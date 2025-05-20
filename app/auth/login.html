@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | Rufino</title>
+  <link rel="stylesheet" href="{{ url_for('auth.static', filename='Clogin.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="container-login">
+
+    <!-- 📦 COLUNA ESQUERDA (MUDEI DE LADO): VITRINE DE SISTEMAS -->
+    <div class="coluna-esquerda">
+      <h3>Soluções disponíveis</h3>
+      <div class="cards-sistemas">
+
+        <div class="card-sistema" data-link="sistema/despesas.html">
+          <h4>Controle de Despesas</h4>
+          <p>Registre e monitore todos os gastos com eficiência.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/financeiro.html">
+          <h4>Controle Financeiro</h4>
+          <p>Fluxo de caixa, contas a pagar e receber com visão clara e simplificada.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/projetos.html">
+          <h4>Controle de Projetos</h4>
+          <p>Organize tarefas e acompanhe projetos com quadros Kanban interativos.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/indicadores.html">
+          <h4>Painel de Indicadores</h4>
+          <p>Dashboards com os principais dados e alertas do seu negócio.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/checklists.html">
+          <h4>Checklists e Processos</h4>
+          <p>Padronize rotinas e acompanhe execuções com histórico e responsáveis.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/estoque.html">
+          <h4>Controle de Estoque</h4>
+          <p>Gerencie entradas, saídas e alertas de produtos em tempo real.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/rh.html">
+          <h4>RH Simplificado</h4>
+          <p>Cadastre colaboradores e acompanhe férias, afastamentos e eventos.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/chamados.html">
+          <h4>Atendimento Interno</h4>
+          <p>Receba e organize solicitações internas com prazos e prioridades.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/marketing.html">
+          <h4>Automação de Marketing</h4>
+          <p>Automatize comunicações por e-mail e WhatsApp com base em eventos.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/contratos.html">
+          <h4>Gestão de Contratos</h4>
+          <p>Controle prazos, renovações e alertas de documentos contratuais.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/agenda.html">
+          <h4>Agenda de Compromissos</h4>
+          <p>Calendário compartilhado com alertas e integração entre equipes.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/ativo.html">
+          <h4>Controle de Ativo Fixo</h4>
+          <p>Gerencie os ativos da empresa com rastreabilidade e depreciação.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/licencas.html">
+          <h4>Licenças e Documentos</h4>
+          <p>Mantenha o controle sobre validade de licenças e obrigações legais.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/normas.html">
+          <h4>Normas e Procedimentos</h4>
+          <p>Documente processos internos e controle versões de forma centralizada.</p>
+        </div>
+
+        <div class="card-sistema card-customizado" data-link="sistema/customizados.html">
+          <h4>Sistemas Customizados</h4>
+          <p>Soluções desenvolvidas sob medida para atender necessidades específicas do seu negócio.</p>
+        </div>
+    </div>
+  </div>
+
+
+
+
+    <!-- 🧑‍💼 COLUNA DIREITA (ALTERADO LADOS): LOGIN -->
+  <div class="box-login">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo Rufino" class="logo-rufino">
+
+      <div id="formLogin" class="tela-login ativa">
+        <h2>"Conquiste mais resultados, tenha segurança e paz no seu negócio. Vamos crescer juntos, guiados pela excelência e pela graça de Deus."</h2>
+        <form onsubmit="return false;">
+          <input id="email" type="text" placeholder="Digite seu e-mail" required>
+          <input id="senha" type="password" placeholder="Digite sua senha" required>
+
+          <div class="link-esqueci">
+            <a href="#" id="linkEsqueciSenha">Esqueci minha senha</a>
+          </div>
+
+          <div class="area-botao-login">
+            <button id="btnLogin" type="button">Entrar</button>
+          </div>
+        </form>
+        <div class="link-cadastro">
+          <p>Não tem uma conta? <a href="#">Cadastrar-se</a></p>
+        </div>
+      </div>
+
+      <div id="formRecuperarSenha" class="tela-redefinir">
+        <h2>Recuperar Acesso</h2>
+        <p style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">
+          Informe seu e-mail e enviaremos um link para redefinir sua senha.
+        </p>
+        <input id="recEmail" type="email" placeholder="Digite seu e-mail" required>
+        <div class="area-botao-login">
+          <button id="btnEnviarToken" type="button">Enviar link de recuperação</button>
+        </div>
+        <div class="area-botao-login">
+          <button id="btnVoltarLogin" type="button">Voltar</button>
+        </div>
+      </div>
+    </div>
+
+    
+      
+  </div>
+
+
+  <footer class="contato-rodape">
+    <div class="conteudo-contato">
+      <h2>Deus abre caminhos onde plantamos nossos sonhos. Vamos conversar?</h2>
+      <div class="botoes-contato">
+        <a href="https://wa.me/5511999999999" target="_blank" class="botao-whatsapp">
+          <img src="{{ url_for('static', filename='imge/whatsapp.png') }}" alt="WhatsApp"> WhatsApp
+        </a>
+        <a href="mailto:contato@rufino.tech" target="_blank" class="botao-email">
+          <img src="{{ url_for('static', filename='imge/email.png') }}" alt="Email"> E-mail
+        </a>
+        <a href="https://instagram.com/seuinstagram" target="_blank" class="botao-instagram">
+          <img src="{{ url_for('static', filename='imge/instagram.png') }}" alt="Instagram"> Instagram
+        </a>
+        <a href="https://linkedin.com/in/seulinkedin" target="_blank" class="botao-linkedin">
+          <img src="{{ url_for('static', filename='imge/linkedin.png') }}" alt="LinkedIn"> LinkedIn
+        </a>
+      </div>
+      <p class="mensagem-final">O que Deus abençoa, ninguém impede.</p>
+    </div>
+  </footer>
+  <script src="{{ url_for('auth.static', filename='Slogin.js') }}"></script>
+</body>
+</html>

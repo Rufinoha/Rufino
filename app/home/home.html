@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rufino | Soluções Inteligentes</title>
+  <link rel="stylesheet" href="{{ url_for('home.static', filename='Chome.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+
+  <!-- 🔝 TOPO FIXO -->
+  <header class="header-fixo">
+    <div class="container-topo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo Rufino" class="logo-rufino">
+      <a href="{{ url_for('auth.exibir_login') }}" class="card-area-cliente">
+        <svg class="icon-entrar" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M15 3h4a2 2 0 0 1 2 2v4M10 17l5-5-5-5M21 12H10M5 21h14a2 2 0 0 0 2-2V5" />
+        </svg>
+        <span>Área do Cliente</span>
+      </a>
+      
+    </div>
+  </header>
+
+
+
+  <main>
+    
+  <div class="conteudo-site">
+      <!-- 🧩 CATÁLOGO DE SOLUÇÕES DISPONÍVEIS -->
+    <section class="secao-catalogo-sistemas">
+      <h2>Soluções Disponíveis</h2>
+      <div class="cards-sistemas">
+
+        <div class="card-sistema" data-link="sistema/despesas.html">
+          <h4>Controle de Despesas</h4>
+          <p>Registre e monitore todos os gastos com eficiência.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/ativo.html">
+          <h4>Controle de Ativo Fixo</h4>
+          <p>Gerencie os ativos da empresa com rastreabilidade.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/eventos.html">
+          <h4>Controle de Eventos</h4>
+          <p>Organize agendas e eventos corporativos.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/projetos.html">
+          <h4>Controle de Projetos</h4>
+          <p>Acompanhe o andamento e prazos dos seus projetos.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/licencas.html">
+          <h4>Controle de Licenças</h4>
+          <p>Mantenha validade e regularidade das licenças.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/normas.html">
+          <h4>Normas e Procedimentos</h4>
+          <p>Controle de documentos e não conformidades.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/financeiro.html">
+          <h4>Controle Financeiro</h4>
+          <p>Fluxo de caixa, contas a pagar e receber.</p>
+        </div>
+
+        <div class="card-sistema" data-link="sistema/vendas.html">
+          <h4>Controle de Vendas</h4>
+          <p>Cadastre e acompanhe suas vendas em tempo real.</p>
+        </div>
+
+        <div class="card-sistema card-customizado" data-link="sistema/customizados.html">
+          <h4>Sistemas Customizados</h4>
+          <p>Soluções desenvolvidas sob medida para atender necessidades específicas do seu negócio.</p>
+        </div>
+        
+      </div>
+    </section>
+
+  
+
+    <!-- 💡 TECNOLOGIA COM VALORES -->
+    <section class="secao-valores">
+      <h2>Tecnologia com Valores</h2>
+      <p>
+        Não vendemos apenas sistemas. Entregamos ética, visão de futuro e parceria duradoura.
+        Acreditamos na tecnologia como ponte entre pessoas e soluções reais.
+      </p>
+    </section>
+  </div>
+
+    <section class="secao-proposito">
+      <div class="fundo-banner">
+        <img src="{{ url_for('home.static', filename='/imge/bannerprincipal01.png') }}" alt="Banner Principal" class="banner-imagem">
+        <div class="conteudo-banner">
+          <h1>Nosso Propósito</h1>
+          <p>
+            A Rufino nasceu para transformar a relação entre tecnologia e pessoas.
+            Criamos soluções que geram impacto real, com responsabilidade, propósito e eficiência.
+          </p>
+        </div>
+      </div>
+    </section>
+    
+
+
+   
+
+    <!-- 📞 FALE CONOSCO -->
+    <section class="secao-contato">
+      <h3>Deus abre caminhos onde plantamos nossos sonhos.</H3>
+      <H3> Vamos conversar?</h3>
+      <form class="form-contato">
+        <input type="text" placeholder="Nome completo" required>
+        <input type="email" placeholder="E-mail" required>
+        <input type="text" placeholder="Assunto" required>
+        <textarea placeholder="Mensagem" rows="5" required></textarea>
+        <button type="submit">Enviar Mensagem</button>
+      </form>
+
+      <div class="contato-rodape">
+        <div class="conteudo-contato">
+          <div class="botoes-contato">
+            <a href="https://wa.me/5511999999999" target="_blank" class="botao-whatsapp">
+              <img src="{{ url_for('static', filename='imge/whatsapp.png') }}" alt="WhatsApp"> WhatsApp
+            </a>
+            <a href="mailto:contato@rufino.tech" target="_blank" class="botao-email">
+              <img src="{{ url_for('static', filename='imge/email.png') }}" alt="Email"> E-mail
+            </a>
+            <a href="https://instagram.com/seuinstagram" target="_blank" class="botao-instagram">
+              <img src="{{ url_for('static', filename='imge/instagram.png') }}" alt="Instagram"> Instagram
+            </a>
+            <a href="https://linkedin.com/in/seulinkedin" target="_blank" class="botao-linkedin">
+              <img src="{{ url_for('static', filename='imge/linkedin.png') }}" alt="LinkedIn"> LinkedIn
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  
+  <!-- 🧱 RODAPÉ -->
+  <footer class="rodape">
+    <p id="versiculo-rotativo">"O Senhor é meu pastor e nada me faltará." – Salmos 23:1</p>
+    <p>© Rufino. Todos os direitos reservados.</p>
+    <div class="redes-sociais">
+      <img src="{{ url_for('static', filename='imge/instagram.png') }}" alt="Instagram">
+      <img src="{{ url_for('static', filename='imge/linkedin.png') }}" alt="LinkedIn">
+    </div>
+  </footer>
+
+  <!-- ✅ JS do módulo home -->
+<script src="{{ url_for('home.static', filename='Shome.js') }}"></script>
+ 
+</body>
+</html>

@@ -1,0 +1,41 @@
+# 🔒 Segurança: nunca subir variáveis sensíveis
+.env
++*.env         
+
+# 🧠 Python: arquivos compilados e cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 📦 Pacotes Python (se usados)
+*.egg-info/
+dist/
+build/
+
+# 💾 Banco de dados local
+*.db
+*.sqlite3
++database/*.db     
+
+# 🧪 Testes temporários
+*.log
+*.bak
+*.tmp
++logs/         
+
+# 🔄 Arquivos do VS Code e outros IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 📂 Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# 🔐 Sessões Flask
+flask_session/
+
+# 📝 Arquivos de documentação (se quiser ignorar)
+*.md
++# *.md          

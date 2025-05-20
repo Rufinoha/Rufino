@@ -1,0 +1,284 @@
+/********************** RESET e CONFIGURAÇÕES INICIAIS ********************/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+body {
+  font-family: 'Arboria', sans-serif;
+  background-color: #F3F3F3;
+  color: #333333;
+}
+  
+/********************** CONTAINER PRINCIPAL ********************/
+.container-login {
+  display: flex;
+  height: 60vh;
+}
+  
+
+/********************** CONTAINER CARDS a ESQUERCA ********************/ 
+  
+.coluna-esquerda {
+  width: 80%;
+  flex: 1;
+  background-color: #F3F3F3;
+  padding: 20px 40px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+    
+h3 {
+  margin-bottom: 20px;
+}
+
+/********************** CONTAINER LOGIN A DIREITA ********************/ 
+.box-login {
+  width: 20%;
+  background-color: #fff;
+  padding: 0px 20px 20px 20px;
+  border-bottom-left-radius: 8%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-height: 600px;
+  display: block;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.logo-rufino {
+  width: 50%;
+  max-width: 100%;
+margin-bottom: 20px;
+}
+
+.box-login h2 {
+  font-size: 1.0rem;
+  margin-bottom: 30px;
+  color: #333333;
+  text-align: center;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+
+
+
+.box-login form {
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  border: #dfd4d4 1px solid;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(0, 500, 0, 0.2);
+  gap: 15px;
+}
+
+.box-login label {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.box-login input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.link-esqueci {
+  text-align: right;
+  margin-top: -8px;
+}
+
+.link-esqueci a {
+  color: #85C300;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.area-botao-login {
+  text-align: right;
+  margin-top: 10px;
+}
+
+.box-login button {
+  background-color: #85C300;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.box-login button:hover {
+  background-color: #6ba000;
+}
+
+.link-cadastro {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.link-cadastro a {
+  font-size: 0.9rem;
+  color: #85C300;
+  text-decoration: underline;
+}
+
+
+
+/********************** CONTAINER CONTATO ********************/ 
+/* Rodapé de Contato */
+.contato-rodape {
+  background-color: #dfd4d4;
+  padding: 30px 20px;
+  text-align: center;
+  margin-top: 0px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.conteudo-contato h2 {
+  color: #333333;
+  font-size: 20px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.botoes-contato {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.botoes-contato a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #85C300;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.botoes-contato a img {
+  width: 20px;
+  height: 20px;
+}
+
+.botoes-contato a:hover {
+  background-color: #FFD700;
+  color: #333333;
+  transform: scale(1.05);
+  box-shadow: 0px 0px 10px #FFD700;
+}
+
+.mensagem-final {
+  color: #666666;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+
+
+
+
+
+  
+/* 🧩 CARDS DE SISTEMAS NA TELA DE LOGIN – VISUAL MODERNO E UNIFICADO */
+
+.cards-sistemas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 25px;
+  justify-content: start;
+}
+  
+.card-sistema {
+  background-color: #ffffff;
+  border-left: 4px solid #85C300;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.26);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.card-customizado {
+  border-left: 6px solid #333333; /* barra lateral cinza */
+  background-color: #fdfdfd; /* levemente mais claro que branco */
+}
+
+
+.card-sistema:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+}
+
+.card-sistema h4 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: #85C300;
+  font-weight: 600;
+}
+
+.card-sistema p {
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.3;
+  margin: 0;
+}
+
+
+/* Responsivo */
+@media (max-width: 950px) {
+  .cards-sistemas {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/********************** RECUPERAR SENHA ********************/ 
+.tela-login,
+.tela-redefinir {
+  transition: opacity 0.3s ease;
+
+}
+
+.tela-redefinir {
+  display: none;
+  opacity: 0;
+}
+
+.tela-redefinir.ativa,
+.tela-login.ativa {
+  display: grid;
+  opacity: 1;
+}
+
+.tela-login:not(.ativa),
+.tela-redefinir:not(.ativa) {
+  display: none;
+  opacity: 0;
+}
+
+
+
+
