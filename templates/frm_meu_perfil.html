@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu Perfil</title>
+    <link rel="stylesheet" href="/static/style/Cmeu_perfil.css">
+    <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    
+    <div class="Cl_titulo">
+        <h1>MEU PERFIL</h1>
+    </div>
+
+    <div class="perfil-container">
+        
+        <div class="tabs">
+            <button class="tab-button active" data-tab="perfil">Meu Perfil</button>
+            <button class="tab-button" data-tab="empresa">Empresa</button>
+            <button class="tab-button" data-tab="financeiro">Dados Financeiros</button>
+        </div>
+
+
+
+        <!-- ABA MEU PERFIL -->
+        <div class="tab-content active" id="perfil">
+            <form id="formPerfil">
+                <div class="perfil-grid">
+                    <!-- FOTO -->
+                    <div class="foto-box">
+                        <img id="fotoUsuario" src="/static/imge/imguser/userpadrao.png" alt="Foto do Usuário">
+                        <div class="botoes-foto">
+                            <button type="button" id="btnExcluirFoto">Excluir</button>
+                            <label for="inputFoto" class="btn-upload">Alterar</label>
+                            <input type="file" id="inputFoto" accept=".png,.jpg" style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- DADOS -->
+                    <div class="dados-box">
+                        <div class="linha">
+                            <label>Nome Completo:</label>
+                            <input type="text" id="nome" disabled>
+                        </div>
+                        <div class="linha">
+                            <label>Email:</label>
+                            <input type="email" id="email" disabled>
+                        </div>
+                        <div class="linha">
+                            <label>Departamento:</label>
+                            <input type="text" id="departamento">
+                        </div>
+                        <div class="linha">
+                            <label>WhatsApp:</label>
+                            <input type="text" id="whatsapp">
+                            <button type="button" id="btnZap" title="Abrir no WhatsApp">📲</button>
+                        </div>
+
+                        <!-- CARD TROCAR SENHA -->
+                        <div class="card-senha" id="cardSenha">
+                            <div class="card-header" onclick="toggleCardSenha()">🔐 Trocar Senha</div>
+                            <div class="card-body" style="display: none;">
+                                <label>Nova Senha:</label>
+                                <input type="password" id="novaSenha">
+                                <label>Repetir Nova Senha:</label>
+                                <input type="password" id="confirmarSenha">
+                                <button type="button" id="btnAlterarSenha">Alterar Senha</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+
+
+         <!-- ABA EMPRESA -->
+        
+        <div class="tab-content" id="empresa">
+            <form id="formEmpresa">
+                <div class="linha10 linha">
+                    <label>CNPJ:</label>
+                    <input type="text" id="cnpj" disabled>
+                    <label id="lbl_empresa">Empresa:</label>
+                    <input type="text" id="nome_empresa" disabled>
+                </div>
+                <div class="linha20 linha">
+                    <label id="lbl_endereco" for="endereco">Endereço:</label>
+                    <input type="text" id="endereco">
+                    <label id="lbl_numero"for="numero">Número:</label>
+                    <input type="text" id="numero">
+                </div>
+                <div class="linha30 linha">
+                    <label>Bairro:</label>
+                    <input type="text" id="bairro">
+                    <label>Cidade:</label>
+                    <input type="text" id="cidade">
+                    <label id="lbl_uf">UF:</label>
+                    <input type="text" id="uf" maxlength="2">
+                </div>
+                <div class="linha40 linha">
+                    <label>CEP:</label>
+                    <input type="text" id="cep">
+                    <label>IE:</label>
+                    <input type="text" id="ie">
+                    <label>Forma de pagamento:</label>
+                    
+                </div>
+            </form>
+        </div>
+
+
+        <!-- ABA DADOS FINANCEIROS -->
+        <div class="tab-content" id="financeiro">
+            <form id="formFinanceiro">
+                <div class="linha linha50">
+                    <label for="contato_financeiro">Responsável Financeiro:</label>
+                    <input type="text" id="contato_financeiro" name="contato_financeiro">
+                </div>
+                <div class="linha linha50">
+                    <label for="email_financeiro">
+                        E-mail de Cobrança:
+                        <span title="Você pode adicionar quantos e-mails quiser, separados por ponto e vírgula ( ; ).">❓</span>
+                    </label>
+                    <input type="text" id="email_financeiro" name="email_financeiro" placeholder="financeiro@exemplo.com; outro@email.com">
+                </div>
+
+                <div class="linha linha50">
+                    <label for="whatsapp_financeiro">WhatsApp Financeiro:</label>
+                    <input type="text" id="whatsapp_financeiro" name="whatsapp_financeiro" placeholder="Ex: 5511999999999">
+                </div>
+                <div class="linha linha50">
+                    <label for="forma_pagamento_padrao">Forma de Pagamento:</label>
+                    <select id="forma_pagamento_padrao" name="forma_pagamento_padrao">
+                        <option value="pix">PIX (à vista)</option>
+                        <option value="bolix">Boleto</option>
+                        <option value="cartao">Cartão de crédito</option>
+                    </select>
+                </div>
+                <div class="linha-observacoes">
+                    <label for="obs_faturamento">Observações:</label>
+                    <textarea id="obs_faturamento" name="obs_faturamento" rows="3"
+                        placeholder="Ex: Enviar cobrança após dia 10, não enviar no WhatsApp..."></textarea>
+                </div>
+
+
+            </form>
+        </div>
+
+
+    </div>
+    <div class="Cl_titulo">
+        <button type="button" id="btnsalvar" title="Salvar">Salvar</button>
+    </div>
+</body>
+</html>

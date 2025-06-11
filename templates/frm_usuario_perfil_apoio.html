@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Perfil de Usuário</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_perfil_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/static/script/global.js"></script>
+</head>
+
+<body>
+
+<!-- 🔹 CABEÇALHO -->
+<div class="Cl_Header">
+  <div class="Cl_Logo">
+    <img src="{{ url_for('static', filename='image/logofleetguard.png') }}" alt="Logo">
+  </div>
+  <div class="Cl_Titulo">
+    <h1>Perfil de Usuário</h1>
+  </div>
+  <div class="Cl_usuarioID">
+    <label for="ob_id">ID:</label>
+    <input type="text" id="ob_id" disabled>
+  </div>
+</div>
+
+<!-- 🔹 FORMULÁRIO -->
+<div class="Cl_Formulario">
+
+  <div class="grupo1">
+    <label for="ob_nome">Nome do Submenu:</label>
+    <input type="text" id="ob_nome">
+  </div>
+
+  <div class="grupo2">
+    <label for="ob_idhtml">ID HTML:</label>
+    <input type="text" id="ob_idhtml">
+  </div>
+
+  <div class="grupo1">
+    <label for="ob_menuprincipal">Menu Principal:</label>
+    <input type="text" id="ob_menuprincipal">
+  </div>
+
+  <div class="grupo2">
+    <label for="ob_ordem">Ordem:</label>
+    <input type="number" id="ob_ordem" min="0">
+  </div>
+
+  <div class="grupo1" style="grid-column: span 2;">
+    <label for="ob_descricao">Descrição:</label>
+    <input type="text" id="ob_descricao">
+  </div>
+
+</div>
+
+<!-- 🔹 BOTÕES -->
+<div class="Cl_Botoes">
+  <button id="ob_btnSalvar">💾 Salvar</button>
+  <button id="ob_btnNovo">🆕 Novo</button>
+  <button id="ob_btnExcluir">🗑️ Excluir</button>
+</div>
+
+<!-- 🔹 SCRIPT -->
+<script src="/static/script/Susuario_perfil_apoio.js"></script>
+
+</body>
+</html>

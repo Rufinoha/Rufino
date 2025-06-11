@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Usuários - FleetGuard</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  
+
+  <div class="Cl_UsuarioContainer">
+    <div class="Cl_TituloContainer">
+      <button id="ob_btnVoltar">⬅ Voltar a configurações</button>
+      <h2>Gestão de Usuários</h2>
+    </div>
+    <div class="Cl_Filtros">
+      <label class="Cl_labelfiltro" for="ob_filtroNome">Nome:</label>
+      <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome">
+
+      <label class="Cl_labelfiltro" for="ob_filtroStatus">Status:</label>
+      <select class="Cl_CamposFiltros" id="ob_filtroStatus">
+        <option value="Ativo" selected>Ativo</option>
+        <option value="Inativo">Inativo</option>
+      </select>
+
+      <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+      <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+    </div>
+
+    <div class="Cl_botaoIncluir">
+      <button id="ob_btnIncluir" class="Cl_BtnIncluir">Novo Usuário</button>
+      <button id="ob_btnnivel" class="Cl_BtnIncluir">Nivel de Acesso</button>
+    </div>
+
+    <div class="Cl_TabelaUsuarios" id="content-area-Usuarios">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome Completo</th>
+            <th>Email</th>
+            <th>WhatsApp</th>
+            <th>Departamento</th> <!-- atualizado -->
+            <th>Grupo</th>
+            <th>Último Login</th> <!-- atualizado -->
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="ob_listaUsuarios">
+          <tr class="Cl_Carregando">
+            <td colspan="9">Carregando...</td>
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+  </div>
+  <!-- 🔹 CAMPOS OCULTOS -->
+<input type="hidden" id="ob_aprovador">
+
+</body>
+</html>

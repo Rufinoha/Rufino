@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Laudo</title>
+    <title>Empresa</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Cempresa_apoio.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <!-- 🔹 CABEÇALHO -->
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='image/logofleetguard.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Empresa</h1>
+    </div>
+  </div>
+
+  <!-- 🔹 CONTEÚDO -->
+  <div class="container">
+
+    <div class="linha">
+      <label for="ob_cnpj">CNPJ:</label>
+      <input type="text" id="ob_cnpj" maxlength="18" placeholder="00.000.000/0000-00">
+      <button type="button" id="ob_btnBuscarCNPJ">Buscar CNPJ</button>
+    </div>
+
+    <div class="linha">
+      <label for="ob_empresa">Razão Social:</label>
+      <input type="text" id="ob_empresa" maxlength="100">
+    </div>
+
+    <div class="linha">
+      <label for="ob_endereco">Endereço:</label>
+      <input type="text" id="ob_endereco" maxlength="100">
+    </div>
+
+    <div class="linha">
+      <label for="ob_numero">Número:</label>
+      <input type="text" id="ob_numero" maxlength="10">
+
+      <label for="ob_bairro" class="espaco">Bairro:</label>
+      <input type="text" id="ob_bairro" maxlength="50">
+    </div>
+
+    <div class="linha">
+      <label for="ob_cidade">Cidade:</label>
+      <input type="text" id="ob_cidade" maxlength="50">
+
+      <label for="ob_uf" class="espaco">UF:</label>
+      <input type="text" id="ob_uf" maxlength="2" style="width: 50px;">
+    </div>
+
+    <div class="linha">
+      <label for="ob_cep">CEP:</label>
+      <input type="text" id="ob_cep" maxlength="9" placeholder="00000-000">
+
+      <label for="ob_ie" class="espaco">Inscrição Estadual:</label>
+      <input type="text" id="ob_ie" maxlength="20">
+    </div>
+
+    
+    </div>
+    <div class="Cl_Botoes">
+      <button type="button" id="ob_btnSalvar">Salvar</button>
+      <button type="button" id="ob_btnNovo">Novo</button>
+      <button type="button" id="ob_btnExcluir">Excluir</button>
+    </div>
+    <script src="{{ url_for('static', filename='script/global.js') }}"></script>
+  <script src="/static/script/Sempresa_apoio.js"></script>
+</body>
+</html>

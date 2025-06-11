@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Definir Nova Senha | Rufino</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_redefinir.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="container-redefinir">
+    <h2>Definir Nova Senha</h2>
+    <p>Crie uma senha segura para acessar o sistema.</p>
+
+    <form id="formSenha" onsubmit="return false;">
+      <div class="grupo-input">
+        <label for="novaSenha">Nova Senha</label>
+        <input type="password" id="novaSenha" name="novaSenha" required>
+      </div>
+
+      <div class="grupo-input">
+        <label for="confirmarSenha">Confirmar Senha</label>
+        <input type="password" id="confirmarSenha" name="confirmarSenha" required>
+      </div>
+
+      <button id="btnAlterarSenha">Salvar Senha</button>
+    </form>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/Susuario_redefinir.js') }}"></script>
+</body>
+</html>

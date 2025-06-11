@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Novidade</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cnovidades_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/static/script/global.js"></script>
+</head>
+<body>
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='image/logofleetguard.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Novidade</h1>
+    </div>
+    <div class="Cl_usuarioID">
+      <label for="ob_id">ID:</label>
+      <input type="text" id="ob_id" disabled>
+    </div>
+  </div>
+
+  <div class="Cl_Formulario">
+    <div class="grupo1">
+      <label for="ob_emissao">Emissão:</label>
+      <input type="date" id="ob_emissao">
+    </div>
+
+    <div class="grupo2">
+      <label for="ob_modulo">Módulo:</label>
+      <input type="text" id="ob_modulo">
+    </div>
+
+    <div class="grupo1" style="grid-column: span 2;">
+      <label for="ob_descricao">Descrição:</label>
+      <textarea id="ob_descricao" rows="4" style="width: 95%;"></textarea>
+    </div>
+
+    <div class="grupo1" style="grid-column: span 2;">
+      <label for="ob_link">Link (opcional):</label>
+      <input type="text" id="ob_link" style="width: 95%;">
+    </div>
+  </div>
+
+  <div class="Cl_Botoes">
+    <button id="ob_btnSalvar">💾 Salvar</button>
+    <button id="ob_btnNovo">🆕 Novo</button>
+    <button id="ob_btnExcluir">🗑️ Excluir</button>
+  </div>
+
+  <script src="/static/script/Snovidades_apoio.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Resumo da Fatura</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cfatura_pre.css') }}">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+</head>
+<div class="Cl_Header">
+  <div class="Cl_Titulo">
+    <h1>Resumo da Fatura</h1>
+  </div>
+  <div class="Cl_usuarioID">
+    <label for="ob_competencia">Competência:</label>
+    <input type="text" id="ob_competencia" disabled>
+    <input type="hidden" id="ob_idcliente">
+  </div>
+</div>
+
+<body>
+  <div class="container-fatura">
+
+    <!-- 🧾 Tabela de Itens da Fatura -->
+    <table id="tabelaResumoFatura">
+      <thead>
+        <tr>
+          <th>Módulo</th>
+          <th>Período | Competência</th>
+          <th>Valor</th>
+        </tr>
+      </thead>
+      <tbody id="corpoTabelaResumo">
+        <!-- preenchido dinamicamente -->
+      <tfoot>
+  
+    </table>
+
+
+    <!-- 💰 Valor total da fatura -->
+    <div class="valor-total">
+      Valor Total: R$ <span id="valorTotal">0,00</span>
+    </div>
+
+    <!-- 📅 Vencimento sugerido -->
+    <div class="form-linha">
+      <label for="vencimentoInput">Vencimento:</label>
+      <input type="date" id="vencimentoInput">
+    </div>
+
+    <div class="form-linha">
+      <label for="formaPagamentoSelect">Forma de pagamento:</label>
+      <select id="formaPagamentoSelect">
+        <option value="pix">PIX (à vista)</option>
+        <option value="bolix">Boleto</option>
+        <option value="cartao">Cartão de crédito</option>
+      </select>
+    </div>
+
+
+    
+    <!-- 🔘 Botões -->
+    
+  </div>
+  <div class="botoes-fatura">
+    <button id="btnCancelarFatura">Cancelar</button>
+    <button id="btnConfirmarFatura">Faturar</button>
+  </div>
+  <script src="{{ url_for('static', filename='script/Sfatura_pre.js') }}"></script>
+</body>
+</html>
+

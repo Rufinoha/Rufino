@@ -1,0 +1,201 @@
+/* ========================== ESTILOS GERAIS ========================== */
+body {
+  padding: 0;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f4f4;
+}
+
+/* ========================== CONTAINER PRINCIPAL ========================== */
+.Cl_UsuarioContainer {
+  margin: 70px auto;
+  padding: 8px;
+  max-width: 1200px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================== TÍTULOS ========================== */
+h2 {
+  margin: 0;
+  color: #000;
+  text-align: right;
+}
+
+/* ========================== CONTAINER DE FILTROS ========================== */
+.Cl_Filtros {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 1180px;
+  gap: 10px;
+}
+
+.Cl_Filtros label {
+  font-weight: bold;
+}
+
+.Cl_Filtros input,
+.Cl_Filtros select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 70%;
+  max-width: 200px;
+  padding: 10px;
+  font-size: 14px;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+
+/* ========================== BOTÃO DE FILTRO ========================== */
+.Cl_botaoFiltro {
+  background-color: #85C300;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  width: 150px;
+  text-align: center;
+}
+
+.Cl_botaoFiltro:hover {
+  background-color: #6FA700;
+  transform: scale(1.05);
+}
+
+.Cl_botaoFiltro:active {
+  background-color: #85C300;
+  transform: scale(0.95);
+}
+
+/* ========================== TABELA ========================== */
+.Cl_TabelaUsuarios {
+  overflow-x: auto;
+}
+
+.Cl_TabelaUsuarios table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 90%;
+}
+
+.Cl_TabelaUsuarios th,
+.Cl_TabelaUsuarios td {
+  padding: 5px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.Cl_TabelaUsuarios th {
+  background-color: #85C300;
+  color: #fff;
+}
+
+.Cl_TabelaUsuarios tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.Cl_TabelaUsuarios tbody tr:hover {
+  background-color: #e0f7ff;
+}
+
+
+.Cl_TabelaUsuarios td:nth-child(1),
+.Cl_TabelaUsuarios th:nth-child(1) {
+    width: 30px;
+    text-align: center;
+}
+
+
+.Cl_TabelaUsuarios td:nth-child(4),
+.Cl_TabelaUsuarios th:nth-child(4) {
+    width: 170px;
+    text-align: left;
+}
+
+.Cl_TabelaUsuarios td:nth-child(5),
+.Cl_TabelaUsuarios th:nth-child(5) {
+    width: 120px;
+    text-align: center;
+}
+
+.Cl_TabelaUsuarios td:nth-child(6),
+.Cl_TabelaUsuarios th:nth-child(6) {
+    width: 30px;
+    text-align: center;
+}
+
+/* ========================== LINHA DE CARREGAMENTO ========================== */
+.Cl_Carregando td {
+  text-align: center;
+  font-weight: bold;
+  color: #666;
+}
+
+/* ========================== BOTAO VOLTAR ========================== */
+.btn-voltar {
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-voltar:hover {
+  background-color: #333;
+}
+
+.Cl_TituloContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* ========================== RESPONSIVIDADE ========================== */
+@media (max-width: 768px) {
+  .Cl_Filtros {
+    flex-direction: column;
+  }
+}
+
+/* ========================== DETALHES MODAL ========================== */
+.swal-log {
+  text-align: left;
+  max-height: 400px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
+
+.destinatario-bloco {
+  margin-bottom: 10px;
+}
+
+.linha-evento {
+  margin-left: 15px;
+  display: inline-block;
+  color: #333;
+}
+
+.status.enviado { background-color: #888; color: #fff; padding: 3px 6px; border-radius: 4px; }
+.status.entregue { background-color: #3399FF; color: #fff; padding: 3px 6px; border-radius: 4px; }
+.status.aberto { background-color: #85C300; color: #fff; padding: 3px 6px; border-radius: 4px; }
+.status.falha { background-color: #D9534F; color: #fff; padding: 3px 6px; border-radius: 4px; }
+.status.aguardando { background-color: #AAAAAA; color: #fff; padding: 3px 6px; border-radius: 4px; }

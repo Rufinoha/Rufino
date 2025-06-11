@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoramento de E-mails - Rufino</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cemail_log.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="Cl_UsuarioContainer">
+    <!-- Título e botão voltar -->
+    <div class="Cl_TituloContainer">
+      <button id="ob_btnVoltar" class="btn-voltar">⬅ Voltar a configurações</button>
+      <h2>Monitoramento de E-mails</h2>
+    </div>
+
+    <!-- Filtros -->
+    <div class="Cl_Filtros">
+      <label class="Cl_labelfiltro" for="filtroStatus">Status:</label>
+      <select class="Cl_CamposFiltros" id="filtroStatus">
+        <option value="">Todos</option>
+        <option value="Enviado">Enviado</option>
+        <option value="Entregue">Entregue</option>
+        <option value="Aberto">Aberto</option>
+        <option value="Falha">Falha</option>
+        <option value="Aguardando">Aguardando</option>
+      </select>
+
+      <label class="Cl_labelfiltro" for="dataInicio">Data Envio:</label>
+      <input class="Cl_CamposFiltros" type="date" id="dataInicio" />
+      <input class="Cl_CamposFiltros" type="date" id="dataFim" />
+
+      <label class="Cl_labelfiltro" for="filtroDestinatario">Destinatário:</label>
+      <input class="Cl_CamposFiltros" type="text" id="filtroDestinatario" placeholder="email@exemplo.com" />
+
+      <button class="Cl_botaoFiltro" id="btnFiltrar">Filtrar</button>
+    </div>
+
+    <!-- Tabela -->
+    <div class="Cl_TabelaUsuarios">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Assunto</th>
+            <th>Destinatários</th>
+            <th>Data Envio</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyLogs">
+          <tr class="Cl_Carregando">
+            <td colspan="6">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/Semail_log.js') }}"></script>
+  
+
+</body>
+</html>

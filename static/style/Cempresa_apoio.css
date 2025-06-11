@@ -1,0 +1,129 @@
+/* 🔹 RESET E FUNDO */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f2f2f2;
+  }
+  
+  /* 🔹 CABEÇALHO PADRÃO DE TELAS DE APOIO */
+  .Cl_Header {
+    display: flex;
+    align-items: center;
+    background-color: #34495e;
+    padding: 12px 20px;
+    color: white;
+  }
+  
+  .Cl_Logo img {
+    height: 40px;
+    margin-right: 15px;
+  }
+  
+  .Cl_Titulo h1 {
+    font-size: 30px;
+    margin: 0;
+  }
+  
+
+  /* 🔹 CONTAINER PRINCIPAL */
+  .container {
+    max-width: 100%;
+    margin: 0px 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 🔹 TÍTULO */
+
+  
+  /* 🔹 LINHAS DE FORMULÁRIO */
+  .linha {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .linha label {
+    width: 140px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .linha input {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  /* 🔹 BOTÃO DENTRO DA LINHA (Buscar CNPJ) */
+  .linha button {
+    margin-left: 10px;
+    padding: 8px 14px;
+    background-color: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .linha button:hover {
+    background-color: #1f5f8b;
+  }
+  
+  /* 🔹 AJUSTE DE ESPAÇAMENTO ENTRE CAMPOS */
+  .espaco {
+    margin-left: 20px;
+  }
+  
+  /* 🔹 BOTOES FINAIS */
+  
+  .Cl_Botoes {
+    display: flex;
+    justify-content: right;
+    margin-right: 80px;
+    gap: 15px;
+
+}
+
+.Cl_Botoes button {
+    width: 100px;
+    padding: 10px 18px;
+    margin: 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+  
+  /* 🔹 BOTÃO SALVAR */
+  #ob_btnSalvar {
+    background-color: #2ecc71;
+    color: white;
+  }
+  
+  #ob_btnSalvar:hover {
+    background-color: #27ae60;
+  }
+  
+  /* 🔹 BOTÃO CANCELAR */
+  #ob_btnExcluir {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+  #ob_btnExcluir:hover {
+    background-color: #c0392b;
+  }
+  
+  

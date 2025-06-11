@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestão de Cobranças</title>
+  <link rel="stylesheet" href="static/style/Ccobranca.css">
+</head>
+<body>
+  <div class="container-cobranca">
+
+    <!-- 🔘 Botões de Abas -->
+    <div class="tabs-container">
+      <button class="tab-button active" data-tab="pendentes">Faturamentos Pendentes</button>
+      <button class="tab-button" data-tab="faturas">Faturas</button>
+    </div>
+
+    <!-- 📄 Aba 01: Faturamentos Pendentes -->
+    <div id="pendentes" class="tab-content active">
+      <div class="filtro-box">
+        <label>Cliente:</label>
+        <input type="text" id="filtroClientePendentes">
+        <label>Competência:</label>
+        <input type="month" id="filtroCompetencia">
+        <button id="btnBuscarPendentes">🔎 Buscar</button>
+      </div>
+
+
+      <table class="tabela-cobranca">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Competência</th>
+            <th>Valor Estimado</th>
+            <th>Situação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPendentes">
+          <!-- Dados serão carregados via JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 📄 Aba 02: Faturas Emitidas -->
+    <div id="faturas" class="tab-content">
+      <div class="filtro-box">
+        <label>Cliente:</label>
+        <input type="text" id="filtroCliente">
+        <label>Período:</label>
+        <input type="date" id="filtroInicio">
+        <input type="date" id="filtroFim">
+        <label>Status:</label>
+        <select id="filtroStatus">
+          <option value="">Todos</option>
+          <option value="Aberta">Aberta</option>
+          <option value="Paga">Paga</option>
+          <option value="Vencida">Vencida</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+        <button id="btnBuscarFaturas">🔎 Buscar</button>
+      </div>
+
+      <table class="tabela-cobranca">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Competência</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Vencimento</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyFaturas">
+          <!-- Dados serão carregados via JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script src="static/script/Scobranca.js"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f4f6f8;
+  margin: 0;
+  padding: 0;
+}
+
+.container-cadastro {
+  max-width: 800px;
+  margin: 10px auto;
+  background-color: #fff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.28);
+}
+
+.container-cadastro h2 {
+  margin-bottom: 5px;
+  color: #333;
+  text-align: center;
+}
+
+.container-cadastro p {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #777;
+  margin-bottom: 30px;
+}
+
+/* 🔹 Agrupamento de campos em linhas */
+.grupo-linha {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.grupo-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.grupo-input label {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+.grupo-input input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.grupo-input input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* 🔹 Input com botão (CNPJ, CEP) */
+.input-com-botao {
+  display: flex;
+  gap: 10px;
+}
+
+.input-com-botao input {
+  flex: 1;
+}
+
+.input-com-botao button {
+  padding: 10px 16px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.input-com-botao button:hover {
+  background-color: #0056b3;
+}
+
+/* 🔹 Botões */
+.area-botoes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.area-botoes button,
+.area-botoes .btn-voltar {
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.area-botoes button {
+  background-color: #85C300;
+  color: #fff;
+  border: none;
+}
+
+.area-botoes button:hover {
+  background-color: #6FA700;
+}
+
+.area-botoes .btn-voltar {
+  background-color: #ccc;
+  color: #333;
+  border: none;
+}
+
+.area-botoes .btn-voltar:hover {
+  background-color: #bbb;
+}
+
+/* 🔹 Responsivo para telas pequenas */
+@media screen and (max-width: 768px) {
+  .container-cadastro {
+    padding: 20px;
+  }
+
+  .grupo-linha {
+    flex-direction: column;
+  }
+
+  .area-botoes {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .input-com-botao {
+    flex-direction: column;
+  }
+}
+
+.uppercase {
+  text-transform: uppercase;
+}

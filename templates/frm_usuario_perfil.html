@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Perfil de Usuário - FleetGuard</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_perfil.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/static/script/global.js"></script>
+</head>
+
+<body>
+
+<div class="Cl_UsuarioContainer">
+  <div class="Cl_TituloContainer">
+    <button id="ob_btnVoltar">⬅ Voltar a configurações</button>
+    <h2>Gestão de Perfil de Usuário</h2>
+  </div>
+
+  <div class="Cl_Filtros">
+    <label class="Cl_labelfiltro" for="ob_filtroMenu">Menu Principal:</label>
+    <input class="Cl_CamposFiltros" type="text" id="ob_filtroMenu" placeholder="Filtrar por menu principal">
+
+    <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+    <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+  </div>
+
+  <div class="Cl_botaoIncluir">
+    <button id="ob_btnIncluir" class="Cl_BtnIncluir">Novo Perfil</button>
+  </div>
+
+  <div class="Cl_TabelaPerfil" id="content-area-Usuarios">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nome</th>
+          <th>ID HTML</th>
+          <th>Menu Principal</th>
+          <th>Ordem</th>
+          <th>Descrição</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="ob_listaPerfis">
+        <tr class="Cl_Carregando">
+          <td colspan="7">Carregando...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="/static/script/Susuario_perfil.js"></script>
+
+</body>
+</html>

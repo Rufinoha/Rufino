@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro Inicial | Rufino</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Ccadastro.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <div class="container-cadastro">
+    <h2>Solicitação de Cadastro</h2>
+    <p>Preencha os dados abaixo para solicitar o primeiro acesso.</p>
+
+    <form id="formCadastro" onsubmit="return false;">
+
+  <!-- 🔹 Linha 1: Nome completo + Email -->
+  <div class="grupo-linha">
+    <div class="grupo-input">
+      <label for="nome_completo">Nome Completo</label>
+      <input type="text" id="nome_completo" name="nome_completo" required>
+    </div>
+    <div class="grupo-input">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+  </div>
+
+  <!-- 🔹 Linha 2: CNPJ + Botão Buscar -->
+  <div class="grupo-linha">
+    <div class="grupo-input">
+      <label for="cnpj">CNPJ</label>
+      <div class="input-com-botao">
+        <input type="text" id="cnpj" name="cnpj" required>
+        <button type="button" id="btnBuscarCNPJ">Buscar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 Linha 3: Empresa + IE -->
+  <div class="grupo-linha">
+    <div class="grupo-input">
+      <label for="empresa">Empresa</label>
+      <input type="text" id="empresa" name="empresa" required class="uppercase">
+    </div>
+    <div class="grupo-input">
+      <label for="ie">IE</label>
+      <input type="text" id="ie" name="ie">
+    </div>
+  </div>
+
+  <!-- 🔹 Linha 4: CEP + Botão Buscar -->
+  <div class="grupo-linha">
+    <div class="grupo-input">
+      <label for="cep">CEP</label>
+      <div class="input-com-botao">
+        <input type="text" id="cep" name="cep">
+        <button type="button" id="btnBuscarCEP">Buscar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 Linha 5: Endereço + Número -->
+  <div class="grupo-linha">
+    <div class="grupo-input">
+      <label for="endereco">Endereço</label>
+      <input type="text" id="endereco" name="endereco" required>
+    </div>
+    <div class="grupo-input">
+      <label for="numero">Número</label>
+      <input type="text" id="numero" name="numero" required>
+    </div>
+  </div>
+
+  <!-- 🔹 Linha 6: Bairro + Cidade + UF -->
+  <div class="grupo-linha">
+    <div class="grupo-input">
+      <label for="bairro">Bairro</label>
+      <input type="text" id="bairro" name="bairro" required>
+    </div>
+    <div class="grupo-input">
+      <label for="cidade">Cidade</label>
+      <input type="text" id="cidade" name="cidade" required>
+    </div>
+    <div class="grupo-input">
+      <label for="uf">UF</label>
+      <input type="text" id="uf" name="uf" maxlength="2" required>
+    </div>
+  </div>
+
+  <!-- 🔹 Botões -->
+  <div class="area-botoes">
+    <button type="submit" id="btnCadastrar">Cadastrar</button>
+    <a href="/" class="btn-voltar">Voltar ao Login</a>
+  </div>
+
+</form>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='script/Scadastro.js') }}"></script>
+</body>
+</html>

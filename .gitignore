@@ -4,6 +4,7 @@
 
 # 🧠 Python: arquivos compilados e cache
 __pycache__/
+__doc/
 *.py[cod]
 *.pyo
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Trocar Senha</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Ctrocasenha.css') }}">
+</head>
+<body>
+  <div class="container-troca">
+    <h2>Atualize sua senha</h2>
+    <p>Por segurança, você precisa definir uma nova senha para continuar.</p>
+
+    <form id="formTrocarSenha" onsubmit="return false;">
+      <input type="password" id="novaSenha" placeholder="Nova senha" required>
+      <input type="password" id="confirmarSenha" placeholder="Confirmar senha" required>
+      <button id="btnTrocarSenha" type="submit">Trocar Senha</button>
+    </form>
+
+    <div class="mensagem-erro" id="mensagemErro"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/Strocasenha.js') }}"></script>
+</body>
+</html>

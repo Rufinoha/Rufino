@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Novidades - FleedGuard</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cnovidades.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="Cl_UsuarioContainer">
+    <div class="Cl_TituloContainer">
+      <div>
+        <button id="ob_btnVoltar">⬅ Voltar a configurações</button>
+      </div>
+      <div>
+        <h2>Gestão de Novidades</h2>
+      </div>
+    </div>
+
+    <div class="Cl_Filtros">
+      <label class="Cl_labelfiltro" for="ob_filtroModulo">Módulo:</label>
+      <input class="Cl_CamposFiltros" type="text" id="ob_filtroModulo" placeholder="Filtrar por módulo">
+
+      <label class="Cl_labelfiltro" for="ob_filtroData">Emissão:</label>
+      <input class="Cl_CamposFiltros" type="date" id="ob_filtroData">
+
+      <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+      <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+    </div>
+
+    <div class="Cl_botaoIncluir">
+      <button id="ob_btnIncluir" class="Cl_BtnIncluir">Nova Novidade</button>
+    </div>
+
+    <div class="Cl_TabelaUsuarios" id="content-area-Novidades">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Emissão</th>
+            <th>Módulo</th>
+            <th>Descrição</th>
+            <th>Link</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="ob_listaNovidades">
+          <tr class="Cl_Carregando">
+            <td colspan="6">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="/static/script/Snovidades.js"></script>
+</body>
+</html>

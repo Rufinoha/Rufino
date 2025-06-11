@@ -1,0 +1,102 @@
+/* Estilo geral */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+.Cl_Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333333;
+    color: white;
+    padding: 10px 20px;
+}
+
+.Cl_Logo img {
+    height: 40px;
+}
+
+.Cl_Titulo h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.Cl_usuarioID {
+    font-weight: bold;
+}
+
+.Cl_Formulario {
+    padding: 20px;
+    background-color: white;
+    max-width: 600px;
+    margin: 20px auto;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.Cl_GrupoCampo {
+    margin-bottom: 15px;
+}
+
+.Cl_GrupoCampo label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.Cl_GrupoCampo input,
+.Cl_GrupoCampo select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* ✅ Linha com 2 colunas lado a lado */
+.Cl_LinhaDupla {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.Cl_LinhaDupla .Cl_GrupoCampo {
+    flex: 1;
+}
+
+.Cl_Botoes {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.Cl_Botoes button {
+    padding: 10px 20px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.Cl_Botoes button:first-child {
+    background-color: #85C300;
+    color: white;
+}
+
+.Cl_Botoes button:first-child:hover {
+    background-color: #6FA700; /* um verde mais escuro */
+    cursor: pointer;
+}
+
+.Cl_Botoes button:last-child {
+    background-color: #f44336;
+    color: white;
+}
+
+.Cl_Botoes button:last-child:hover {
+    background-color: #d32f2f; /* um vermelho mais escuro */
+    cursor: pointer;
+}
+

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Empresas - FleetGuard</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Cempresa.css') }}">
+</head>
+<body>
+    <div class="Cl_EmpresaContainer">
+        <h2>Gestão de Empresas</h2>
+        <div class="Cl_Filtros">
+            <label class="Cl_labelfiltro" for="ob_filtroCNPJ">CNPJ:</label>
+            <input class="Cl_CamposFiltros" type="text" id="ob_filtroCNPJ" placeholder="Filtrar por CNPJ">
+            
+            
+            <label class="Cl_labelfiltro" for="ob_filtroEmpresa">Empresa:</label>
+            <input class="Cl_CamposFiltros" type="text" id="ob_filtroEmpresa" placeholder="Filtrar por nome da empresa">
+            
+           
+            <label class="Cl_labelfiltro" for="ob_filtroCidade">Cidade:</label>
+            <input class="Cl_CamposFiltros" type="text" id="ob_filtroCidade" placeholder="Filtrar por cidade">
+            
+            
+            <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+            <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+        </div>
+        <div class="Cl_botaoIncluir">
+            <button id="ob_btnIncluir" class="Cl_BtnIncluir">Nova Empresa</button>
+        </div>
+        <div class="Cl_TabelaEmpresa" id="content-area-Empresa">
+            <table>
+                <thead>
+                    <tr>
+                        <th>CNPJ</th>
+                        <th>Empresa</th>
+                        <th>Cidade</th>
+                        <th>UF</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="ob_listaEmpresas">
+                    <tr class="Cl_Carregando">
+                        <td colspan="10">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="Cl_Paginacao">
+            <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+            <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+            <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+            <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+            <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script/Sempresa.js') }}" defer></script>
+</body>
+</html>

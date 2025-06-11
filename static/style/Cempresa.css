@@ -1,0 +1,156 @@
+/* ========================== ESTILOS GERAIS ========================== */
+body {
+    padding: 0;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f4f4;
+}
+
+/* ========================== CONTAINER PRINCIPAL ========================== */
+.Cl_EmpresaContainer {
+    margin: 70px auto;
+    padding: 8px;
+    max-width: 1200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================== TÍTULOS ========================== */
+h2 {
+    margin: 0;
+    color: #000;
+    text-align: right;
+}
+
+/* ========================== CONTAINER DE FILTROS ========================== */
+.Cl_Filtros {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 1180px;
+    gap: 10px;
+}
+
+.Cl_Filtros label {
+    font-weight: bold;
+}
+
+.Cl_Filtros input {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 70%;
+    max-width: 200px;
+    padding: 10px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* ========================== BOTÕES ========================== */
+.Cl_BtnIncluir,
+.Cl_botaoFiltro {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.Cl_BtnIncluir:hover,
+.Cl_botaoFiltro:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.Cl_BtnIncluir:active,
+.Cl_botaoFiltro:active {
+    background-color: #003d80;
+    transform: scale(0.95);
+}
+
+/* ========================== TABELA ========================== */
+.Cl_TabelaEmpresa {
+    overflow-x: auto;
+}
+
+.Cl_TabelaEmpresa table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 90%;
+}
+
+.Cl_TabelaEmpresa th,
+.Cl_TabelaEmpresa td {
+    padding: 5px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.Cl_TabelaEmpresa th {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.Cl_TabelaEmpresa tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.Cl_TabelaEmpresa tbody tr:hover {
+    background-color: #e0f7ff;
+}
+
+/* ========================== BOTÕES DE AÇÃO ========================== */
+.Cl_BtnAcao {
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    align-items: center;
+}
+
+.Cl_BtnAcao:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ========================== PAGINAÇÃO ========================== */
+.Cl_Paginacao {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.Cl_direcao {
+    padding: 5px 10px;
+    margin: 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1px solid #007bff;
+    background-color: #fff;
+    color: #007bff;
+    transition: all 0.3s;
+}
+
+.Cl_direcao:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* ========================== RESPONSIVIDADE ========================== */
+@media (max-width: 768px) {
+    .Cl_Filtros {
+        flex-direction: column;
+    }
+}

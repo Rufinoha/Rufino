@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Usuário</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_apoio.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='script/global.js') }}"></script>
+</head>
+<body>
+
+<!-- 🔹 CABEÇALHO -->
+<div class="Cl_Header">
+    <div class="Cl_Logo">
+        <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+        <h1>Usuário</h1>
+    </div>
+    <div class="Cl_usuarioID">
+        <label for="ob_id">ID:</label>
+        <input type="text" id="ob_id" disabled>
+    </div>
+</div>
+
+<!-- 🔹 FORMULÁRIO -->
+<div class="Cl_Formulario">
+    <form id="formUsuario">
+        <!-- Nome completo -->
+        <div class="Cl_GrupoCampo">
+            <label for="ob_nome_completo">Nome completo:</label>
+            <input type="text" id="ob_nome_completo" required>
+        </div>
+
+        <!-- Campo nome invisível -->
+        <input type="hidden" id="ob_nome">
+
+        <!-- Email -->
+        <div class="Cl_GrupoCampo">
+            <label for="ob_email">E-mail:</label>
+            <input type="email" id="ob_email" required>
+        </div>
+
+        <!-- Grupo e Departamento -->
+        <div class="Cl_LinhaDupla">
+            <div class="Cl_GrupoCampo">
+                <label for="ob_grupo">Grupo:</label>
+                <select id="ob_grupo"></select>
+            </div>
+            <div class="Cl_GrupoCampo">
+                <label for="ob_departamento">Departamento:</label>
+                <input type="text" id="ob_departamento">
+            </div>
+        </div>
+
+        <!-- WhatsApp e Status -->
+        <div class="Cl_LinhaDupla">
+            <div class="Cl_GrupoCampo">
+                <label for="ob_whatsapp">WhatsApp:</label>
+                <input type="text" id="ob_whatsapp">
+            </div>
+            <div class="Cl_GrupoCampo">
+                <label for="ob_status">Status:</label>
+                <select id="ob_status">
+                    <option value="Ativo">Ativo</option>
+                    <option value="Inativo">Inativo</option>
+                    <option value="Bloqueado">Bloqueado</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="Cl_Botoes">
+            <button type="submit" id="btnSalvar">Salvar</button>
+            <button type="button" onclick="window.close()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Script do módulo -->
+<script src="{{ url_for('static', filename='script/Susuario_apoio.js') }}"></script>
+</body>
+</html>

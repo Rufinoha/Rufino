@@ -51,7 +51,7 @@ async function carregarConfiguracoes() {
         }
 
         const id_cliente = App.Varidcliente;
-        const response = await fetch(`/auth/configuracoes/${id_cliente}`);
+        const response = await fetch(`/configuracoes/${id_cliente}`);
         const data = await response.json();
 
         if (data.success) {
@@ -243,3 +243,23 @@ window.Util.removerMascaraCPF = function(cpf) {
         });
     }
 })();
+
+
+
+window.Util.formatarDataHora = function (dataISO) {
+  if (!dataISO) return "";
+
+  const data = new Date(dataISO);
+
+  // Valida se a data foi reconhecida
+  if (isNaN(data.getTime())) return dataISO;
+
+  const dia = String(data.getDate()).padStart(2, '0');
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const ano = data.getFullYear();
+
+  const horas = String(data.getHours()).padStart(2, '0');
+  const minutos = String(data.getMinutes()).padStart(2, '0');
+
+  return `${dia}/${mes}/${ano} ${horas}:${minutos}`;
+};

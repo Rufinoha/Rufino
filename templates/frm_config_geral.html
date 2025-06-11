@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações Gerais - FleetGuard</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Cconfig_geral.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="Cl_ConfigContainer">
+        <h2>Configurações Gerais</h2>
+
+        <div class="Cl_Filtros">
+            <label class="Cl_labelfiltro" for="ob_filtroDescricao">Descrição:</label>
+            <input class="Cl_CamposFiltros" type="text" id="ob_filtroDescricao" placeholder="Filtrar por descrição">
+
+            <label class="Cl_labelfiltro" for="ob_filtroChave">Chave:</label>
+            <input class="Cl_CamposFiltros" type="text" id="ob_filtroChave" placeholder="Filtrar por chave">
+
+            <div>
+                <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+                <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+            </div>
+        </div>
+
+        <div class="Cl_botaoIncluir">
+            <button class="Cl_BtnIncluir" id="btnNovaConfig">Nova Configuração</button>
+        </div>
+
+        <div class="Cl_TabelaConfig" id="content-area-Config">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Chave</th>
+                        <th>Valor</th>
+                        <th>Última Atualização</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="ob_listaConfigs">
+                    <tr class="Cl_Carregando">
+                        <td colspan="5">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="Cl_Paginacao">
+            <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+            <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+            <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+            <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+            <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+        </div>
+    </div>
+</body>
+</html>

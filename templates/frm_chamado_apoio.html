@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chamado - Detalhes</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cchamado_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="Cl_Header">
+    <div>
+      <label id="lbl_id" for="ob_id">Chamado </label>
+      <input type="text" id="ob_id" disabled>
+    </div>
+    <div class="Cl_laudoID">
+      <label for="ob_status">Status </label>
+      <input type="text" id="ob_status" disabled>
+    </div>
+  </div>
+
+
+
+  <div class="linha">
+    <input type="text" id="ob_situacao" disabled>
+  </div>
+
+  <div class="Cl_ContainerApoio">
+    <form id="formChamado">
+    
+      <div class="linha10">
+        <label for="ob_categoria">Categoria:</label>
+        <select id="ob_categoria" required>
+          <option value="">Selecione</option>
+          <option value="Dúvidas">Dúvidas</option>
+          <option value="Problemas Técnicos">Problemas Técnicos</option>
+          <option value="Sugestões">Sugestões</option>
+          <option value="Financeiro">Financeiro</option>
+          <option value="API">API</option>
+        </select>
+        <label for="ob_titulo">Título:</label>
+        <input type="text" id="ob_titulo" required>
+      </div>
+
+      <div class="linha20">
+          <label for="ob_ocorrencia">Descrição do Problema:</label>
+          <textarea id="ob_ocorrencia" rows="4" required></textarea>
+      </div>
+    </form>
+
+    <hr>
+    <div class="linha-flex-topo">
+      <h3 class="titulo-conversa">Conversa</h3>
+      <div class="linha-anexo">
+        <label for="ob_anexos">Anexos (opcional):</label>
+        <input type="file" id="ob_anexos" multiple accept=".png,.jpg,.jpeg,.pdf">
+        <small>Você pode anexar até 3 arquivos.</small>
+      </div>
+    </div>
+
+    <div id="listaMensagens" class="mensagem-scrollavel"></div>
+
+
+    <div class="Cl_BotoesApoio">
+      <button id="ob_btnConversar" class="Cl_BtnSalvar">Enviar Comentarios</button>
+      <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+      <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="window.close()">Cancelar</button>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='script/global.js') }}"></script>
+  <script src="{{ url_for('static', filename='script/Schamado_apoio.js') }}"></script>
+</body>
+</html>

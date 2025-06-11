@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamados - Rufino</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Cchamado.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="Cl_ChamadoContainer">
+        <h2>Controle de Chamados</h2>
+
+        <div class="Cl_Filtros">
+            <label class="Cl_labelfiltro" for="ob_filtroCategoria">Categoria:</label>
+            <select class="Cl_CamposFiltros" id="ob_filtroCategoria">
+                <option value="">Todas</option>
+                <option value="Dúvidas">Dúvidas</option>
+                <option value="Problemas Técnicos">Problemas Técnicos</option>
+                <option value="Sugestões">Sugestões</option>
+                <option value="Financeiro">Financeiro</option>
+                <option value="API">API</option>
+            </select>
+
+            <label class="Cl_labelfiltro" for="ob_filtroStatus">Status:</label>
+            <select class="Cl_CamposFiltros" id="ob_filtroStatus">
+                <option value="">Todos</option>
+                <option value="Pendente" selected>Pendente</option>
+                <option value="Concluído">Concluído</option>
+            </select>
+
+            <label class="Cl_labelfiltro" for="ob_filtroOcorrencia">Nº Ocorrência:</label>
+            <input class="Cl_CamposFiltros" type="number" id="ob_filtroOcorrencia" placeholder="ID">
+
+            <label class="Cl_labelfiltro" for="ob_filtroUsuario">Usuário:</label>
+            <input class="Cl_CamposFiltros" type="text" id="ob_filtroUsuario" placeholder="Nome do usuário">
+
+            <div>
+                <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+                <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+            </div>
+        </div>
+
+        <div class="Cl_botaoIncluir">
+            <button class="Cl_BtnIncluir" id="btnNovoChamado">Novo Chamado</button>
+        </div>
+
+        <div class="Cl_TabelaChamado" id="content-area-Chamado">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Categoria</th>
+                        <th>Título</th>
+                        <th>Usuário</th>
+                        <th>Criado em</th>
+                        <th>Situação</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="ob_listaChamados">
+                    <tr class="Cl_Carregando">
+                        <td colspan="8">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="Cl_Paginacao">
+            <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+            <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+            <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+            <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+            <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script/Schamado.js') }}"></script>
+</body>
+</html>

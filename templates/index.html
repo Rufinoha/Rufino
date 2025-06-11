@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br"> 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rufino | Soluções Inteligentes</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cindex.css') }}">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+  <script>
+    window.Paths = {
+      pinSolto: "{{ url_for('static', filename='imge/pin_solto.png') }}",
+      pinFincado: "{{ url_for('static', filename='imge/pin_fincado.png') }}"
+    };
+  </script>    
+</head>
+
+<body>
+  <!-- ✅ Menu Superior -->
+  <header class="menu-superior">
+    <div class="logo">
+      <img src="/static/imge/logorufino.png" alt="Logo Rufino" />
+    </div>
+
+    <div class="menu-direito">
+      <button id="btnnovidades" title="Novidades">
+        <i data-lucide="newspaper"></i>
+      </button>
+
+
+      <div class="menu-usuario">
+        <img id="iconeUsuario" src="/static/imge/imguser/userpadrao.png" alt="Usuário" />
+        <div class="info-usuario">
+          <span id="usuarioNome">Usuário</span>
+          <span id="usuarioEmpresa">Empresa</span>
+        </div>
+        <button id="btnUsuarioToggle" class="btn-triangulo">▾</button>
+
+        <ul class="submenu-usuario" id="submenuUsuario">
+          <div id="menu-horizontal-usuario"></div> <!-- Aqui vamos carregar os menus horizontais -->
+          <hr>
+          <li><a href="#" id="btnsair">🚪 Sair</a></li>
+        </ul>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ✅ Menu Lateral -->
+  <aside id="menuLateral" class="retraido">
+    <button id="btnPinMenu">
+      <img id="iconePin" src="{{ url_for('static', filename='imge/pin_solto.png') }}" alt="PIN" />
+    </button>
+
+    <ul id="listaMenus">
+      <!-- Aqui é o menu lateral -->
+      <div id="menu-lateral" class="menu-lateral"></div>
+    </ul>
+  </aside>
+
+
+  <!-- ✅ Conteúdo Principal -->
+  <main id="content-area" data-page="">
+    <!-- Aqui será carregado dinamicamente via JS -->
+  </main>
+
+  <!-- ✅ Painel de Novidades -->
+  <section id="painelNovidades" class="painel-flutuante">
+    <div class="cabecalho-novidades">
+      <span>🆕 Novidades</span>
+      <button onclick="fecharPainelNovidades()">✖️</button>
+    </div>
+    <div id="listaNovidades" class="corpo-novidades">
+      <!-- Conteúdo via JS -->
+    </div>
+  </section>
+
+  <!-- ✅ Rodapé -->
+  <footer class="rodape">
+    © 2025 <strong>Rufino Tech</strong> – Todos os direitos reservados.
+  </footer>
+
+
+  <script src="{{ url_for('static', filename='script/global.js') }}"></script>
+  <script src="{{ url_for('static', filename='script/Sindex.js') }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (window.lucide) lucide.createIcons();
+    });
+  </script>
+
+</body>
+</html>

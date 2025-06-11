@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Marketplace - Rufino</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cmarketplace.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <h2>Marketplace de Aplicativos</h2>
+  <div id="listaApps" class="container-cards"></div>
+
+  <!-- Modal Detalhes do App -->
+  <div id="modalDetalhes" class="modal" style="display:none;">
+    <div class="modal-conteudo">
+      <span id="btnFecharModal" class="btn-fechar">×</span>
+      <h3 id="modalTitulo"></h3>
+      <p id="modalDescricao"></p>
+      <p id="modalObs"></p>
+      <p><strong>Valor:</strong> R$ <span id="modalValor"></span>/mês</p>
+      <button id="btnAssinar">Assinar Agora</button>
+    </div>
+  </div>
+
+</body>
+</html>

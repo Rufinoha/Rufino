@@ -1,0 +1,380 @@
+/* 🌐 RESET BÁSICO */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+    color: #333333;
+}
+
+
+
+.Cl_titulo {
+    max-width: 900px;
+    margin: 0px auto;
+    text-align: right;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333333;
+    margin-top: 20px;
+}
+
+
+
+.perfil-container {
+    max-width: 900px;
+    margin: 0px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.20);
+}
+
+
+/* --------------------------------------------------------*/
+/* 🔘 TABS */
+/* --------------------------------------------------------*/
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    border-bottom: 4px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    transition: 0.3s;
+}
+
+.tab-button.active {
+    border-color: #85C300;
+    color: #85C300;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+
+/* --------------------------------------------------------*/
+/* 🧱 WHATSAPP
+/* --------------------------------------------------------*/
+
+
+
+.whatsapp-box {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#btnZap {
+  padding: 6px 10px;
+  background-color: #25d366;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#btnZap:hover {
+  background-color: #1ebc59;
+}
+
+
+
+/* --------------------------------------------------------*/
+/* 🧱 FORMULARIO MEU PERFIL */
+/* --------------------------------------------------------*/
+
+
+.linha {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.linha label {
+    flex: 1 1 100px;
+    font-weight: 500;
+}
+
+.linha input {
+    flex: none;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    
+
+}
+
+
+select,
+input[type="text"],
+input[type="email"],
+textarea {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+
+select {
+    min-width: 600px;
+    max-width: 600px;
+}
+
+.linha-observacoes textarea {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+
+#nome, #email,#departamento {
+    flex: 400px;
+}
+
+#whatsapp {
+    flex: 340px;
+}
+
+
+
+.linha10 {
+  display: grid;
+  grid-template-columns: 80px calc(40% - 80px) 100px calc(100% - 100px);
+  gap: 10px;
+  margin-bottom: 15px;
+
+  justify-self: start;
+}
+
+.linha20 {
+  display: grid;
+  grid-template-columns: 80px calc(100% - 80px) 100px calc(40% - 100px);
+  gap: 10px;
+  margin-bottom: 15px;
+
+  justify-self: start;
+}
+
+.linha30 {
+  display: grid;
+  grid-template-columns: 80px calc(40% - 80px) 80px calc(40% - 80px) 40px calc(18% - 40px);
+  gap: 10px;
+  margin-bottom: 15px;
+
+  justify-self: start;
+}
+
+.linha40 {
+  display: grid;
+  grid-template-columns: 80px calc(40% - 80px) 80px calc(40% - 80px) 80px calc(90% - 80px);
+  gap: 10px;
+  margin-bottom: 15px;
+
+  justify-self: start;
+}
+
+.linha50 {
+  display: grid;
+  grid-template-columns: 200px calc(200% - 200px) ;
+  gap: 10px;
+  margin-bottom: 15px;
+
+  justify-self: start;
+}
+
+.linha-observacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 15px;
+}
+
+.linha-observacoes label {
+    font-weight: 500;
+    margin: 0;
+    padding: 0;
+}
+
+.linha-observacoes textarea {
+    width: 95%;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+label span[title] {
+    cursor: help;
+    margin-left: 6px;
+    font-size: 16px;
+}
+
+label span[title] {
+    cursor: help;
+    margin-left: 6px;
+    font-size: 14px;
+    color: #666;
+    user-select: none;
+}
+
+
+/* --------------------------------------------------------*/
+/* 🖼️ FOTO DO USUÁRIO */
+/* --------------------------------------------------------*/
+.perfil-grid {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.foto-box {
+    width: 180px;
+    text-align: center;
+}
+
+.foto-box img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.botoes-foto button,
+.btn-upload {
+    display: inline-block;
+    margin: 5px 4px;
+    padding: 6px 12px;
+    background-color: #85C300;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s ease;
+}
+
+.botoes-foto button:hover,
+.btn-upload:hover {
+    background-color: #6fa700;
+}
+
+
+/* --------------------------------------------------------*/
+/* 📋 DADOS BOX */
+/* --------------------------------------------------------*/
+.dados-box {
+    flex: 1;
+}
+
+
+
+/* --------------------------------------------------------*/
+/* 🔐 CARD DE TROCA DE SENHA */
+/* --------------------------------------------------------*/
+.card-senha {
+    margin-top: 30px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card-header {
+    background-color: #f5f5f5;
+    padding: 10px 15px;
+    font-weight: bold;
+    cursor: pointer;
+    border-bottom: 1px solid #ccc;
+}
+
+.card-body {
+    padding: 15px;
+    background-color: #fafafa;
+}
+
+.card-body label {
+    display: block;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+
+.card-body input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.card-body button {
+    background-color: #85C300;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.card-body button:hover {
+    background-color: #6fa700;
+}
+
+
+
+
+/* --------------------------------------------------------*/
+/* 🖼️ BOTÃO SALVAR */
+/* --------------------------------------------------------*/
+#btnsalvar {
+  background-color: #85C300;        /* Verde institucional */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-top: 0px;
+}
+
+#btnsalvar:hover {
+  background-color: #6fa800;        /* Verde escuro ao passar o mouse */
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+#btnsalvar:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
