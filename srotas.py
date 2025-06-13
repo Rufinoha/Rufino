@@ -3,7 +3,6 @@
 # ────────────────────────────────────────────────
 import os
 import re
-import sqlite3
 import secrets
 import bcrypt
 import smtplib
@@ -11,36 +10,64 @@ import requests
 import json
 import html
 import calendar
+import psycopg2
 from datetime import date, datetime, timedelta
 from email.mime.text import MIMEText
 from email.utils import formataddr
-from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, send_from_directory
+from flask import (
+    Blueprint, render_template, request, jsonify, session, redirect, url_for,
+    send_from_directory, make_response, current_app as app
+)
 from dotenv import load_dotenv
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from functools import wraps
-from flask import make_response
 from weasyprint import HTML
-from flask import current_app
 from sapiefi import gerar_cobranca_efi
-
+from extensoes import db
 
 # ────────────────────────────────────────────────
-# 2️⃣ CONFIGURAÇÕES GERAIS
+# 2️⃣ IMPORTANDO TABELAS DO MODELOS
 # ────────────────────────────────────────────────
-
-auth_bp = Blueprint(
-    'auth',
-    __name__,
-    template_folder='../templates',    
-    static_folder='../static',        
-    static_url_path='/static'          
+from modelos import (
+    TblAssinaturaCliente, TblChamado, TblChamadoMensagem, TblChamadoMensagemAnexo,
+    TblConfig, TblEmailEnvio, TblEmailDestinatario, TblEmailEvento, TblEmailLog,
+    TblEmpresa, TblFatura, TblFaturaAssinatura, TblMenu, TblNovidades,
+    TblUsuario, TblUsuarioGrupo, TblUsuarioPermissao
 )
 
 
-# Carregar variáveis do .env
-load_dotenv()
+# ────────────────────────────────────────────────
+# 4️⃣ FUNÇÃO PARA CONECTAR NO BANCO DE DADOS PostgreSQL
+# ────────────────────────────────────────────────
+def Var_ConectarBanco():
+    senha = os.getenv("BANK_KEY")
+    conn = psycopg2.connect(
+        dbname="bd_rufino",
+        user="postgres",
+        password=senha,
+        host="localhost",
+        port=5432
+    )
+    return conn
 
+# ────────────────────────────────────────────────
+# 5️⃣ BLUEPRINT: LOGIN / AUTENTICAÇÃO
+# ────────────────────────────────────────────────
+auth_bp = Blueprint(
+    'auth',
+    __name__,
+    template_folder='../templates',
+    static_folder='../static',
+    static_url_path='/static'
+)
+
+# ────────────────────────────────────────────────
+# 6️⃣ OUTRAS FUNÇÕES ÚTEIS
+# ────────────────────────────────────────────────
+
+# Carrega variáveis do .env
+load_dotenv()
 
 def remover_tags_html(texto):
     return re.sub('<[^<]+?>', '', texto)
@@ -48,22 +75,6 @@ def remover_tags_html(texto):
 def get_base_url():
     return "https://rufino.tech" if os.getenv("MODO_PRODUCAO", "false").lower() == "true" else "http://127.0.0.1:5000"
 
-
-# Função para conectar ao banco de dados (Rufino)
-def Var_ConectarBanco():
-    if os.getenv("MODO_PRODUCAO", "False") == "True":
-        banco_path = Path("/srv/rufinotech/database/bd_rufino.db")
-    else:
-        banco_path = Path(__file__).resolve().parent.parent / "rufino" / "database" / "bd_rufino.db"
-
-    if not banco_path.exists():
-        raise FileNotFoundError(f"Banco de dados não encontrado: {banco_path}")
-
-    conn = sqlite3.connect(banco_path, timeout=10.0, check_same_thread=False)
-    conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA busy_timeout = 10000;")      # espera até 10s por locks
-    conn.execute("PRAGMA journal_mode = WAL;")        # permite melhor concorrência :contentReference[oaicite:2]{index=2}
-    return conn
 
 
 
@@ -97,7 +108,7 @@ def gerar_faturas_mensais():
 
         # 🔍 Buscar todos os clientes com assinaturas ativas
         cursor.execute("""
-            SELECT id_cliente, id_modulo, dt_inicio, forma_pagamento
+            SELECT id_empresa, id_modulo, dt_inicio, forma_pagamento
             FROM tbl_assinatura_cliente
             WHERE status = 'Ativo'
         """)
@@ -106,7 +117,7 @@ def gerar_faturas_mensais():
         faturas_criadas = 0
 
         for assinatura in assinaturas:
-            id_cliente, id_modulo, dt_inicio, forma_pagamento = assinatura
+            id_empresa, id_modulo, dt_inicio, forma_pagamento = assinatura
 
             # ⏱️ Definir o período da assinatura para a fatura
             periodo_inicio = max(dt_inicio, primeiro_dia_mes - timedelta(days=30))
@@ -117,7 +128,7 @@ def gerar_faturas_mensais():
             dias_no_mes = dias_no_mes.days
 
             # 💰 Valor mensal da assinatura
-            cursor.execute("SELECT valor FROM tbl_menu WHERE id = ?", (id_modulo,))
+            cursor.execute("SELECT valor FROM tbl_menu WHERE id = %s", (id_modulo,))
             resultado = cursor.fetchone()
             valor_mensal = resultado[0] if resultado else 0.0
 
@@ -126,15 +137,15 @@ def gerar_faturas_mensais():
 
             # 🧾 Criar a fatura principal
             cursor.execute("""
-                INSERT INTO tbl_fatura (id_cliente, dt_referencia, vencimento, valor_total, desconto, acrescimo, forma_pagamento, status_pagamento)
-                VALUES (?, ?, ?, ?, 0, 0, ?, 'Pendente')
-            """, (id_cliente, primeiro_dia_mes.isoformat(), vencimento.isoformat(), valor_proporcional, forma_pagamento))
-            id_fatura = cursor.lastrowid
+                INSERT INTO tbl_fatura (id_empresa, dt_referencia, vencimento, valor_total, desconto, acrescimo, forma_pagamento, status_pagamento)
+                VALUES (%s, %s, %s, %s, 0, 0, %s, 'Pendente')
+            """, (id_empresa, primeiro_dia_mes.isoformat(), vencimento.isoformat(), valor_proporcional, forma_pagamento))
+            id_fatura = cursor.fetchone()[0]
 
             # 🧾 Inserir detalhe da fatura
             cursor.execute("""
                 INSERT INTO tbl_fatura_assinatura (id_fatura, id_modulo, periodo_inicio, periodo_fim, valor)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             """, (id_fatura, id_modulo, periodo_inicio.isoformat(), periodo_fim.isoformat(), valor_proporcional))
 
             faturas_criadas += 1
@@ -157,10 +168,10 @@ def enviar_email_fatura(id_fatura):
         # 📦 Dados da fatura
         cursor.execute("""
             SELECT F.id, F.valor_total, F.vencimento, F.forma_pagamento, F.status_pagamento,
-                   F.id_cliente, C.nome_fantasia, C.email
+                   F.id_empresa, C.nome_fantasia, C.email
             FROM tbl_fatura F
-            JOIN tbl_config C ON F.id_cliente = C.id_cliente
-            WHERE F.id = ?
+            JOIN tbl_config C ON F.id_empresa = C.id_empresa
+            WHERE F.id = %s
         """, (id_fatura,))
         fatura = cursor.fetchone()
 
@@ -168,14 +179,14 @@ def enviar_email_fatura(id_fatura):
             print("⚠️ Fatura não encontrada para envio.")
             return
 
-        id_fatura, valor_total, vencimento, forma_pagamento, status, id_cliente, nome_cliente, email_destino = fatura
+        id_fatura, valor_total, vencimento, forma_pagamento, status, id_empresa, nome_cliente, email_destino = fatura
 
         # 📄 Detalhes da fatura
         cursor.execute("""
             SELECT M.nome_menu, D.periodo_inicio, D.periodo_fim, D.valor
             FROM tbl_fatura_assinatura D
             JOIN tbl_menu M ON D.id_modulo = M.id
-            WHERE D.id_fatura = ?
+            WHERE D.id_fatura = %s
         """, (id_fatura,))
         detalhes = cursor.fetchall()
 
@@ -227,19 +238,19 @@ def enviar_email_fatura(id_fatura):
 @auth_bp.route("/config/tempo_sessao")
 def config_tempo_sessao():
     try:
-        id_cliente = session.get("id_cliente")
+        id_empresa = session.get("id_empresa")
         print("🔍 Sessão atual:", dict(session))  # debug temporário
 
-        if not id_cliente:
+        if not id_empresa:
             return jsonify({"erro": "Cliente não identificado"}), 401
 
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
         cursor.execute("""
             SELECT valor FROM tbl_config
-            WHERE chave = 'tempo_sessao_minutos' AND id_cliente = ?
+            WHERE chave = 'tempo_sessao_minutos' AND id_empresa = %s
             LIMIT 1
-        """, (id_cliente,))
+        """, (id_empresa,))
         resultado = cursor.fetchone()
         conn.close()
 
@@ -269,6 +280,9 @@ def main():
     return render_template("index.html")
 
 
+# ────────────────────────────────────────────────
+# 4️⃣ ROTAS PARA CARREGAR DINAMICO O HTML NO INDEX
+# ────────────────────────────────────────────────
 
 @auth_bp.route("/<pagina>", methods=["GET"])
 def abrir_pagina(pagina):
@@ -305,11 +319,11 @@ def autenticar_login():
         # 🔍 Traz exatamente os campos existentes na tabela
         cursor.execute("""
             SELECT 
-                id_usuario, id_cliente, nome, nome_completo, email, senha, grupo, 
+                id_usuario, id_empresa, nome, nome_completo, email, senha, grupo, 
                 departamento, whatsapp, status, ultimo_login, trocasenha_em, imagem,
                 consentimento_lgpd, consentimento_marketing
             FROM tbl_usuario
-            WHERE email = ? AND status = 'Ativo'
+            WHERE email = %s AND status = 'Ativo'
         """, (email,))
         usuario = cursor.fetchone()
 
@@ -317,7 +331,7 @@ def autenticar_login():
             return jsonify(success=False, message="Usuário não encontrado."), 404
 
         (
-            id_usuario, id_cliente, nome, nome_completo, email_db, senha_db, grupo,
+            id_usuario, id_empresa, nome, nome_completo, email_db, senha_db, grupo,
             departamento, whatsapp, status, ultimo_login, trocasenha_em, imagem,
             consentimento_lgpd, consentimento_marketing
         ) = usuario
@@ -332,14 +346,14 @@ def autenticar_login():
             return jsonify(success=False, message="Senha inválida."), 401
 
         # 🔎 Buscar nome da empresa
-        cursor.execute("SELECT nome_empresa FROM tbl_empresa WHERE id = ?", (id_cliente,))
+        cursor.execute("SELECT nome_empresa FROM tbl_empresa WHERE id = %s", (id_empresa,))
         empresa_row = cursor.fetchone()
         nome_empresa = empresa_row[0] if empresa_row else ""
 
         # 🔐 Atualiza sessão
         session["usuario_id"] = id_usuario
         session["id_usuario"] = id_usuario
-        session["id_cliente"] = id_cliente
+        session["id_empresa"] = id_empresa
         session["grupo"] = grupo
 
         if trocasenha_em:
@@ -348,7 +362,7 @@ def autenticar_login():
         # ✅ Dados para o frontend
         usuario_dados = {
             "id_usuario": id_usuario,
-            "id_cliente": id_cliente,
+            "id_empresa": id_empresa,
             "nome": nome,
             "nome_completo": nome_completo,
             "email": email_db,
@@ -391,7 +405,7 @@ def usuario_recuperar():
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id_usuario, nome FROM tbl_usuario WHERE email = ? AND status = 'Ativo'", (email,))
+        cursor.execute("SELECT id_usuario, nome FROM tbl_usuario WHERE email = %s AND status = 'Ativo'", (email,))
         usuario = cursor.fetchone()
 
         if not usuario:
@@ -402,8 +416,8 @@ def usuario_recuperar():
         expira_em = datetime.now() + timedelta(hours=1)
 
         cursor.execute("""
-            UPDATE tbl_usuario SET token_redefinicao = ?, expira_em = ?
-            WHERE id_usuario = ?
+            UPDATE tbl_usuario SET token_redefinicao = %s, expira_em = %s
+            WHERE id_usuario = %s
         """, (token, expira_em, id_usuario))
         conn.commit()
 
@@ -443,7 +457,7 @@ def usuario_validar_token():
 
     cursor.execute("""
         SELECT id_usuario FROM tbl_usuario
-        WHERE token_redefinicao = ? AND expira_em >= ?
+        WHERE token_redefinicao = %s AND expira_em >= %s
     """, (token, datetime.now()))
 
     usuario = cursor.fetchone()
@@ -475,7 +489,7 @@ def usuario_atualizar_senha():
 
     cursor.execute("""
         SELECT id_usuario FROM tbl_usuario
-        WHERE token_redefinicao = ? AND expira_em >= ?
+        WHERE token_redefinicao = %s AND expira_em >= %s
     """, (token, datetime.now()))
     usuario = cursor.fetchone()
 
@@ -486,8 +500,8 @@ def usuario_atualizar_senha():
     senha_hash = bcrypt.hashpw(nova.encode(), bcrypt.gensalt()).decode()
 
     cursor.execute("""
-        UPDATE tbl_usuario SET senha = ?, token_redefinicao = NULL, expira_em = NULL
-        WHERE id_usuario = ?
+        UPDATE tbl_usuario SET senha = %s, token_redefinicao = NULL, expira_em = NULL
+        WHERE id_usuario = %s
     """, (senha_hash, id_usuario))
     conn.commit()
 
@@ -516,7 +530,7 @@ def usuario_apoio():
                    g.nome_grupo AS grupo
             FROM tbl_usuario u
             LEFT JOIN tbl_usuario_grupo g ON u.id_grupo = g.id_grupo
-            WHERE u.id_usuario = ?
+            WHERE u.id_usuario = %s
         """, (id_usuario,))
         
         usuario = cursor.fetchone()
@@ -537,13 +551,13 @@ def usuario_apoio():
 # 5️⃣ ROTAS DE CONFIGURAÇÕES
 # ────────────────────────────────────────────────
 
-@auth_bp.route("/configuracoes/<int:id_cliente>", methods=["GET"])
-def configuracoes(id_cliente):
+@auth_bp.route("/configuracoes/<int:id_empresa>", methods=["GET"])
+def configuracoes(id_empresa):
     try:
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT chave, valor FROM tbl_config WHERE id_cliente = ?", (id_cliente,))
+        cursor.execute("SELECT chave, valor FROM tbl_config WHERE id_empresa = %s", (id_empresa,))
         registros = cursor.fetchall()
 
         config = {}
@@ -628,14 +642,14 @@ def cadastro_novo():
         cursor = conn.cursor()
 
         # 🔎 Verifica se o CNPJ já está cadastrado
-        cursor.execute("SELECT id FROM tbl_empresa WHERE cnpj = ?", (cnpj,))
+        cursor.execute("SELECT id FROM tbl_empresa WHERE cnpj = %s", (cnpj,))
         empresa_existente = cursor.fetchone()
         if empresa_existente:
             return jsonify({"mensagem": "Já existe um cadastro com este CNPJ. Faça login com o e-mail vinculado ou entre em contato com o suporte."}), 400
 
 
         # Verifica se o e‑mail já está cadastrado
-        cursor.execute("SELECT id_usuario FROM tbl_usuario WHERE email = ?", (dados["email"],))
+        cursor.execute("SELECT id_usuario FROM tbl_usuario WHERE email = %s", (dados["email"],))
         if cursor.fetchone():
             conn.close()
             return jsonify({
@@ -650,21 +664,24 @@ def cadastro_novo():
             INSERT INTO tbl_empresa (
                 tipo, cnpj, nome_empresa, endereco, numero, bairro,
                 cidade, uf, cep, ie, tipofavorecido, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         """, (
             "Juridica", cnpj, empresa, endereco, numero, bairro,
             cidade, uf, cep, ie, "Empresa", "Ativo"
         ))
-        id_empresa = cursor.lastrowid
+        id_empresa = cursor.fetchone()[0]
+
+
 
         # 👤 Cria o primeiro usuário
         nome = nome_completo.split()[0]
         token = secrets.token_urlsafe(32)
         cursor.execute("""
             INSERT INTO tbl_usuario (
-                id_cliente, nome, nome_completo, email, senha,
+                id_empresa, nome, nome_completo, email, senha,
                 grupo, status, imagem, token_redefinicao
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             id_empresa, nome, nome_completo, email, "",
             "Administrador", "Ativo", "userpadrao.png", token
@@ -672,8 +689,8 @@ def cadastro_novo():
 
         # ⚙️ Cria configuração padrão
         cursor.execute("""
-            INSERT INTO tbl_config (id_cliente, chave, valor, descricao)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO tbl_config (id_empresa, chave, valor, descricao)
+            VALUES (%s, %s, %s, %s)
         """, (id_empresa, "tempo_sessao_minutos", "60", "Tempo de inatividade permitido"))
 
         conn.commit()
@@ -731,8 +748,10 @@ def cadastro_novo():
             "destinatarios": [email],
             "assunto": "Crie sua senha de acesso",
             "corpo_html": corpo_html,
-            "tag": "cadastro_inicial"
+            "tag": "cadastro_inicial",
+            "id_empresa": id_empresa
         })
+
 
         return jsonify({"status": "sucesso", "mensagem": "Cadastro realizado! Um e‑mail foi enviado para você criar sua senha."})
 
@@ -770,8 +789,8 @@ def trocar_senha():
         senha_hash = bcrypt.hashpw(nova.encode(), bcrypt.gensalt()).decode()
 
         cursor.execute("""
-            UPDATE tbl_usuario SET senha = ?, trocasenha_em = NULL
-            WHERE id_usuario = ?
+            UPDATE tbl_usuario SET senha = %s, trocasenha_em = NULL
+            WHERE id_usuario = %s
         """, (senha_hash, usuario_id))
         conn.commit()
 
@@ -795,10 +814,10 @@ def menu_por_posicao(posicao):
     conn = None
     try:
         id_usuario = session.get("id_usuario")
-        id_cliente = session.get("id_cliente")
+        id_empresa = session.get("id_empresa")
         grupo = session.get("grupo")
 
-        if not id_usuario or not id_cliente or not grupo:
+        if not id_usuario or not id_empresa or not grupo:
             return jsonify({"erro": "Sessão expirada"}), 401
 
         conn = Var_ConectarBanco()
@@ -810,7 +829,8 @@ def menu_por_posicao(posicao):
                 SELECT id, nome_menu, descricao, rota, data_page, icone, link_detalhe,
                        tipo_abrir, ordem, parent_id
                 FROM tbl_menu
-                WHERE ativo = 1 AND LOWER(local_menu) = LOWER(?)
+                WHERE ativo = TRUE
+ AND LOWER(local_menu) = LOWER(%s)
                 ORDER BY ordem
             """, (posicao,))
 
@@ -820,13 +840,14 @@ def menu_por_posicao(posicao):
                 SELECT id, nome_menu, descricao, rota, data_page, icone, link_detalhe,
                        tipo_abrir, ordem, parent_id
                 FROM tbl_menu
-                WHERE ativo = 1 AND LOWER(local_menu) = LOWER(?)
+                WHERE ativo = TRUE
+ AND LOWER(local_menu) = LOWER(%s)
                 ORDER BY ordem
             """, (posicao,))
 
         else:
             print("🔍 Grupo personalizado - buscando permissões")
-            cursor.execute("SELECT id_grupo FROM tbl_usuario WHERE id_usuario = ?", (id_usuario,))
+            cursor.execute("SELECT id_grupo FROM tbl_usuario WHERE id_usuario = %s", (id_usuario,))
             resultado = cursor.fetchone()
 
             if not resultado or resultado[0] is None:
@@ -840,9 +861,10 @@ def menu_por_posicao(posicao):
                        m.tipo_abrir, m.ordem, m.parent_id
                 FROM tbl_usuario_permissao p
                 JOIN tbl_menu m ON m.id = p.id_menu
-                WHERE m.ativo = 1
-                  AND LOWER(m.local_menu) = LOWER(?)
-                  AND p.id_grupo = ?
+                WHERE m.ativo = TRUE
+
+                  AND LOWER(m.local_menu) = LOWER(%s)
+                  AND p.id_grupo = %s
                   AND p.pode_visualizar = 1
                 ORDER BY m.ordem
             """, (posicao, id_grupo))
@@ -894,7 +916,7 @@ def menu_acoes():
         # Buscar ID do grupo personalizado
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
-        cursor.execute("SELECT id_grupo FROM tbl_usuario WHERE id_usuario = ?", (id_usuario,))
+        cursor.execute("SELECT id_grupo FROM tbl_usuario WHERE id_usuario = %s", (id_usuario,))
         id_grupo = cursor.fetchone()
 
         if not id_grupo or not id_grupo[0]:
@@ -911,7 +933,7 @@ def menu_acoes():
         cursor.execute("""
             SELECT pode_visualizar, pode_incluir, pode_editar, pode_excluir
             FROM tbl_usuario_permissao
-            WHERE id_grupo = ? AND id_menu = ?
+            WHERE id_grupo = %s AND id_menu = %s
         """, (id_grupo, id_menu))
 
         permissao = cursor.fetchone()
@@ -971,9 +993,9 @@ CAMINHO_IMG_USER = os.path.join('static', 'imge', 'imguser')
 def obter_dados_perfil():
     try:
         id_usuario = session.get("id_usuario")
-        id_cliente = session.get("id_cliente")
+        id_empresa = session.get("id_empresa")
 
-        if not id_usuario or not id_cliente:
+        if not id_usuario or not id_empresa:
             return jsonify({"erro": "Sessão expirada ou inválida."}), 401
 
         conn = Var_ConectarBanco()
@@ -983,8 +1005,8 @@ def obter_dados_perfil():
         cursor.execute("""
             SELECT nome_completo, email, departamento, whatsapp, imagem
             FROM tbl_usuario
-            WHERE id_usuario = ? AND id_cliente = ?
-        """, (id_usuario, id_cliente))
+            WHERE id_usuario = %s AND id_empresa = %s
+        """, (id_usuario, id_empresa))
         row_usuario = cursor.fetchone()
 
         usuario = {
@@ -1001,8 +1023,8 @@ def obter_dados_perfil():
                    contato_financeiro, email_financeiro, whatsapp_financeiro, 
                    forma_pagamento_padrao, obs_faturamento
             FROM tbl_empresa
-            WHERE id = ?
-        """, (id_cliente,))
+            WHERE id = %s
+        """, (id_empresa,))
         row_empresa = cursor.fetchone()
 
         empresa = {
@@ -1056,7 +1078,7 @@ def perfil_upload_imagem():
 
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
-        cursor.execute("UPDATE tbl_usuario SET imagem = ? WHERE id_usuario = ?", (nome_arquivo, id_usuario))
+        cursor.execute("UPDATE tbl_usuario SET imagem = %s WHERE id_usuario = %s", (nome_arquivo, id_usuario))
         conn.commit()
         conn.close()
 
@@ -1076,7 +1098,7 @@ def perfil_excluir_imagem():
         # Atualiza no banco a imagem padrão
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
-        cursor.execute("SELECT imagem FROM tbl_usuario WHERE id_usuario = ?", (id_usuario,))
+        cursor.execute("SELECT imagem FROM tbl_usuario WHERE id_usuario = %s", (id_usuario,))
         atual = cursor.fetchone()
 
         if atual and atual[0] != "userpadrao.png":
@@ -1084,7 +1106,7 @@ def perfil_excluir_imagem():
             if os.path.exists(caminho):
                 os.remove(caminho)
 
-        cursor.execute("UPDATE tbl_usuario SET imagem = ? WHERE id_usuario = ?", ("userpadrao.png", id_usuario))
+        cursor.execute("UPDATE tbl_usuario SET imagem = %s WHERE id_usuario = %s", ("userpadrao.png", id_usuario))
         conn.commit()
         conn.close()
 
@@ -1116,7 +1138,7 @@ def perfil_trocar_senha():
 
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
-        cursor.execute("UPDATE tbl_usuario SET senha = ? WHERE id_usuario = ?", (senha_hash, id_usuario))
+        cursor.execute("UPDATE tbl_usuario SET senha = %s WHERE id_usuario = %s", (senha_hash, id_usuario))
         conn.commit()
         conn.close()
 
@@ -1131,8 +1153,8 @@ def salvar_perfil():
         dados = request.get_json()
 
         id_usuario = session.get("id_usuario")
-        id_cliente = session.get("id_cliente")
-        if not id_usuario or not id_cliente:
+        id_empresa = session.get("id_empresa")
+        if not id_usuario or not id_empresa:
             return jsonify({"erro": "Sessão expirada ou inválida."}), 401
 
         conn = Var_ConectarBanco()
@@ -1142,19 +1164,19 @@ def salvar_perfil():
         empresa = dados.get("empresa", {})
         cursor.execute("""
             UPDATE tbl_empresa SET
-                endereco = ?, 
-                numero = ?, 
-                bairro = ?, 
-                cidade = ?, 
-                uf = ?, 
-                cep = ?, 
-                ie = ?,
-                contato_financeiro = ?,
-                email_financeiro = ?,
-                whatsapp_financeiro = ?,
-                forma_pagamento_padrao = ?,
-                obs_faturamento = ?
-            WHERE id = ?
+                endereco = %s, 
+                numero = %s, 
+                bairro = %s, 
+                cidade = %s, 
+                uf = %s, 
+                cep = %s, 
+                ie = %s,
+                contato_financeiro = %s,
+                email_financeiro = %s,
+                whatsapp_financeiro = %s,
+                forma_pagamento_padrao = %s,
+                obs_faturamento = %s
+            WHERE id = %s
         """, (
             empresa.get("endereco"),
             empresa.get("numero"),
@@ -1168,21 +1190,21 @@ def salvar_perfil():
             empresa.get("whatsapp_financeiro"),
             empresa.get("forma_pagamento_padrao"),
             empresa.get("obs_faturamento"),
-            id_cliente  # ← usado como ID da empresa
+            id_empresa  # ← usado como ID da empresa
         ))
 
         # Atualiza dados do usuário
         usuario = dados.get("usuario", {})
         cursor.execute("""
             UPDATE tbl_usuario SET
-                departamento = ?, 
-                whatsapp = ?
-            WHERE id_usuario = ? AND id_cliente = ?
+                departamento = %s, 
+                whatsapp = %s
+            WHERE id_usuario = %s AND id_empresa = %s
         """, (
             usuario.get("departamento"),
             usuario.get("whatsapp"),
             id_usuario,
-            id_cliente
+            id_empresa
         ))
 
         conn.commit()
@@ -1199,12 +1221,6 @@ def salvar_perfil():
 # ────────────────────────────────────────────────
 # 🔧 ROTAS DO MÓDULO CHAMADO
 # ────────────────────────────────────────────────
-from flask import request, jsonify, session, send_from_directory
-from werkzeug.utils import secure_filename
-import os
-from datetime import datetime
-
-# 📁 Listagem paginada de chamados com filtros
 @auth_bp.route("/chamado/dados")
 def chamado_dados():
     conn = Var_ConectarBanco()
@@ -1222,50 +1238,80 @@ def chamado_dados():
         "usuario": request.args.get("usuario", "")
     }
 
-    base_query = "SELECT c.id, c.titulo, c.categoria, c.status, c.situacao, u.nome AS nome_usuario, c.criado_em FROM tbl_chamado c JOIN tbl_usuario u ON c.id_usuario = u.id_usuario WHERE c.id_empresa = ?"
-    params = [session["id_cliente"]]
+    base_query = """
+        SELECT 
+            c.id, c.titulo, c.categoria, c.status, c.situacao, 
+            u.nome AS nome_usuario, c.criado_em 
+        FROM tbl_chamado c 
+        JOIN tbl_usuario u ON c.id_usuario = u.id_usuario 
+        WHERE c.id_empresa = %s
+    """
+    params = [session["id_empresa"]]
 
     if session.get("grupo") != "Desenvolvedor":
-        base_query += " AND c.id_usuario = ?"
+        base_query += " AND c.id_usuario = %s"
         params.append(session["id_usuario"])
 
     if filtros["categoria"]:
-        base_query += " AND c.categoria = ?"
+        base_query += " AND c.categoria = %s"
         params.append(filtros["categoria"])
     if filtros["status"]:
-        base_query += " AND c.status = ?"
+        base_query += " AND c.status = %s"
         params.append(filtros["status"])
     if filtros["situacao"]:
-        base_query += " AND c.situacao = ?"
+        base_query += " AND c.situacao = %s"
         params.append(filtros["situacao"])
     if filtros["ocorrencia"]:
-        base_query += " AND c.id = ?"
+        base_query += " AND c.id = %s"
         params.append(filtros["ocorrencia"])
     if filtros["usuario"]:
-        base_query += " AND u.nome LIKE ?"
+        base_query += " AND u.nome LIKE %s"
         params.append(f"%{filtros['usuario']}%")
 
-    total = cur.execute(f"SELECT COUNT(*) FROM ({base_query})", tuple(params)).fetchone()[0]
-    base_query += " ORDER BY c.id DESC LIMIT ? OFFSET ?"
-    params += [por_pagina, offset]
+    # Logs para depuração
+    print("📄 base_query:", base_query)
+    print("📦 params:", params)
 
-    chamados = [dict(zip([c[0] for c in cur.description], row)) for row in cur.execute(base_query, tuple(params)).fetchall()]
+    # ⚠️ Conta registros (sem LIMIT/OFFSET)
+    try:
+        count_query = f"SELECT COUNT(*) FROM ({base_query}) AS subquery"
+        cur.execute(count_query, tuple(params))
+        row = cur.fetchone()
+        total = row[0] if row else 0
+    except Exception as e:
+        print("❌ Erro ao contar registros:", e)
+        total = 0
+
+    # Adiciona paginação à query principal
+    base_query += " ORDER BY c.id DESC LIMIT %s OFFSET %s"
+    params_com_paginacao = params + [por_pagina, offset]
+
+    # ⚠️ Busca os chamados com proteção
+    try:
+        cur.execute(base_query, tuple(params_com_paginacao))
+        rows = cur.fetchall()
+        columns = [desc[0] for desc in cur.description]
+        chamados = [dict(zip(columns, row)) for row in rows]
+    except Exception as e:
+        print("❌ Erro ao buscar chamados:", e)
+        chamados = []
+
     return jsonify(dados=chamados, total_paginas=(total + por_pagina - 1) // por_pagina)
 
 
-# 🆕 Abrir inclusão
+
 @auth_bp.route("/chamado/incluir")
 def chamado_incluir():
     return render_template("/frm_chamado_apoio.html")
 
 
-# ✏️ Abrir edição
+
 @auth_bp.route("/chamado/editar")
 def chamado_editar():
     return render_template("/frm_chamado_apoio.html")
 
 
-# 💾 Criar ou atualizar chamado
+
 @auth_bp.route("/chamado/salvar", methods=["POST"])
 def chamado_salvar():
     conn = Var_ConectarBanco()
@@ -1280,7 +1326,7 @@ def chamado_salvar():
     situacao = request.form.get("situacao", "Aberto").strip()
     ocorrencia = request.form.get("ocorrencia", "").strip()
     usuario = session.get("id_usuario")
-    empresa = session.get("id_cliente")
+    empresa = session.get("id_empresa")
 
     if not titulo or not categoria or not ocorrencia:
         return jsonify({"erro": "Campos obrigatórios não preenchidos."}), 400
@@ -1289,16 +1335,18 @@ def chamado_salvar():
     if id_chamado:
         cur.execute("""
             UPDATE tbl_chamado
-            SET titulo = ?, categoria = ?, status = ?, situacao = ?, ocorrencia = ?
-            WHERE id = ?
+            SET titulo = %s, categoria = %s, status = %s, situacao = %s, ocorrencia = %s
+            WHERE id = %s
         """, (titulo, categoria, status, situacao, ocorrencia, id_chamado))
     else:
         # Insere novo chamado
         cur.execute("""
             INSERT INTO tbl_chamado (id_usuario, id_empresa, categoria, status, situacao, titulo, ocorrencia)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         """, (usuario, empresa, categoria, status, situacao, titulo, ocorrencia))
-        id_chamado = cur.lastrowid
+        id_chamado = cur.fetchone()[0]
+
 
     # Salvar anexos se existirem
     for i in range(1, 4):
@@ -1312,13 +1360,14 @@ def chamado_salvar():
             # Registra na tabela de mensagens como anexo inicial do chamado
             cur.execute("""
                 INSERT INTO tbl_chamado_mensagem (id_chamado, id_usuario, mensagem, origem, criado_em)
-                VALUES (?, ?, ?, 'sistema', ?)
+                VALUES (%s, %s, %s, 'sistema', %s)
+                RETURNING id
             """, (id_chamado, usuario, f"[anexo inicial] {nome}", agora))
-            id_mensagem = cur.lastrowid
+            id_mensagem = cur.fetchone()[0]
 
             cur.execute("""
                 INSERT INTO tbl_chamado_mensagem_anexo (id_mensagem, nome_arquivo, caminho, criado_em)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (id_mensagem, nome, nome_arquivo, agora))
 
     conn.commit()
@@ -1328,14 +1377,14 @@ def chamado_salvar():
 
 
 
-# 📄 Obter detalhes e mensagens de um chamado
+# Obter detalhes e mensagens de um chamado
 @auth_bp.route("/chamado/detalhes/<int:id>")
 def chamado_detalhes(id):
     conn = Var_ConectarBanco()
     cur = conn.cursor()
 
     # Busca o chamado
-    cur.execute("SELECT * FROM tbl_chamado WHERE id = ?", (id,))
+    cur.execute("SELECT * FROM tbl_chamado WHERE id = %s", (id,))
     chamado = cur.fetchone()
     if not chamado:
         return jsonify({"erro": "Chamado não encontrado."}), 404
@@ -1348,7 +1397,7 @@ def chamado_detalhes(id):
         SELECT m.id, m.mensagem, m.criado_em, m.origem, u.nome AS nome_usuario
         FROM tbl_chamado_mensagem m
         JOIN tbl_usuario u ON m.id_usuario = u.id_usuario
-        WHERE m.id_chamado = ?
+        WHERE m.id_chamado = %s
         ORDER BY m.id ASC
     """, (id,))
     
@@ -1366,7 +1415,7 @@ def chamado_detalhes(id):
         cur.execute("""
             SELECT nome_arquivo, caminho 
             FROM tbl_chamado_mensagem_anexo 
-            WHERE id_mensagem = ?
+            WHERE id_mensagem = %s
         """, (msg["id"],))
         msg["anexos"] = [dict(zip(["nome_arquivo", "caminho"], a)) for a in cur.fetchall()]
         mensagens.append(msg)
@@ -1377,7 +1426,7 @@ def chamado_detalhes(id):
 
 
 
-# 💬 Adicionar nova mensagem com anexos
+# Adicionar nova mensagem com anexos
 @auth_bp.route("/chamado/mensagem/incluir", methods=["POST"])
 def chamado_mensagem_incluir():
     id_chamado = request.form.get("id_chamado")
@@ -1389,23 +1438,24 @@ def chamado_mensagem_incluir():
     cur = conn.cursor()
 
     # 🔒 Verifica se o chamado existe
-    cur.execute("SELECT 1 FROM tbl_chamado WHERE id = ?", (id_chamado,))
+    cur.execute("SELECT 1 FROM tbl_chamado WHERE id = %s", (id_chamado,))
     if not cur.fetchone():
         return jsonify({"erro": "Chamado inexistente. Salve o chamado antes de responder."}), 400
 
     # 🔒 Verifica se o usuário é válido
-    cur.execute("SELECT 1 FROM tbl_usuario WHERE id_usuario = ?", (usuario,))
+    cur.execute("SELECT 1 FROM tbl_usuario WHERE id_usuario = %s", (usuario,))
     if not cur.fetchone():
         return jsonify({"erro": "Usuário inválido ou sessão expirada."}), 400
 
-    # 💬 Salva mensagem
+    # 💬 Salva mensagem e captura o ID com RETURNING
     cur.execute("""
         INSERT INTO tbl_chamado_mensagem (id_chamado, id_usuario, mensagem, origem, criado_em)
-        VALUES (?, ?, ?, 'sistema', ?)
+        VALUES (%s, %s, %s, 'sistema', %s)
+        RETURNING id
     """, (id_chamado, usuario, mensagem, agora))
-    id_mensagem = cur.lastrowid
+    id_mensagem = cur.fetchone()[0]
 
-    # 📎 Salva anexos
+    # 📎 Salva anexos (1 a 3)
     for i in range(1, 4):
         file = request.files.get(f"anexo{i}")
         if file:
@@ -1416,15 +1466,16 @@ def chamado_mensagem_incluir():
 
             cur.execute("""
                 INSERT INTO tbl_chamado_mensagem_anexo (id_mensagem, nome_arquivo, caminho, criado_em)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (id_mensagem, nome, caminho, agora))
 
     conn.commit()
     return jsonify({"sucesso": True})
 
 
+
 # ------------------------------------------------------------
-# ✅ ROTAS DE NOVIDADES
+# ROTAS DE NOVIDADES
 # ------------------------------------------------------------
 @auth_bp.route("/novidades/painel")
 @login_obrigatorio
@@ -1464,11 +1515,11 @@ def novidades_dados():
     valores = []
 
     if modulo:
-        base_sql += " AND modulo LIKE ?"
+        base_sql += " AND modulo LIKE %s"
         valores.append(f"%{modulo}%")
 
     if emissao:
-        base_sql += " AND emissao = ?"
+        base_sql += " AND emissao = %s"
         valores.append(emissao)
 
     sql_total = f"SELECT COUNT(*) FROM ({base_sql})"
@@ -1476,7 +1527,7 @@ def novidades_dados():
     total_registros = cursor.fetchone()[0]
     total_paginas = (total_registros + por_pagina - 1) // por_pagina
 
-    base_sql += " ORDER BY emissao DESC LIMIT ? OFFSET ?"
+    base_sql += " ORDER BY emissao DESC LIMIT %s OFFSET %s"
     valores.extend([por_pagina, offset])
 
     cursor.execute(base_sql, valores)
@@ -1516,15 +1567,15 @@ def novidades_salvar():
         if dados.get("id"):
             cursor.execute("""
                 UPDATE tbl_novidades
-                SET emissao = ?, modulo = ?, descricao = ?, link = ?
-                WHERE id = ?
+                SET emissao = %s, modulo = %s, descricao = %s, link = %s
+                WHERE id = %s
             """, (dados["emissao"], dados["modulo"], dados["descricao"], dados["link"], dados["id"]))
         else:
             cursor.execute("""
                 INSERT INTO tbl_novidades (emissao, modulo, descricao, link)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (dados["emissao"], dados["modulo"], dados["descricao"], dados["link"]))
-            dados["id"] = cursor.lastrowid
+            dados["id"] = cursor.fetchone()[0]
 
         conn.commit()
         return jsonify({"status": "sucesso", "id": dados["id"]})
@@ -1545,7 +1596,7 @@ def novidades_delete():
     dados = request.json
 
     try:
-        cursor.execute("DELETE FROM tbl_novidades WHERE id = ?", (dados["id"],))
+        cursor.execute("DELETE FROM tbl_novidades WHERE id = %s", (dados["id"],))
         conn.commit()
         return jsonify({"status": "sucesso", "mensagem": "Registro excluído com sucesso."})
     except Exception as e:
@@ -1556,7 +1607,7 @@ def novidades_delete():
 
 
 # ------------------------------------------------------------
-# ✅ ROTAS DE CONFIGURAÇÔES GERAIS (tbl_config)
+# ROTAS DE CONFIGURAÇÔES GERAIS (tbl_config)
 # ------------------------------------------------------------
 @auth_bp.route("/configuracoes/dados")
 @login_obrigatorio
@@ -1573,10 +1624,10 @@ def config_dados():
     params = []
 
     if descricao:
-        sql += " AND descricao LIKE ?"
+        sql += " AND descricao LIKE %s"
         params.append(f"%{descricao}%")
     if chave:
-        sql += " AND chave LIKE ?"
+        sql += " AND chave LIKE %s"
         params.append(f"%{chave}%")
 
     cursor.execute(sql, params)
@@ -1633,15 +1684,15 @@ def rota_configuracoes_salvar():
 
     try:
         # Verifica se a chave já existe
-        cursor.execute("SELECT 1 FROM tbl_config WHERE chave = ?", (chave,))
+        cursor.execute("SELECT 1 FROM tbl_config WHERE chave = %s", (chave,))
         existe = cursor.fetchone()
 
         if existe:
             # Atualiza
             cursor.execute("""
                 UPDATE tbl_config
-                SET descricao = ?, valor = ?, atualizado_em = CURRENT_TIMESTAMP
-                WHERE chave = ?
+                SET descricao = %s, valor = %s, atualizado_em = CURRENT_TIMESTAMP
+                WHERE chave = %s
             """, (descricao, valor, chave))
             conexao.commit()
             return jsonify({"status": "sucesso", "mensagem": "Configuração atualizada com sucesso!", "chave": chave})
@@ -1649,7 +1700,7 @@ def rota_configuracoes_salvar():
             # Insere
             cursor.execute("""
                 INSERT INTO tbl_config (chave, descricao, valor, atualizado_em)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
             """, (chave, descricao, valor))
             conexao.commit()
             return jsonify({"status": "sucesso", "mensagem": "Configuração incluída com sucesso!", "chave": chave})
@@ -1675,7 +1726,7 @@ def rota_configuracoes_delete():
     cursor = conexao.cursor()
 
     try:
-        cursor.execute("DELETE FROM tbl_config WHERE chave = ?", (chave,))
+        cursor.execute("DELETE FROM tbl_config WHERE chave = %s", (chave,))
         conexao.commit()
         return jsonify({"status": "sucesso", "mensagem": "Configuração excluída com sucesso!"})
     except Exception as e:
@@ -1693,7 +1744,7 @@ def config_apoio(chave):
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT descricao, chave, valor, atualizado_em FROM tbl_config WHERE chave = ?", (chave,))
+    cursor.execute("SELECT descricao, chave, valor, atualizado_em FROM tbl_config WHERE chave = %s", (chave,))
     row = cursor.fetchone()
 
     if row:
@@ -1714,47 +1765,47 @@ def config_apoio(chave):
 @auth_bp.route("/usuario/dados", methods=["GET"])
 @login_obrigatorio
 def obter_usuarios():
-    if "id_cliente" not in session:
+    if "id_empresa" not in session:
         return jsonify({"erro": "Cliente não autenticado."}), 403
 
     try:
-        id_cliente = session["id_cliente"]
+        id_empresa = session["id_empresa"]
         nome_filtro = request.args.get("nome", "").strip()
         status_filtro = request.args.get("status", "").strip()
         pagina = int(request.args.get("pagina", 1))
         registros_por_pagina = int(request.args.get("porPagina", 20))
         offset = (pagina - 1) * registros_por_pagina
 
-        # 🔍 SQL principal com base em id_cliente
+        # 🔍 SQL principal com base em id_empresa
         sql = """
             SELECT id_usuario, nome_completo, email, whatsapp, departamento, grupo,
                    ultimo_login, status, imagem
             FROM tbl_usuario
-            WHERE id_cliente = ?
+            WHERE id_empresa = %s
         """
-        params = [id_cliente]
+        params = [id_empresa]
 
         if nome_filtro:
-            sql += " AND nome_completo LIKE ?"
+            sql += " AND nome_completo LIKE %s"
             params.append(f"%{nome_filtro}%")
 
         if status_filtro in ["Ativo", "Inativo", "Bloqueado"]:
-            sql += " AND status = ?"
+            sql += " AND status = %s"
             params.append(status_filtro)
 
-        sql += " ORDER BY nome_completo ASC LIMIT ? OFFSET ?"
+        sql += " ORDER BY nome_completo ASC LIMIT %s OFFSET %s"
         params.extend([registros_por_pagina, offset])
 
         # 🔢 Consulta de total para paginação
-        count_sql = "SELECT COUNT(*) FROM tbl_usuario WHERE id_cliente = ?"
-        count_params = [id_cliente]
+        count_sql = "SELECT COUNT(*) FROM tbl_usuario WHERE id_empresa = %s"
+        count_params = [id_empresa]
 
         if nome_filtro:
-            count_sql += " AND nome_completo LIKE ?"
+            count_sql += " AND nome_completo LIKE %s"
             count_params.append(f"%{nome_filtro}%")
 
         if status_filtro in ["Ativo", "Inativo", "Bloqueado"]:
-            count_sql += " AND status = ?"
+            count_sql += " AND status = %s"
             count_params.append(status_filtro)
 
         conn = Var_ConectarBanco()
@@ -1817,7 +1868,7 @@ def usuario_editar():
 
 
 
-# ✅ Rota para Salvar os dados do usuário
+# Rota para Salvar os dados do usuário
 @auth_bp.route("/usuario/salvar", methods=["POST"])
 def salvar_usuario():
     try:
@@ -1828,8 +1879,9 @@ def salvar_usuario():
         nome_completo = dados.get("nome_completo", "").strip()
         nome = nome_completo.split(" ")[0] if nome_completo else ""
         email = dados.get("email", "").strip().lower()
-        id_cliente = dados.get("id_cliente")
+        id_empresa = dados.get("id_empresa")
         id_grupo = dados.get("id_grupo")
+        grupo_nome = dados.get("grupo")  # ✅ Nome do grupo para campo visível
         departamento = dados.get("departamento") or ""
         whatsapp = dados.get("whatsapp") or ""
         status = dados.get("status", "Ativo")
@@ -1843,12 +1895,11 @@ def salvar_usuario():
         trocasenha_em = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # Verifica se o e-mail já existe
-        cursor.execute("SELECT id_usuario FROM tbl_usuario WHERE email = ?", (email,))
+        cursor.execute("SELECT id_usuario FROM tbl_usuario WHERE email = %s", (email,))
         usuario_existente = cursor.fetchone()
 
         if usuario_existente:
             return jsonify({"status": "erro", "mensagem": "Já existe um usuário com esse e-mail."}), 400
-
 
         if not id_usuario:
             senha_provisoria = "123456"
@@ -1856,39 +1907,74 @@ def salvar_usuario():
 
             cursor.execute("""
                 INSERT INTO tbl_usuario (
-                    id_cliente, id_grupo, nome_completo, nome, email, grupo,
+                    id_empresa, id_grupo, nome_completo, nome, email, grupo,
                     departamento, whatsapp, status, senha, imagem,
                     trocasenha_em, token_redefinicao, expira_em
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id_usuario
             """, (
-                id_cliente, id_grupo, nome_completo, nome, email, email,
+                id_empresa, id_grupo, nome_completo, nome, email, grupo_nome,  # ✅ Corrigido aqui
                 departamento, whatsapp, status, senha_hash, imagem,
                 trocasenha_em, token, expira_em
             ))
 
+            id_usuario = cursor.fetchone()[0]
             conn.commit()
-            id_usuario = cursor.lastrowid
             print("✅ Usuário incluído com ID:", id_usuario)
 
             # 🔗 Montar link
+            base_url = os.getenv("BASE_PROD") if os.getenv("MODO_PRODUCAO", "false").lower() == "true" else os.getenv("BASE_DEV")
             link = f"{get_base_url()}/usuario/redefinir?token={token}"
-
-
+            url_privacidade  = f"{base_url}/privacidade"
+            url_logo         = f"{base_url}/static/imge/logorufino.png"
+            url_redefinicao = f"{base_url}/usuario/redefinir?token={token}"
             # 📧 Enviar e-mail via API
             assunto = "Acesso ao sistema Rufino"
-            corpo_html = f"""
-                <p>Olá, {nome_completo}!</p>
-                <p>Você foi cadastrado no sistema <strong>Rufino</strong>.</p>
-                <p>Para criar sua senha, clique no link abaixo:</p>
-                <p><a href="{link}" target="_blank">Criar nova senha</a></p>
-                <p>Este link expira em 1 hora.</p>
-            """
+            corpo_html = f"""<!DOCTYPE html>
+                <html lang="pt-br">
+                <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center">
+                    <table width="100%" style="max-width:600px;background:#ffffff;" cellpadding="20" cellspacing="0">
+                        <tr><td style="text-align:left;">
+                        <img src="{url_logo}" alt="Rufino Logo" style="max-width:200px;height:auto;display:block;">
+                        </td></tr>
+                        <tr><td style="border-top:1px solid #ddd;"></td></tr>
+                        <tr><td>
+                        <p>Olá <strong>{nome}</strong>,</p>
+                        <p>Você foi cadastrado no sistema <strong>Rufino</strong>.</p>
+                        <p>Para criar sua senha e acessar o sistema, <a href="{url_redefinicao}" style="color:#85C300;text-decoration:none;">clique aqui</a> ou copie e cole este link no navegador:</p>
+                        <p><a href="{url_redefinicao}" style="word-break:break-all;color:#555;">{url_redefinicao}</a></p>
+                        <p style="font-size:13px;color:#999;">Este link expira em 1 hora.</p>
+                        </td></tr>
+                        <tr><td style="background:#f9f9f9;padding:15px;border-radius:4px;font-size:14px;color:#666;">
+                        <p><strong>Este e‑mail foi enviado exclusivamente por notificas@rufino.tech.</strong></p>
+                        <ul style="margin:10px 0 0 15px;padding:0;">
+                            <li>Não pedimos sua senha por e‑mail.</li>
+                            <li>Verifique sempre se o link começa com <strong>rufino.tech</strong>.</li>
+                            <li>Nunca informe dados sensíveis via e‑mail.</li>
+                            <li>Se você não solicitou este acesso, ignore esta mensagem.</li>
+                        </ul>
+                        </td></tr>
+                        <tr><td style="font-size:14px;color:#666;">
+                        <p>Dúvidas? Consulte nossa <a href="{url_privacidade}" style="color:#85C300;text-decoration:none;">Política de Privacidade</a>.</p>
+                        </td></tr>
+                        <tr><td style="font-size:12px;color:#999;text-align:center;padding-top:20px;">
+                        Obrigado por escolher a Rufino! © 2025 Rufino. Todos os direitos reservados.
+                        </td></tr>
+                    </table>
+                    </td></tr>
+                </table>
+                </body></html>"""
+
+
 
             payload = {
                 "destinatarios": [email],
                 "assunto": assunto,
                 "corpo_html": corpo_html,
-                "tag": f"user_{id_usuario}"
+                "tag": f"user_{id_usuario}",
+                "id_empresa": id_empresa  # ✅ Usado na API e registro
             }
 
             try:
@@ -1903,9 +1989,9 @@ def salvar_usuario():
         else:
             cursor.execute("""
                 UPDATE tbl_usuario SET
-                    id_grupo = ?, nome_completo = ?, nome = ?, email = ?, usuario = ?,
-                    departamento = ?, whatsapp = ?, status = ?, imagem = ?
-                WHERE id_usuario = ?
+                    id_grupo = %s, nome_completo = %s, nome = %s, email = %s, usuario = %s,
+                    departamento = %s, whatsapp = %s, status = %s, imagem = %s
+                WHERE id_usuario = %s
             """, (
                 id_grupo, nome_completo, nome, email, email,
                 departamento, whatsapp, status, imagem, id_usuario
@@ -1923,6 +2009,7 @@ def salvar_usuario():
 
 
 
+
 # função auxiliar para atribuir permissões ao usuário
 def atribuir_permissoes_por_grupo(usuario_id, grupo):
     print(f"🔧 Iniciando atribuição de permissões para o usuário {usuario_id} do grupo '{grupo}'")
@@ -1933,12 +2020,12 @@ def atribuir_permissoes_por_grupo(usuario_id, grupo):
     try:
         # Apaga permissões antigas
         print(f"🧹 Removendo permissões existentes do usuário {usuario_id}...")
-        cursor.execute("DELETE FROM tbl_permissoes WHERE usuario_id = ?", (usuario_id,))
+        cursor.execute("DELETE FROM tbl_permissoes WHERE usuario_id = %s", (usuario_id,))
         conn.commit()
 
         # Busca permissões do grupo
         print(f"🔍 Buscando permissões padrão do grupo '{grupo}'...")
-        cursor.execute("SELECT submenu_id FROM tbl_permissoes_modelo WHERE grupo = ?", (grupo,))
+        cursor.execute("SELECT submenu_id FROM tbl_permissoes_modelo WHERE grupo = %s", (grupo,))
         permissoes = cursor.fetchall()
 
         if not permissoes:
@@ -1949,7 +2036,7 @@ def atribuir_permissoes_por_grupo(usuario_id, grupo):
         # Insere permissões
         for p in permissoes:
             print(f"➕ Inserindo submenu_id {p[0]} para usuário_id {usuario_id}")
-            cursor.execute("INSERT INTO tbl_permissoes (usuario_id, submenu_id) VALUES (?, ?)", (usuario_id, p[0]))
+            cursor.execute("INSERT INTO tbl_permissoes (usuario_id, submenu_id) VALUES (%s, %s)", (usuario_id, p[0]))
 
         conn.commit()
         print(f"✅ Permissões atribuídas com sucesso ao usuário {usuario_id}.")
@@ -1972,11 +2059,11 @@ def excluir_usuario():
     try:
         dados = request.get_json()
         usuario_id = dados.get("id")
-        id_cliente = session.get("id_cliente")
+        id_empresa = session.get("id_empresa")
 
         if not usuario_id:
             return jsonify({"status": "erro", "mensagem": "ID do usuário não foi fornecido."}), 400
-        if not id_cliente:
+        if not id_empresa:
             return jsonify({"status": "erro", "mensagem": "Sessão expirada ou cliente não identificado."}), 403
 
         conn = Var_ConectarBanco()
@@ -1985,8 +2072,8 @@ def excluir_usuario():
         # 🔍 Verifica se é o usuário criador
         cursor.execute("""
             SELECT criador FROM tbl_usuario 
-            WHERE id_usuario = ? AND id_cliente = ?
-        """, (usuario_id, id_cliente))
+            WHERE id_usuario = %s AND id_empresa = %s
+        """, (usuario_id, id_empresa))
         resultado = cursor.fetchone()
 
         if resultado and resultado[0] == 1:
@@ -1994,11 +2081,11 @@ def excluir_usuario():
             return jsonify({"status": "erro", "mensagem": "Usuário criador não pode ser excluído."}), 403
 
         # 🔄 Exclusão segura
-        print(f"🗑️ Excluindo usuário com ID {usuario_id} da empresa {id_cliente}...")
+        print(f"🗑️ Excluindo usuário com ID {usuario_id} da empresa {id_empresa}...")
         cursor.execute("""
             DELETE FROM tbl_usuario 
-            WHERE id_usuario = ? AND id_cliente = ?
-        """, (usuario_id, id_cliente))
+            WHERE id_usuario = %s AND id_empresa = %s
+        """, (usuario_id, id_empresa))
         conn.commit()
 
         return jsonify({"status": "sucesso", "mensagem": "Usuário excluído com sucesso!"})
@@ -2032,7 +2119,7 @@ def usuario_redefinir():
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id_usuario FROM tbl_usuario WHERE token_redefinicao = ?", (token,))
+        cursor.execute("SELECT id_usuario FROM tbl_usuario WHERE token_redefinicao = %s", (token,))
         usuario = cursor.fetchone()
         if not usuario:
             return jsonify({"mensagem": "Token inválido ou expirado."}), 400
@@ -2043,8 +2130,8 @@ def usuario_redefinir():
 
         cursor.execute("""
             UPDATE tbl_usuario
-            SET senha = ?, trocasenha_em = ?, token_redefinicao = NULL
-            WHERE id_usuario = ?
+            SET senha = %s, trocasenha_em = %s, token_redefinicao = NULL
+            WHERE id_usuario = %s
         """, (senha_hash, nova_data, id_usuario))
 
         conn.commit()
@@ -2073,14 +2160,14 @@ def pagina_permissoes_usuario():
 @auth_bp.route("/permissao/ativos")
 @login_obrigatorio
 def get_usuarios_ativos():
-    id_cliente = session.get("id_cliente")
+    id_empresa = session.get("id_empresa")
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id, nome_completo 
         FROM tbl_usuario 
-        WHERE status = 'ATIVO' AND id_cliente = ?
-    """, (id_cliente,))
+        WHERE status = 'ATIVO' AND id_empresa = %s
+    """, (id_empresa,))
     usuarios = [{"id": row[0], "nome_completo": row[1]} for row in cursor.fetchall()]
     return jsonify(usuarios)
 
@@ -2088,12 +2175,12 @@ def get_usuarios_ativos():
 @auth_bp.route("/permissao/id/<int:usuario_id>")
 @login_obrigatorio
 def get_permissoes_usuario(usuario_id):
-    id_cliente = session.get("id_cliente")
+    id_empresa = session.get("id_empresa")
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
 
     # Verifica se o usuário pertence à empresa
-    cursor.execute("SELECT grupo FROM tbl_usuario WHERE id = ? AND id_cliente = ?", (usuario_id, id_cliente))
+    cursor.execute("SELECT grupo FROM tbl_usuario WHERE id = %s AND id_empresa = %s", (usuario_id, id_empresa))
     resultado = cursor.fetchone()
 
     if not resultado:
@@ -2107,7 +2194,7 @@ def get_permissoes_usuario(usuario_id):
     else:
         cursor.execute("""
             SELECT submenu_id FROM tbl_permissoes 
-            WHERE usuario_id = ? AND permitido = 1
+            WHERE usuario_id = %s AND permitido = 1
         """, (usuario_id,))
         permissoes = [{"submenu_id": row[0]} for row in cursor.fetchall()]
 
@@ -2127,13 +2214,13 @@ def salvar_permissoes():
     cursor = conn.cursor()
 
     # Remove permissões antigas
-    cursor.execute("DELETE FROM tbl_permissoes WHERE usuario_id = ?", (usuario_id,))
+    cursor.execute("DELETE FROM tbl_permissoes WHERE usuario_id = %s", (usuario_id,))
 
     # Insere novas permissões
     for item in permissoes:
         cursor.execute("""
             INSERT INTO tbl_permissoes (usuario_id, submenu_id, permitido)
-            VALUES (?, ?, ?)
+            VALUES (%s, %s, %s)
         """, (usuario_id, item["submenu_id"], item["permitido"]))
 
     conn.commit()
@@ -2151,7 +2238,7 @@ def aplicar_permissao_modelo():
         if not usuario_id or not grupo:
             return jsonify({"erro": "Dados incompletos"}), 400
 
-        #usuario_id = cursor.lastrowid
+        #usuario_id = cursor.fetchone()[0]
         #atribuir_permissoes_por_grupo(usuario_id, grupo_nome)    3333333333333333333333333333333333333333333333333333333333333333333333
 
         return jsonify({"mensagem": "Permissões modelo aplicadas com sucesso"})
@@ -2165,15 +2252,15 @@ def aplicar_permissao_modelo():
 @login_obrigatorio
 def listar_grupos_permissao():
     try:
-        id_cliente = session.get("id_cliente")
+        id_empresa = session.get("id_empresa")
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, nome_grupo 
             FROM tbl_usuario_grupo 
-            WHERE id_cliente = ? 
+            WHERE id_empresa = %s 
             ORDER BY nome_grupo ASC
-        """, (id_cliente,))
+        """, (id_empresa,))
         grupos = [{"id": row[0], "grupo": row[1]} for row in cursor.fetchall()]
         return jsonify(grupos)
     except Exception as e:
@@ -2191,14 +2278,14 @@ def atribuir_permissoes_por_grupo(usuario_id, grupo_nome):
         cursor.execute("""
             SELECT submenuid, permitido
             FROM tbl_permissoes_modelo
-            WHERE gruponome = ?
+            WHERE gruponome = %s
         """, (grupo_nome,))
         permissoes = cursor.fetchall()
 
         for submenu_id, permitido in permissoes:
             cursor.execute("""
                 INSERT INTO tbl_permissoes (usuario_id, submenu_id, permitido)
-                VALUES (?, ?, ?)
+                VALUES (%s, %s, %s)
             """, (usuario_id, submenu_id, permitido))
 
         conn.commit()
@@ -2249,7 +2336,7 @@ def buscar_id_grupo():
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM tbl_usuario_grupo WHERE nome_grupo = ?", (nome_grupo,))
+        cursor.execute("SELECT id FROM tbl_usuario_grupo WHERE nome_grupo = %s", (nome_grupo,))
         resultado = cursor.fetchone()
         conn.close()
 
@@ -2269,18 +2356,18 @@ def buscar_id_grupo():
 
 # 🔁 Dicionário de tradução de erros
 ERROS_AMIGAVEIS = {
-    "Mailbox full": "📭 Caixa de e-mail cheia",
+    "Mailbox full": "Caixa de e-mail cheia",
     "Temporary error": "⏳ Erro temporário no servidor do destinatário",
-    "Email address does not exist": "❌ Endereço de e-mail inválido",
-    "User unknown": "❌ Usuário de e-mail desconhecido",
-    "Blocked due to spam": "🚫 Bloqueado por suspeita de spam",
-    "Domain blacklisted": "🚫 Domínio bloqueado pelo provedor de destino",
-    "Marked as spam": "🚫 Marcado como spam pelo destinatário",
-    "Invalid email": "❌ E-mail mal formatado",
-    "Unsubscribed user": "🔕 Usuário descadastrado da lista",
-    "Soft bounce - Relay not permitted": "🚫 Erro temporário: Rejeição pelo servidor do destinatário",
-    "Hard bounce - Content rejected": "🚫 Conteúdo rejeitado pelo servidor",
-    "Blocked (policy)": "🚫 Política de entrega bloqueou a mensagem"
+    "Email address does not exist": "Endereço de e-mail inválido",
+    "User unknown": "Usuário de e-mail desconhecido",
+    "Blocked due to spam": "Bloqueado por suspeita de spam",
+    "Domain blacklisted": "Domínio bloqueado pelo provedor de destino",
+    "Marked as spam": "Marcado como spam pelo destinatário",
+    "Invalid email": "E-mail mal formatado",
+    "Unsubscribed user": "Usuário descadastrado da lista",
+    "Soft bounce - Relay not permitted": "Erro temporário: Rejeição pelo servidor do destinatário",
+    "Hard bounce - Content rejected": "Conteúdo rejeitado pelo servidor",
+    "Blocked (policy)": "Política de entrega bloqueou a mensagem"
 }
 
 @auth_bp.route("/email/webhook", methods=["POST"])
@@ -2294,6 +2381,9 @@ def brevo_webhook():
             return jsonify({"erro": "JSON inválido ou ausente"}), 400
 
         email = dados.get("email")
+        # ✅ Filtra apenas os eventos do e-mail desejado
+        #if email != "notifica@rufino.tech":
+        #    return jsonify({"status": "ignorado", "motivo": "E-mail fora do filtro"}), 200
         evento = dados.get("event")
         data_evento = dados.get("date")
         motivo_bruto = dados.get("reason", "").strip()
@@ -2317,7 +2407,7 @@ def brevo_webhook():
             SELECT ed.id_destinatario
             FROM tbl_email_destinatario ed
             JOIN tbl_email_envio ee ON ed.id_envio = ee.id_envio
-            WHERE ee.tag_email = ? AND ed.email = ?
+            WHERE ee.tag_email = %s AND ed.email = %s
         """, (tag, email))
 
         resultado = cursor.fetchone()
@@ -2338,14 +2428,14 @@ def brevo_webhook():
         # Atualiza status atual do destinatário
         cursor.execute("""
             UPDATE tbl_email_destinatario
-            SET status_atual = ?, dt_ultimo_evento = ?
-            WHERE id_destinatario = ?
+            SET status_atual = %s, dt_ultimo_evento = %s
+            WHERE id_destinatario = %s
         """, (evento, data_evento_fmt, id_destinatario))
 
         # Insere no histórico de eventos
         cursor.execute("""
             INSERT INTO tbl_email_evento (id_destinatario, tipo_evento, data_evento, mensagem_erro)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
         """, (id_destinatario, evento, data_evento_fmt, motivo_amigavel))
 
         conn.commit()
@@ -2375,6 +2465,17 @@ def email_enviar():
         if not destinatarios or not assunto or not corpo_html:
             return jsonify({"erro": "Assunto, corpo e destinatários são obrigatórios."}), 400
 
+        # 🧠 Recupera id_empresa da sessão ou do payload JSON
+        id_empresa = (
+            session.get("id_empresa") or
+            dados.get("id_empresa") or
+            dados.get("id_cliente")
+        )
+
+        if not id_empresa:
+            return jsonify({"erro": "Cliente não identificado na sessão ou na requisição."}), 403
+
+        # Envio para Brevo
         payload = {
             "sender": {
                 "name": os.getenv("BREVO_REMETENTE_NOME"),
@@ -2383,7 +2484,8 @@ def email_enviar():
             "to": [{"email": email.strip()} for email in destinatarios],
             "subject": assunto,
             "htmlContent": corpo_html,
-            "tags": [tag]
+            "tags": [tag],
+            "id_empresa": id_empresa
         }
 
         headers = {
@@ -2406,27 +2508,34 @@ def email_enviar():
         cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT INTO tbl_email_envio (tag_email, assunto, corpo)
-            VALUES (?, ?, ?)
-        """, (tag, remover_tags_html(corpo_html), assunto))
-        id_envio = cursor.lastrowid
+            INSERT INTO tbl_email_envio (id_empresa, tag_email, assunto, corpo, dt_envio)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id_envio
+        """, (
+            id_empresa,
+            tag,
+            remover_tags_html(corpo_html),
+            assunto,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ))
+
+
+
+        id_envio = cursor.fetchone()[0]
+        print("📌 ID do envio registrado:", id_envio)
 
         for email in destinatarios:
             cursor.execute("""
                 INSERT INTO tbl_email_destinatario (id_envio, email, status_atual, tag_email)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             """, (id_envio, email.strip(), "Enviado", tag))
-
-        id_cliente = session.get("id_cliente")
-        if not id_cliente:
-            return jsonify({"erro": "Cliente não identificado na sessão."}), 403
 
         cursor.execute("""
             INSERT INTO tbl_email_log (
-                id_cliente, assunto, corpo, destinatario, status, tag, data_envio
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                id_empresa, assunto, corpo, destinatario, status, tag, data_envio
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
-            id_cliente,
+            id_empresa,
             assunto,
             remover_tags_html(corpo_html),
             ", ".join(destinatarios),
@@ -2443,6 +2552,7 @@ def email_enviar():
     except Exception as e:
         print("❌ Erro geral ao enviar via API:", str(e))
         return jsonify({"erro": str(e)}), 500
+
 
 
 
@@ -2467,11 +2577,11 @@ def email_logs():
         params = []
 
         if data_filtro:
-            query_envios += " AND DATE(dt_envio) = DATE(?)"
+            query_envios += " AND DATE(dt_envio) = DATE(%s)"
             params.append(data_filtro)
 
         if busca:
-            query_envios += " AND (assunto LIKE ? OR corpo LIKE ?)"
+            query_envios += " AND (assunto LIKE %s OR corpo LIKE %s)"
             params += [f"%{busca}%", f"%{busca}%"]
 
         cursor.execute(query_envios, params)
@@ -2484,7 +2594,7 @@ def email_logs():
             cursor.execute("""
                 SELECT id_destinatario, email, status_atual, dt_ultimo_evento
                 FROM tbl_email_destinatario
-                WHERE id_envio = ?
+                WHERE id_envio = %s
             """, (id_envio,))
             destinatarios_raw = cursor.fetchall()
 
@@ -2529,7 +2639,7 @@ def email_eventos(id_destinatario):
         cursor.execute("""
             SELECT tipo_evento, data_evento, mensagem_erro
             FROM tbl_email_evento
-            WHERE id_destinatario = ?
+            WHERE id_destinatario = %s
             ORDER BY data_evento ASC
         """, (id_destinatario,))
 
@@ -2645,8 +2755,8 @@ def gerar_relatorio_pdf():
 @auth_bp.route("/email/dados")
 def email_dados():
     try:
-        id_cliente = session.get("id_cliente")
-        if not id_cliente:
+        id_empresa = session.get("id_empresa")
+        if not id_empresa:
             return jsonify([])
 
         status = request.args.get("status", "")
@@ -2661,24 +2771,24 @@ def email_dados():
             SELECT l.id_log, l.assunto, l.destinatario, l.status, l.data_envio, e.tag_email as tag
             FROM tbl_email_log l
             JOIN tbl_email_envio e ON e.tag_email = l.tag
-            WHERE e.id_cliente = ?
+            WHERE e.id_empresa = %s
         """
-        params = [id_cliente]
+        params = [id_empresa]
 
         if status:
-            query += " AND l.status = ?"
+            query += " AND l.status = %s"
             params.append(status)
 
         if destinatario:
-            query += " AND l.destinatario LIKE ?"
+            query += " AND l.destinatario LIKE %s"
             params.append(f"%{destinatario}%")
 
         if data_inicio:
-            query += " AND date(l.data_envio) >= ?"
+            query += " AND date(l.data_envio) >= %s"
             params.append(data_inicio)
 
         if data_fim:
-            query += " AND date(l.data_envio) <= ?"
+            query += " AND date(l.data_envio) <= %s"
             params.append(data_fim)
 
         query += " ORDER BY l.data_envio DESC LIMIT 100"
@@ -2710,8 +2820,8 @@ def email_dados():
 @auth_bp.route("/email/log/detalhes/<tag>")
 def email_detalhes(tag):
     try:
-        id_cliente = session.get("id_cliente")
-        if not id_cliente:
+        id_empresa = session.get("id_empresa")
+        if not id_empresa:
             return jsonify([])
 
         conn = Var_ConectarBanco()
@@ -2722,8 +2832,8 @@ def email_detalhes(tag):
             SELECT d.id_destinatario, d.email, d.status_atual
             FROM tbl_email_destinatario d
             JOIN tbl_email_envio e ON d.id_envio = e.id_envio
-            WHERE d.tag_email = ? AND e.id_cliente = ?
-        """, (tag, id_cliente))
+            WHERE d.tag_email = %s AND e.id_empresa = %s
+        """, (tag, id_empresa))
 
         destinatarios = cursor.fetchall()
 
@@ -2735,7 +2845,7 @@ def email_detalhes(tag):
             cursor.execute("""
                 SELECT tipo_evento, data_evento
                 FROM tbl_email_evento
-                WHERE id_destinatario = ?
+                WHERE id_destinatario = %s
                 ORDER BY data_evento DESC
             """, (id_dest,))
             eventos = cursor.fetchall()
@@ -2766,8 +2876,8 @@ def email_detalhes(tag):
 @auth_bp.route("/email/log/reenviar/<tag>", methods=["POST"])
 def email_reenviar(tag):
     try:
-        id_cliente = session.get("id_cliente")
-        if not id_cliente:
+        id_empresa = session.get("id_empresa")
+        if not id_empresa:
             return jsonify({"status": "error", "titulo": "Erro", "mensagem": "Sessão expirada."})
 
         conn = Var_ConectarBanco()
@@ -2778,8 +2888,8 @@ def email_reenviar(tag):
             SELECT d.id_destinatario, d.email, d.id_envio
             FROM tbl_email_destinatario d
             JOIN tbl_email_envio e ON d.id_envio = e.id_envio
-            WHERE d.tag_email = ? AND e.id_cliente = ? AND d.status_atual IN ('Falha', 'Aguardando')
-        """, (tag, id_cliente))
+            WHERE d.tag_email = %s AND e.id_empresa = %s AND d.status_atual IN ('Falha', 'Aguardando')
+        """, (tag, id_empresa))
 
         destinatarios = cursor.fetchall()
         if not destinatarios:
@@ -2792,14 +2902,14 @@ def email_reenviar(tag):
             # Marcar como reenviado
             cursor.execute("""
                 INSERT INTO tbl_email_evento (id_destinatario, tipo_evento, data_evento)
-                VALUES (?, 'reenviado', datetime('now', 'localtime'))
+                VALUES (%s, 'reenviado', datetime('now', 'localtime'))
             """, (id_dest,))
 
             # Atualiza status para "Enviado"
             cursor.execute("""
                 UPDATE tbl_email_destinatario
                 SET status_atual = 'Enviado', dt_ultimo_evento = datetime('now', 'localtime')
-                WHERE id_destinatario = ?
+                WHERE id_destinatario = %s
             """, (id_dest,))
 
         conn.commit()
@@ -2825,8 +2935,8 @@ def api_marketplace():
     import html
     conn = None
     try:
-        id_cliente = session.get("id_cliente")
-        if not id_cliente:
+        id_empresa = session.get("id_empresa")
+        if not id_empresa:
             return jsonify([])
 
         conn = Var_ConectarBanco()
@@ -2836,7 +2946,8 @@ def api_marketplace():
         cursor.execute("""
             SELECT id, nome_menu, descricao, valor, obs
             FROM tbl_menu
-            WHERE assinatura_app = 1 AND ativo = 1
+            WHERE assinatura_app = true AND ativo = true
+
             ORDER BY ordem
         """)
         apps = cursor.fetchall()
@@ -2846,8 +2957,8 @@ def api_marketplace():
             # Verifica se já foi assinado por este cliente com status Ativo
             cursor.execute("""
                 SELECT 1 FROM tbl_fatura_assinatura
-                WHERE id_cliente = ? AND id_modulo = ? AND status = 'Ativo'
-            """, (id_cliente, id_modulo))
+                WHERE id_empresa = %s AND id_modulo = %s AND status = 'Ativo'
+            """, (id_empresa, id_modulo))
             assinado = cursor.fetchone() is not None
 
             # Converte entidades HTML para texto visível
@@ -2881,10 +2992,10 @@ def assinar_app():
     conn = None
     try:
         dados = request.get_json()
-        id_cliente = session.get("id_cliente")
+        id_empresa = session.get("id_empresa")
         id_modulo = dados.get("id_modulo")
 
-        if not id_cliente or not id_modulo:
+        if not id_empresa or not id_modulo:
             return jsonify({"status": "erro", "mensagem": "Cliente ou módulo inválido."})
 
         conn = Var_ConectarBanco()
@@ -2893,13 +3004,13 @@ def assinar_app():
         # Verifica se já existe assinatura ativa
         cursor.execute("""
             SELECT 1 FROM tbl_fatura_assinatura
-            WHERE id_cliente = ? AND id_modulo = ? AND status = 'Ativo'
-        """, (id_cliente, id_modulo))
+            WHERE id_empresa = %s AND id_modulo = %s AND status = 'Ativo'
+        """, (id_empresa, id_modulo))
         if cursor.fetchone():
             return jsonify({"status": "erro", "mensagem": "Este app já está assinado."})
 
         # Dados do app
-        cursor.execute("SELECT nome_menu, valor FROM tbl_menu WHERE id = ?", (id_modulo,))
+        cursor.execute("SELECT nome_menu, valor FROM tbl_menu WHERE id = %s", (id_modulo,))
         app = cursor.fetchone()
         if not app:
             return jsonify({"status": "erro", "mensagem": "Módulo não encontrado."})
@@ -2910,16 +3021,16 @@ def assinar_app():
         # Insere na tbl_fatura_assinatura
         cursor.execute("""
             INSERT INTO tbl_fatura_assinatura (
-                id_cliente, id_modulo, nome_modulo,
+                id_empresa, id_modulo, nome_modulo,
                 periodo_inicio, periodo_fim, valor, status
-            ) VALUES (?, ?, ?, ?, NULL, ?, 'Ativo')
-        """, (id_cliente, id_modulo, nome_modulo, hoje, valor))
+            ) VALUES (%s, %s, %s, %s, NULL, %s, 'Ativo')
+        """, (id_empresa, id_modulo, nome_modulo, hoje, valor))
 
         
         conn.commit()
 
         # Envia e-mail de confirmação
-        enviar_email_confirmacao_assinatura(id_cliente, id_modulo)
+        enviar_email_confirmacao_assinatura(id_empresa, id_modulo)
 
         return jsonify({
             "status": "sucesso",
@@ -2934,16 +3045,16 @@ def assinar_app():
         if conn:
             conn.close()
 
-def enviar_email_confirmacao_assinatura(id_cliente, id_modulo):
+def enviar_email_confirmacao_assinatura(id_empresa, id_modulo):
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
     try:
         cursor.execute("""
             SELECT e.email_cobranca, m.nome_menu
             FROM tbl_empresa e
-            JOIN tbl_menu m ON m.id = ?
-            WHERE e.id = ?
-        """, (id_modulo, id_cliente))
+            JOIN tbl_menu m ON m.id = %s
+            WHERE e.id = %s
+        """, (id_modulo, id_empresa))
 
         resultado = cursor.fetchone()
         if not resultado:
@@ -3003,7 +3114,7 @@ def cobranca_pendentes():
         cursor = conn.cursor()
 
         competencia = request.args.get("competencia")
-        id_cliente = request.args.get("id_cliente")
+        id_empresa = request.args.get("id_empresa")
 
         if not competencia or not re.match(r"^\d{4}-\d{2}$", competencia):
             return jsonify({"status": "erro", "mensagem": "Competência obrigatória no formato YYYY-MM."}), 400
@@ -3016,26 +3127,26 @@ def cobranca_pendentes():
 
         # 🔍 Seleciona assinaturas ativas na competência
         sql = """
-            SELECT fa.id_cliente, fa.nome_modulo, fa.valor, fa.periodo_inicio, fa.periodo_fim, e.nome_empresa
+            SELECT fa.id_empresa, fa.nome_modulo, fa.valor, fa.periodo_inicio, fa.periodo_fim, e.nome_empresa
             FROM tbl_fatura_assinatura fa
-            JOIN tbl_empresa e ON e.id = fa.id_cliente
-            WHERE fa.periodo_inicio <= ?
-              AND (fa.periodo_fim IS NULL OR fa.periodo_fim >= ?)
+            JOIN tbl_empresa e ON e.id = fa.id_empresa
+            WHERE fa.periodo_inicio <= %s
+              AND (fa.periodo_fim IS NULL OR fa.periodo_fim >= %s)
         """
         params = [ultimo_dia.strftime("%Y-%m-%d"), primeiro_dia.strftime("%Y-%m-%d")]
 
-        if id_cliente:
-            sql += " AND fa.id_cliente = ?"
-            params.append(id_cliente)
+        if id_empresa:
+            sql += " AND fa.id_empresa = %s"
+            params.append(id_empresa)
 
         cursor.execute(sql, params)
         registros = cursor.fetchall()
 
         # 🚫 Evita repetir clientes que já têm fatura na competência
-        cursor.execute("SELECT id_cliente FROM tbl_fatura WHERE competencia = ?", (competencia,))
+        cursor.execute("SELECT id_empresa FROM tbl_fatura WHERE competencia = %s", (competencia,))
         clientes_faturados = set(row[0] for row in cursor.fetchall())
 
-        if id_cliente:
+        if id_empresa:
             # 👁️ Detalhado por módulo (para popup)
             resultado = []
             for row in registros:
@@ -3087,7 +3198,7 @@ def cobranca_pendentes():
 
                 if id_cli not in resumo:
                     resumo[id_cli] = {
-                        "id_cliente": id_cli,
+                        "id_empresa": id_cli,
                         "nome": nome_cli,
                         "competencia": competencia,
                         "valor_estimado": 0
@@ -3124,17 +3235,17 @@ def cobranca_faturas():
         SELECT f.id, e.nome_empresa AS nome, f.dt_referencia, f.vencimento,
                f.valor_total, f.status_pagamento
         FROM tbl_fatura f
-        JOIN tbl_empresa e ON f.id_cliente = e.id
-        WHERE f.dt_referencia BETWEEN ? AND ?
+        JOIN tbl_empresa e ON f.id_empresa = e.id
+        WHERE f.dt_referencia BETWEEN %s AND %s
         """
         params = [data_inicio, data_fim]
 
         if cliente:
-            sql += " AND e.nome_empresa LIKE ?"
+            sql += " AND e.nome_empresa LIKE %s"
             params.append(f"%{cliente}%")
 
         if status:
-            sql += " AND f.status_pagamento = ?"
+            sql += " AND f.status_pagamento = %s"
             params.append(status)
 
         sql += " ORDER BY f.dt_referencia DESC, e.nome_empresa"
@@ -3159,10 +3270,10 @@ def cobranca_faturas():
 def cobranca_preparar():
     try:
         dados = request.get_json()
-        id_cliente = dados.get("id_cliente")
+        id_empresa = dados.get("id_empresa")
         dt_referencia = dados.get("dt_referencia")  # Ex: "2025-03-01"
 
-        if not id_cliente or not dt_referencia:
+        if not id_empresa or not dt_referencia:
             return jsonify({"status": "erro", "mensagem": "Dados incompletos."}), 400
 
         referencia = datetime.strptime(dt_referencia, "%Y-%m-%d")
@@ -3178,8 +3289,8 @@ def cobranca_preparar():
         cursor.execute("""
             SELECT nome_modulo, valor, dt_inicio
             FROM tbl_fatura_assinatura
-            WHERE id_cliente = ? AND status = 'Ativo'
-        """, (id_cliente,))
+            WHERE id_empresa = %s AND status = 'Ativo'
+        """, (id_empresa,))
         modulos = cursor.fetchall()
 
         total = 0
@@ -3229,28 +3340,28 @@ def cobranca_preparar():
 def gerar_fatura():
     try:
         dados = request.get_json()
-        id_cliente = dados.get("id_cliente")
+        id_empresa = dados.get("id_empresa")
         competencia = dados.get("competencia")
         vencimento = dados.get("vencimento")
         valor_total = dados.get("valor_total")
         forma_pagamento = dados.get("forma_pagamento")
 
-        if not all([id_cliente, competencia, vencimento, valor_total, forma_pagamento]):
+        if not all([id_empresa, competencia, vencimento, valor_total, forma_pagamento]):
             return jsonify({"status": "erro", "mensagem": "Dados obrigatórios não informados."}), 400
 
         # 🚫 Verifica se já existe fatura para a competência
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id FROM tbl_fatura WHERE id_cliente = ? AND competencia = ?
-        """, (id_cliente, competencia))
+            SELECT id FROM tbl_fatura WHERE id_empresa = %s AND competencia = %s
+        """, (id_empresa, competencia))
         if cursor.fetchone():
             return jsonify({"status": "erro", "mensagem": "Já existe fatura para esta competência."}), 400
 
         # 🔎 Busca e-mail e nome da empresa
         cursor.execute("""
-            SELECT email_financeiro, nome_empresa FROM tbl_empresa WHERE id = ?
-        """, (id_cliente,))
+            SELECT email_financeiro, nome_empresa FROM tbl_empresa WHERE id = %s
+        """, (id_empresa,))
         empresa = cursor.fetchone()
         if not empresa:
             return jsonify({"status": "erro", "mensagem": "Empresa não encontrada."}), 404
@@ -3262,14 +3373,14 @@ def gerar_fatura():
         # 🧾 Insere a fatura
         cursor.execute("""
             INSERT INTO tbl_fatura (
-                id_cliente, vencimento, valor_total, forma_pagamento,
+                id_empresa, vencimento, valor_total, forma_pagamento,
                 status_pagamento, competencia
-            ) VALUES (?, ?, ?, ?, ?, ?)
+            ) VALUES (%s, %s, %s, %s, %s, %s)
         """, (
-            id_cliente, vencimento, valor_total,
+            id_empresa, vencimento, valor_total,
             forma_pagamento, 'Pendente', competencia
         ))
-        id_fatura = cursor.lastrowid
+        id_fatura = cursor.fetchone()[0]
         conn.commit()
 
         # 🏦 Geração da cobrança
@@ -3317,10 +3428,10 @@ def gerar_fatura():
 def resumo_fatura():
     try:
         dados = request.get_json()
-        id_cliente = dados.get("id_cliente")
+        id_empresa = dados.get("id_empresa")
         dt_referencia = dados.get("dt_referencia")
 
-        if not id_cliente or not dt_referencia:
+        if not id_empresa or not dt_referencia:
             return jsonify({"status": "erro", "mensagem": "Dados incompletos."}), 400
 
         # ⏱️ Competência e vencimento sugerido
@@ -3339,8 +3450,8 @@ def resumo_fatura():
         cursor.execute("""
             SELECT nome_modulo, valor, dt_inicio, dt_fim
             FROM tbl_fatura_assinatura
-            WHERE id_cliente = ? AND status = 'Ativo'
-        """, (id_cliente,))
+            WHERE id_empresa = %s AND status = 'Ativo'
+        """, (id_empresa,))
         modulos = cursor.fetchall()
 
         total = 0.0
@@ -3390,15 +3501,15 @@ def resumo_fatura():
 # parar puxar a forma de pagamento padrão do cliente
 @auth_bp.route("/empresa/forma_pagamento")
 def forma_pagamento_empresa():
-    id_cliente = request.args.get("id_cliente")
+    id_empresa = request.args.get("id_empresa")
 
-    if not id_cliente:
+    if not id_empresa:
         return jsonify({"status": "erro", "mensagem": "ID do cliente não informado."}), 400
 
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT forma_pagamento_padrao FROM tbl_empresa WHERE id = ?", (id_cliente,))
+    cursor.execute("SELECT forma_pagamento_padrao FROM tbl_empresa WHERE id = %s", (id_empresa,))
     linha = cursor.fetchone()
     conn.close()
 

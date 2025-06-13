@@ -1,6 +1,6 @@
-console.log("🟢 Scadastro.js carregado");
+console.log("Scadastro.js carregado");
 
-// 🔁 Validação e envio do formulário
+// Validação e envio do formulário
 document.getElementById("btnCadastrar").addEventListener("click", async () => {
   const nome_completo = document.getElementById("nome_completo").value.trim();
   const email         = document.getElementById("email").value.trim();
@@ -14,10 +14,20 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
   const cidade        = document.getElementById("cidade").value.trim();
   const uf            = document.getElementById("uf").value.trim().toUpperCase();
 
-  // 🧪 Validação básica
+ // Validação obrigatória
   if (!nome_completo || !email || !cnpj || !empresa || !cep || !endereco || !numero || !bairro || !cidade || !uf) {
     return Swal.fire("Campos obrigatórios", "Preencha todos os campos obrigatórios.", "warning");
   }
+
+  // ✉️ Validação de e-mail
+  const regexEmail = /^[\w\.-]+@[\w\.-]+\.\w{2,}$/;
+  if (!regexEmail.test(email)) {
+    return Swal.fire("E-mail inválido", "Informe um e-mail válido (ex: nome@empresa.com.br).", "warning")
+      .then(() => {
+        document.getElementById("email").focus();
+      });
+  }
+
 
   const dados = { nome_completo, email, cnpj, empresa, ie, cep, endereco, numero, bairro, cidade, uf };
 
@@ -148,4 +158,22 @@ if (btnBuscarCEP) {
 }
 
 
-  
+// ===============================================================
+// Validação de e-mail ao sair do campo (evento blur)
+// ===============================================================
+document.getElementById("email").addEventListener("blur", () => {
+  const email = document.getElementById("email").value.trim();
+
+  const regexEmail = /^[\w\.-]+@[\w\.-]+\.\w{2,}$/;
+
+  if (email && !regexEmail.test(email)) {
+    Swal.fire({
+      icon: "warning",
+      title: "E-mail inválido",
+      text: "Informe um e-mail válido (ex: nome@empresa.com.br).",
+    }).then(() => {
+      document.getElementById("email").focus();
+    });
+  }
+});
+ 

@@ -74,9 +74,9 @@ def gerar_cobranca_efi(id_fatura):
         # 🔍 Dados da fatura e cliente
         cursor.execute("""
             SELECT F.id, F.valor_total, F.vencimento, F.forma_pagamento,
-                F.id_cliente, E.nome_empresa, E.email_financeiro
+                F.id_empresa, E.nome_empresa, E.email_financeiro
             FROM tbl_fatura F
-            JOIN tbl_empresa E ON F.id_cliente = E.id
+            JOIN tbl_empresa E ON F.id_empresa = E.id
             WHERE F.id = ?
         """, (id_fatura,))
 
@@ -85,7 +85,7 @@ def gerar_cobranca_efi(id_fatura):
         if not fatura:
             return {"status": "erro", "mensagem": "Fatura não encontrada."}
 
-        id_fatura, valor_total, vencimento, forma_pgto, id_cliente, nome_cliente, email = fatura
+        id_fatura, valor_total, vencimento, forma_pgto, id_empresa, nome_cliente, email = fatura
 
         # 🔐 Ambiente e credenciais
         modo_producao = os.getenv("MODO_PRODUCAO", "false").lower() == "true"

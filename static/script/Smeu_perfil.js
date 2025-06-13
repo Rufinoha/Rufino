@@ -1,3 +1,4 @@
+console.log("🔧 Meu_Perfil.js carregado...");
 // -------------------------------------------------------------
 // 🔄 TROCA DE ABAS
 // -------------------------------------------------------------
@@ -11,18 +12,16 @@ document.querySelectorAll('.tab-button').forEach(btn => {
     });
 });
 
+
 // -------------------------------------------------------------
-// 📸 ALTERAR / EXCLUIR IMAGEM DE PERFIL
-// -------------------------------------------------------------
-// -------------------------------------------------------------
-// 📸 ALTERAR / EXCLUIR IMAGEM DE PERFIL
+// ALTERAR / EXCLUIR IMAGEM DE PERFIL
 // -------------------------------------------------------------
 (function () {
   const inputFoto = document.getElementById('inputFoto');
   const fotoUsuario = document.getElementById('fotoUsuario');
   const btnExcluirFoto = document.getElementById('btnExcluirFoto');
 
-  // 🔁 Visualização instantânea da imagem selecionada
+  // Visualização instantânea da imagem selecionada
   inputFoto.addEventListener('change', () => {
     const file = inputFoto.files[0];
     if (!file) return;
@@ -39,7 +38,7 @@ document.querySelectorAll('.tab-button').forEach(btn => {
     };
     reader.readAsDataURL(file);
 
-    // 🔁 Enviar imagem para o backend
+    // Enviar imagem para o backend
     const formData = new FormData();
     formData.append('imagem', file);
 
@@ -162,7 +161,7 @@ document.getElementById('btnAlterarSenha').addEventListener('click', async () =>
         document.getElementById("obs_faturamento").value = empresaInfo.obs_faturamento || "";
 
       // 🔹 Preenche Meu Perfil
-      document.getElementById("nome").value = dados.usuario.nome;
+      document.getElementById("nome").value = dados.usuario.nome_completo;
       document.getElementById("email").value = dados.usuario.email;
       document.getElementById("departamento").value = dados.usuario.departamento;
       document.getElementById("whatsapp").value = dados.usuario.whatsapp;

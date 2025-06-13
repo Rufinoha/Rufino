@@ -6,7 +6,7 @@
 const usuario = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
 let dadosRecebidos = null;
 
-if (!usuario || !usuario.id_cliente) {
+if (!usuario || !usuario.id_empresa) {
   Swal.fire("⚠️ Sessão expirada", "Faça login novamente.", "warning").then(() => {
     window.location.href = "/login.html";
   });
@@ -17,11 +17,11 @@ if (!usuario || !usuario.id_cliente) {
 // ========================================================================
 async function carregarResumoFatura() {
   try {
-    const id_cliente = dadosRecebidos?.id_cliente || usuario.id_cliente;
+    const id_empresa = dadosRecebidos?.id_empresa || usuario.id_empresa;
     const competencia = dadosRecebidos?.competencia;
     document.getElementById("ob_competencia").value = competencia || "";
 
-    const url = `/cobranca/pendentes?id_cliente=${id_cliente}&competencia=${competencia}`;
+    const url = `/cobranca/pendentes?id_empresa=${id_empresa}&competencia=${competencia}`;
 
     const resposta = await fetch(url);
     const dados = await resposta.json();
@@ -63,7 +63,7 @@ async function carregarResumoFatura() {
     });
     totalEl.textContent = valorTotal.toFixed(2);
 
-    await carregarFormaPagamentoPadrao(id_cliente);
+    await carregarFormaPagamentoPadrao(id_empresa);
 
 
 
@@ -93,9 +93,9 @@ window.addEventListener("DOMContentLoaded", () => {
 // 📨 Recebe dados via postMessage (quando aberto por popup)
 // ========================================================================
 window.addEventListener("message", (event) => {
-  if (event.data && event.data.id_cliente) {
+  if (event.data && event.data.id_empresa) {
     dadosRecebidos = event.data;
-    document.getElementById("ob_idcliente").value = event.data.id_cliente;
+    document.getElementById("ob_idcliente").value = event.data.id_empresa;
     carregarResumoFatura();
   }
 });
@@ -119,7 +119,7 @@ document.getElementById("btnConfirmarFatura").addEventListener("click", async ()
   }
 
   // 📦 Coleta de dados da tela
-  const id_cliente = parseInt(document.getElementById("ob_idcliente")?.value);
+  const id_empresa = parseInt(document.getElementById("ob_idcliente")?.value);
   const competencia = document.getElementById("ob_competencia").value.trim();
   const vencimento = document.getElementById("vencimentoInput")?.value;
   
@@ -133,9 +133,9 @@ document.getElementById("btnConfirmarFatura").addEventListener("click", async ()
   console.log("🧪 vencimento:", vencimento);
   console.log("🧪 competencia:", competencia);
   console.log("🧪 forma_pagamento:", forma_pagamento);
-  console.log("id_cliente:", id_cliente)
+  console.log("id_empresa:", id_empresa)
 
-  if (!id_cliente || !competencia || !vencimento || !forma_pagamento || isNaN(valor_total)) {
+  if (!id_empresa || !competencia || !vencimento || !forma_pagamento || isNaN(valor_total)) {
     Swal.fire("Erro", "Todos os campos devem estar preenchidos corretamente.", "error");
     return;
   }
@@ -144,7 +144,7 @@ document.getElementById("btnConfirmarFatura").addEventListener("click", async ()
     const resp = await fetch("/cobranca/gerar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_cliente, competencia, vencimento, valor_total, forma_pagamento })
+      body: JSON.stringify({ id_empresa, competencia, vencimento, valor_total, forma_pagamento })
     });
 
     const data = await resp.json();
@@ -176,9 +176,9 @@ document.getElementById("btnCancelarFatura").addEventListener("click", () => {
 // ========================================================================
 // Carregar forma de pagamento padrão
 // ========================================================================
-async function carregarFormaPagamentoPadrao(id_cliente) {
+async function carregarFormaPagamentoPadrao(id_empresa) {
   try {
-    const resposta = await fetch(`/empresa/forma_pagamento?id_cliente=${id_cliente}`);
+    const resposta = await fetch(`/empresa/forma_pagamento?id_empresa=${id_empresa}`);
     const resultado = await resposta.json();
 
     if (resultado && resultado.forma_pagamento_padrao) {

@@ -1,7 +1,33 @@
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* ========================== CONFIGURAÇÕES GERAIS ========================== */
 body {
-    margin: 0;
     padding: 0;
-    font-family: 'Arboria', sans-serif;
+    margin: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
     background-color: #FFFCFB;
     color: #333333;
     line-height: 1.6;
@@ -11,30 +37,39 @@ body {
 /********************************************************/
 /********************************************************/
 /********************TOPO FIXO***************************/
+/* 🔝 TOPO FIXO LIMPO */
 .header-fixo {
     position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    background-color:transparent;
+    background-color: #FFFCFB;
     border-bottom: 1px solid #ccc;
-
-    padding: 0rem 2rem;
-    display: flex;
-    justify-content: center;
-    transition: background-color 0.3s ease;
     z-index: 1000;
+
+    /* Padding interno e centralização do conteúdo */
+    padding: 0.5rem 2rem;
+
+    /* Zera interferência de fundo ou efeitos */
+    background-image: none !important;
+    background: #FFFCFB !important;
 }
-  
+
+/* 🔳 Conteúdo centralizado, com logo à esquerda e botão à direita */
 .container-topo {
-    width: 100%;
     max-width: 1200px;
+    margin: 0 auto;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
-  
+
+/* 🖼️ Logo fluido */
 .logo-rufino {
-    height: 80px;
+    height: 90px;
+    max-width: 100%;
 }
+
   
 .btn-area-cliente {
     background-color: #85C300;
@@ -445,32 +480,12 @@ section h2 {
   
 
 }
-  
 
-  
-/************************************************************/
-/************************************************************/
-/******************* BANNER F CENTRALIZADO NO SITE ******************/
-/* Fundo lateral direito com imagem */
+
+
+
 body::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 60vw;
-    height: 100vh;
-    /* background-image: url("/static/imge/bannerprincipal02.png"); */
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center right;
-    opacity: 1;
-    z-index: 0;
-    pointer-events: none;
-  }
-  
-  body, .conteudo-site {
-    position: relative;
-    z-index: 1;
-  }
-  
-  
+    content: none !important;
+    display: none !important;
+    background: none !important;
+}

@@ -108,7 +108,7 @@ document.getElementById("btnSalvar").addEventListener("click", async (e) => {
 
     // Coleta dos campos
     const id = document.getElementById("ob_id").value.trim() || null;
-    const id_cliente = App.Varidcliente;
+    const id_empresa = App.Varidcliente;
     const nome_completo = document.getElementById("ob_nome_completo").value.trim();
     const nome = document.getElementById("ob_nome").value.trim();
     const email = document.getElementById("ob_email").value.trim();
@@ -121,7 +121,7 @@ document.getElementById("btnSalvar").addEventListener("click", async (e) => {
 
     const payload = {
         id,
-        id_cliente,
+        id_empresa,
         id_grupo,  // ✅ Já está nulo para administrador/desenvolvedor
         nome_completo,
         nome,

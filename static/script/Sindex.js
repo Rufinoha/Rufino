@@ -15,7 +15,7 @@
       Varnome: usuario.nome,
       Varemail: usuario.email,
       Varimagem: usuario.imagem,
-      Varid_cliente: usuario.id_cliente,
+      Varid_empresa: usuario.id_empresa,
     };
   }
 })();
@@ -140,12 +140,21 @@ function configurarPin() {
   const menuLateral = document.getElementById("menuLateral");
   const icone = document.getElementById("iconePin");
 
-  // 🟢 Sempre iniciar retraído, ignorando localStorage anterior
-  menuLateral.classList.add("retraido");
-  menuLateral.classList.remove("expandido");
-  icone.src = window.Paths.pinSolto;
-  btnPin.classList.remove("pin-fincado");
-  localStorage.setItem("menuLateralEstado", "retraido");
+   //Sempre iniciar expandido, a menos que o usuário tenha retraído manualmente
+  const estadoSalvo = localStorage.getItem("menuLateralEstado") || "expandido";
+
+  if (estadoSalvo === "expandido") {
+    menuLateral.classList.add("expandido");
+    menuLateral.classList.remove("retraido");
+    icone.src = window.Paths.pinFincado;
+    btnPin.classList.add("pin-fincado");
+  } else {
+    menuLateral.classList.add("retraido");
+    menuLateral.classList.remove("expandido");
+    icone.src = window.Paths.pinSolto;
+    btnPin.classList.remove("pin-fincado");
+  }
+
 
   btnPin.addEventListener("click", () => {
     const estaExpandido = menuLateral.classList.contains("expandido");
@@ -237,9 +246,9 @@ function renderizarMenu(itens, posicao) {
 // 🎯 Disparar ação ao clicar nos menus
 document.addEventListener("click", function (e) {
   const link = e.target.closest("[data-link]");
-  
   if (link) {
     e.preventDefault();
+
     const rota = link.getAttribute("data-link");
     const tipo = link.getAttribute("data-tipo");
     const pagina = link.getAttribute("data-page");
@@ -249,6 +258,28 @@ document.addEventListener("click", function (e) {
         console.warn("⚠️ Menu com 'index' mas sem data-page definido.");
         return;
       }
+
+      // 🔁 Remove destaque de todos os submenus
+      document.querySelectorAll(".submenu-item.ativo").forEach(el => el.classList.remove("ativo"));
+
+      // ✅ Adiciona destaque ao submenu atual
+      link.classList.add("ativo");
+
+      // 🔁 Fecha todos os submenus, exceto o pai do submenu clicado
+      document.querySelectorAll(".submenu").forEach(sub => {
+        if (!sub.contains(link)) {
+          sub.classList.remove("aberto");
+          sub.style.display = "none";
+        }
+      });
+
+      // ✅ Garante que o submenu atual esteja aberto
+      const submenu = link.closest(".submenu");
+      if (submenu) {
+        submenu.classList.add("aberto");
+        submenu.style.display = "block";
+      }
+
       carregarPagina(pagina);
     } else if (tipo === "nova_aba") {
       window.open(rota, "_blank");
@@ -256,6 +287,7 @@ document.addEventListener("click", function (e) {
       alert("🚧 Modal ainda não implementado.");
     }
   }
+
 
   // 🔄 Alternar submenu
   const toggle = e.target.closest("[data-toggle]");
@@ -298,19 +330,23 @@ function carregarMenuHorizontalUsuario() {
       });
       // 🔥 Adiciona evento de clique
       container.querySelectorAll(".submenu-horizontal-item").forEach(item => {
-        item.addEventListener("click", (e) => {
-          const tipo = item.getAttribute("data-tipo");
-          const page = item.getAttribute("data-page");
-          const rota = item.getAttribute("data-link");
+       item.addEventListener("click", (e) => {
+        const tipo = item.getAttribute("data-tipo");
+        const page = item.getAttribute("data-page");
+        const rota = item.getAttribute("data-link");
 
-          if (tipo === "index") {
-            carregarPagina(page); // ✅ usa data-page
-          } else if (tipo === "nova_aba") {
-            window.open(rota, "_blank");
-          } else if (tipo === "popup") {
-            alert("🚧 Modal ainda não implementado.");
-          }
-        });
+        // ✅ Fecha o menu horizontal do usuário
+        document.querySelector(".menu-usuario")?.classList.remove("active");
+
+        if (tipo === "index") {
+          carregarPagina(page);
+        } else if (tipo === "nova_aba") {
+          window.open(rota, "_blank");
+        } else if (tipo === "popup") {
+          alert("🚧 Modal ainda não implementado.");
+        }
+      });
+
       });
     })
     .catch(err => console.warn("Erro ao carregar menu horizontal:", err));
@@ -359,38 +395,41 @@ function fecharPainelNovidades() {
 
 function carregarPagina(pagina) {
   const conteudo = document.getElementById("content-area");
-  if (!conteudo) {
-    console.error("❌ #content-area não encontrado.");
-    return;
-  }
+  if (!conteudo) return;
 
-  if (conteudo.getAttribute("data-page") === pagina) {
-    fecharTodosSubmenus();
-    return;
-  }
+  // 1. Limpa conteúdo e scripts antigos
+  conteudo.innerHTML = "";
+  document.querySelectorAll("script[data-page-script]").forEach(s => s.remove());
 
+  // 2. Remove módulo antigo
+  const modulo = pagina.charAt(0).toUpperCase() + pagina.slice(1);
+  delete window[modulo];
+
+  // 3. Carrega o HTML da tela
   fetch(`/${pagina}`)
-    .then(response => response.text())
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.text();
+    })
     .then(html => {
       conteudo.innerHTML = html;
       conteudo.setAttribute("data-page", pagina);
 
-      const scriptNome = `/static/script/S${pagina}.js`;
-      const existente = document.querySelector(`script[src="${scriptNome}"]`);
-      if (existente) existente.remove();
+      // 4. Injeta o script novo
+      const script = document.createElement("script");
+      script.src = `/static/script/S${modulo}.js?t=${Date.now()}`;
+      script.defer = true;
+      script.setAttribute("data-page-script", pagina);
+      document.body.appendChild(script);
 
-      const novoScript = document.createElement("script");
-      novoScript.src = scriptNome;
-      novoScript.defer = true;
-      document.body.appendChild(novoScript);
-
-      fecharTodosSubmenus();
+      
     })
-    .catch(error => {
-      console.error(`❌ Erro ao carregar ${pagina}:`, error);
-      Swal.fire("Erro", `Não foi possível carregar ${pagina}`, "error");
+    .catch(err => {
+      console.error(`Erro ao carregar ${pagina}`, err);
+      Swal.fire("Erro", `Não foi possível abrir ${pagina}`, "error");
     });
 }
+
 
 (function iniciarControleSessao() {
   let tempoSessaoMinutos = 30;

@@ -22,7 +22,7 @@ if (typeof usuario === "undefined") {
 
 window.App = {
     Varid: usuario.id_usuario,
-    Varidcliente: usuario.id_cliente,
+    Varidcliente: usuario.id_empresa,
     Varnome: usuario.nome,
     Varnomecompleto: usuario.nome_completo,
     Varemail: usuario.email,
@@ -50,8 +50,8 @@ async function carregarConfiguracoes() {
             return;
         }
 
-        const id_cliente = App.Varidcliente;
-        const response = await fetch(`/configuracoes/${id_cliente}`);
+        const id_empresa = App.Varidcliente;
+        const response = await fetch(`/configuracoes/${id_empresa}`);
         const data = await response.json();
 
         if (data.success) {

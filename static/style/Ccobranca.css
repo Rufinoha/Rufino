@@ -1,10 +1,35 @@
-/* 🧱 Container geral */
-.container-cobranca {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background: #FFFCFB;
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
 }
 
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* ========================== CONFIGURAÇÕES GERAIS ========================== */
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+}
 /* 🔘 Abas */
 .tabs-container {
   display: flex;

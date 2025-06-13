@@ -5,7 +5,7 @@ if (typeof window.Configuracoes === "undefined") {
             { card_id: "usuarios", titulo: "Usuários", texto: "Gerencie contas e permissões do sistema.", pagina: "frm_usuario.html" },
             { card_id: "perfil", titulo: "Perfil de Usuário", texto: "Gerencie os menus de cada perfil de acesso.", pagina: "frm_usuario_perfil.html" },
             { card_id: "novidades", titulo: "Novidades", texto: "Gerencie os cards exibidos na lateral do sistema.", pagina: "frm_novidades.html" },
-            { card_id: "email", titulo: "og de E-mail", texto: "Verifique aqui o status de todos os emails enviados pelo sistema.", pagina: "frm_email_log.html" },
+            { card_id: "email", titulo: "Log de E-mail", texto: "Verifique aqui o status de todos os emails enviados pelo sistema.", pagina: "frm_email_log.html" },
             { card_id: "geral", titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.", pagina: "frm_config_geral" },
             { card_id: "ajuda", titulo: "Central de Ajuda", texto: "Cadastre dicas e explicações para os módulos.", pagina: "frm_emcontrucao_config.html" },
             { card_id: "banco", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "frm_emcontrucao_config.html" },

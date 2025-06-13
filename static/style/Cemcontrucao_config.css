@@ -1,0 +1,84 @@
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* ========================== CONFIGURAÇÕES GERAIS ========================== */
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+}
+
+
+.Cl_UsuarioContainer {
+    width: 50%;
+    min-width: 320px;
+    max-width: 600px;
+
+    margin: 60px auto 0 auto; /* ← isso centraliza horizontalmente */
+    padding: 30px;
+
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+}
+
+
+.Cl_button {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.Cl_button button {
+    background-color: #e0e0e0;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.Cl_button button:hover {
+    background-color: #d2d2d2;
+}
+
+.Cl_container {
+    text-align: center;
+}
+
+.Cl_container h1 {
+    color: red;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.Cl_container p {
+    font-size: 16px;
+    color: #333;
+    line-height: 1.6;
+}
+

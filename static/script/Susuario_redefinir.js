@@ -36,7 +36,7 @@ document.getElementById("btnAlterarSenha").addEventListener("click", async () =>
 
     if (resp.ok) {
       Swal.fire("Sucesso!", resultado.mensagem, "success").then(() => {
-        window.location.href = "/auth/login";
+        window.location.href = "/login";
       });
     } else {
       btn.disabled = false;

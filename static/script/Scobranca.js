@@ -37,7 +37,7 @@ async function carregarPendentes() {
 
   try {
     const params = new URLSearchParams({ competencia });
-    if (cliente) params.append("id_cliente", cliente);
+    if (cliente) params.append("id_empresa", cliente);
 
     const resposta = await fetch(`/cobranca/pendentes?${params.toString()}`);
     const pendentes = await resposta.json();
@@ -66,7 +66,7 @@ async function carregarPendentes() {
 
       btnGerar.addEventListener("click", () => {
         const dadosFatura = {
-          id_cliente: item.id_cliente,
+          id_empresa: item.id_empresa,
           nome_cliente: item.nome,
           competencia: item.competencia,
           valor_estimado: item.valor_estimado
