@@ -9,7 +9,8 @@ if (typeof window.Configuracoes === "undefined") {
             { card_id: "geral", titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.", pagina: "frm_config_geral" },
             { card_id: "ajuda", titulo: "Central de Ajuda", texto: "Cadastre dicas e explicações para os módulos.", pagina: "frm_emcontrucao_config.html" },
             { card_id: "banco", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "frm_emcontrucao_config.html" },
-            { card_id: "Cobranças", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "frm_cobranca.html" }
+            { card_id: "Cobrancas", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "frm_cobranca.html" },
+            { card_id: "Menu", titulo: "Menu", texto: "Controle de conteudo dos Menus lateral e topo.", pagina: "frm_menu.html" }
         ], 
 
         configurarEventos: async function () {

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro de Menu</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cmenu_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <!-- 🔹 CABEÇALHO -->
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Cadastro de Menu</h1>
+    </div>
+    <div class="Cl_MenuID">
+        <label for="id">ID:</label>
+        <input type="text" id="id" disabled>
+    </div>
+  </div>
+
+  <div class="Cl_ContainerApoio">
+    <form id="formMenu" class="form-grade">
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="nome_menu">Nome do Menu:</label>
+          <input type="text" id="nome_menu" required />
+        </div>
+
+        <div class="form-campo">
+          <label for="icone">Ícone:</label>
+          <input type="text" id="icone" />
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="descricao">Descrição:</label>
+          <input type="text" id="descricao" />
+        </div>
+
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="rota">Rota:</label>
+          <input type="text" id="rota" />
+        </div>
+        <div class="form-campo">
+          <label for="data_page">Data Page:</label>
+          <input type="text" id="data_page" />
+        </div>
+
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="link_detalhe">Link Detalhe:</label>
+          <input type="text" id="link_detalhe" />
+        </div>
+        <div class="form-campo">
+          <label for="tipo_abrir">Tipo Abrir:</label>
+          <select id="tipo_abrir">
+            <option value="index">index</option>
+            <option value="externo">externo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="ordem">Ordem:</label>
+          <input type="number" id="ordem" />
+        </div>
+        <div class="form-campo">
+          <label for="parent_id">Parent ID:</label>
+          <input type="number" id="parent_id" />
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="ativo">Ativo:</label>
+          <select id="ativo">
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+        <div class="form-campo">
+          <label for="local_menu">Local Menu:</label>
+          <select id="local_menu">
+            <option value="lateral">Lateral</option>
+            <option value="horizontal">Horizontal</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="valor">Valor:</label>
+          <input type="number" step="0.01" id="valor" />
+        </div>
+        <div class="form-campo">
+          <label for="assinatura_app">Assinatura App:</label>
+          <select id="assinatura_app">
+            <option value="true">Sim</option>
+            <option value="false">Não</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-linha">
+        <div class="form-campo">
+          <label for="obs">Observações:</label>
+          <input type="text" id="obs" />
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="Cl_BotoesApoio">
+    <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+    <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="window.close()">Cancelar</button>
+    <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/Smenu_apoio.js') }}"></script>
+</body>
+</html>

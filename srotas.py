@@ -5,51 +5,64 @@ import os
 import re
 import secrets
 import bcrypt
-import smtplib
 import requests
-import json
-import html
 import calendar
 import psycopg2
+import html
 from datetime import date, datetime, timedelta
 from email.mime.text import MIMEText
-from email.utils import formataddr
-from flask import (
-    Blueprint, render_template, request, jsonify, session, redirect, url_for,
-    send_from_directory, make_response, current_app as app
-)
 from dotenv import load_dotenv
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from functools import wraps
-from weasyprint import HTML
-from sapiefi import gerar_cobranca_efi
-from extensoes import db
+from urllib.parse import urlparse
+from flask import (
+    Blueprint, render_template, request, jsonify, session, redirect, url_for,
+    send_from_directory, make_response, current_app as app
+)
 
-# ────────────────────────────────────────────────
-# 2️⃣ IMPORTANDO TABELAS DO MODELOS
-# ────────────────────────────────────────────────
+# Importar arquivos de rotas
+from srotas_api_efi import gerar_cobranca_efi
+from srotas_api_email_brevo import brevo_bp
 from modelos import (
     TblAssinaturaCliente, TblChamado, TblChamadoMensagem, TblChamadoMensagemAnexo,
     TblConfig, TblEmailEnvio, TblEmailDestinatario, TblEmailEvento, TblEmailLog,
     TblEmpresa, TblFatura, TblFaturaAssinatura, TblMenu, TblNovidades,
-    TblUsuario, TblUsuarioGrupo, TblUsuarioPermissao
+    TblUsuario, TblUsuarioGrupo, TblUsuarioPermissaoGrupo
+)
+from global_utils import (
+    remover_tags_html,
+    formata_data_brasileira,
+    formata_moeda,
+    valida_email,
 )
 
+
+
+
+# Carrega variáveis do .env
+load_dotenv()
 
 # ────────────────────────────────────────────────
 # 4️⃣ FUNÇÃO PARA CONECTAR NO BANCO DE DADOS PostgreSQL
 # ────────────────────────────────────────────────
 def Var_ConectarBanco():
+    usuario = os.getenv("BANK_USER")
     senha = os.getenv("BANK_KEY")
+    banco = os.getenv("BANK_NAME")
+    host = os.getenv("BANK_HOST")
+    porta = os.getenv("BANK_PORT")
+
     conn = psycopg2.connect(
-        dbname="bd_rufino",
-        user="postgres",
+        dbname=banco,
+        user=usuario,
         password=senha,
-        host="localhost",
-        port=5432
+        host=host,
+        port=porta
     )
     return conn
+
+
 
 # ────────────────────────────────────────────────
 # 5️⃣ BLUEPRINT: LOGIN / AUTENTICAÇÃO
@@ -62,21 +75,19 @@ auth_bp = Blueprint(
     static_url_path='/static'
 )
 
+def init_app(app):
+    app.register_blueprint(auth_bp)
+# ────────────────────────────────────────────────
+
 # ────────────────────────────────────────────────
 # 6️⃣ OUTRAS FUNÇÕES ÚTEIS
 # ────────────────────────────────────────────────
-
-# Carrega variáveis do .env
-load_dotenv()
 
 def remover_tags_html(texto):
     return re.sub('<[^<]+?>', '', texto)
 
 def get_base_url():
     return "https://rufino.tech" if os.getenv("MODO_PRODUCAO", "false").lower() == "true" else "http://127.0.0.1:5000"
-
-
-
 
 def login_obrigatorio(func):
     @wraps(func)
@@ -88,6 +99,42 @@ def login_obrigatorio(func):
 
 
 
+
+def configurar_tempo_sessao(id_empresa):
+    try:
+        conn = Var_ConectarBanco()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT valor 
+            FROM tbl_config 
+            WHERE chave = 'tempo_sessao_minutos' AND id_empresa = %s
+        """, (id_empresa,))
+        resultado = cur.fetchone()
+        conn.close()
+
+        if resultado:
+            return timedelta(minutes=int(resultado[0]))
+    except Exception as e:
+        print("⚠️ Erro ao configurar tempo de sessão:", str(e))
+    
+    return timedelta(minutes=30)  # Valor padrão
+
+
+# ────────────────────────────────────────────────
+# Rota para testar conexão com banco
+# ────────────────────────────────────────────────
+
+@auth_bp.route("/teste_banco")
+def teste_banco():
+    try:
+        conn = Var_ConectarBanco()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM tbl_usuario")
+        qtd = cur.fetchone()[0]
+        conn.close()
+        return f"✅ Conectado ao banco! Existem {qtd} usuários cadastrados."
+    except Exception as e:
+        return f"❌ Erro de conexão: {e}"
 
 
 
@@ -235,34 +282,6 @@ def enviar_email_fatura(id_fatura):
 
 
 
-@auth_bp.route("/config/tempo_sessao")
-def config_tempo_sessao():
-    try:
-        id_empresa = session.get("id_empresa")
-        print("🔍 Sessão atual:", dict(session))  # debug temporário
-
-        if not id_empresa:
-            return jsonify({"erro": "Cliente não identificado"}), 401
-
-        conn = Var_ConectarBanco()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT valor FROM tbl_config
-            WHERE chave = 'tempo_sessao_minutos' AND id_empresa = %s
-            LIMIT 1
-        """, (id_empresa,))
-        resultado = cursor.fetchone()
-        conn.close()
-
-        return jsonify({"valor": resultado[0] if resultado else "30"})
-
-    except Exception as e:
-        print("❌ Erro ao buscar tempo de sessão:", e)
-        return jsonify({"valor": "30"}), 500
-
-
-
-
 # ────────────────────────────────────────────────
 # 6️⃣ ROTAS DE PÁGINA PRINCIPAL (HOME, INDEX)
 # ────────────────────────────────────────────────
@@ -345,21 +364,27 @@ def autenticar_login():
         if not bcrypt.checkpw(senha.encode('utf-8'), senha_em_bytes):
             return jsonify(success=False, message="Senha inválida."), 401
 
-        # 🔎 Buscar nome da empresa
+        # Buscar nome da empresa
         cursor.execute("SELECT nome_empresa FROM tbl_empresa WHERE id = %s", (id_empresa,))
         empresa_row = cursor.fetchone()
         nome_empresa = empresa_row[0] if empresa_row else ""
 
-        # 🔐 Atualiza sessão
+        #Atualiza sessão
         session["usuario_id"] = id_usuario
         session["id_usuario"] = id_usuario
         session["id_empresa"] = id_empresa
-        session["grupo"] = grupo
+        session["grupo"] = grupo 
 
-        if trocasenha_em:
+        #Configura tempo de sessão com base na empresa
+        session.permanent = True
+        app.permanent_session_lifetime = configurar_tempo_sessao(id_empresa)
+
+        # Verifica se está na hora de trocar a senha
+        if trocasenha_em and datetime.now().date() >= trocasenha_em.date():
             return jsonify({"trocar_senha": True})
 
-        # ✅ Dados para o frontend
+
+        # Dados para o frontend
         usuario_dados = {
             "id_usuario": id_usuario,
             "id_empresa": id_empresa,
@@ -510,7 +535,6 @@ def usuario_atualizar_senha():
 
 @auth_bp.route("/usuario/apoio")
 def usuario_apoio():
-    from flask import request, jsonify
     try:
         id_usuario = request.args.get("id")
         if not id_usuario:
@@ -672,6 +696,18 @@ def cadastro_novo():
         ))
         id_empresa = cursor.fetchone()[0]
 
+        # 👥 Cria os grupos padrões para a empresa
+        agora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        grupos_padrao = [
+            ("Usuario", "Grupo de acesso básico a nível padrão"),
+            ("Administrador", "Acesso nível administrador")
+        ]
+
+        for nome_grupo, descricao in grupos_padrao:
+            cursor.execute("""
+                INSERT INTO tbl_usuario_grupo (id_empresa, nome_grupo, descricao, criado_em)
+                VALUES (%s, %s, %s, %s)
+            """, (id_empresa, nome_grupo, descricao, agora))
 
 
         # 👤 Cria o primeiro usuário
@@ -814,7 +850,7 @@ def menu_por_posicao(posicao):
     conn = None
     try:
         id_usuario = session.get("id_usuario")
-        id_empresa = session.get("id_empresa")
+        id_empresa = session.get("id_empresa")  # nome correto no seu projeto
         grupo = session.get("grupo")
 
         if not id_usuario or not id_empresa or not grupo:
@@ -829,21 +865,25 @@ def menu_por_posicao(posicao):
                 SELECT id, nome_menu, descricao, rota, data_page, icone, link_detalhe,
                        tipo_abrir, ordem, parent_id
                 FROM tbl_menu
-                WHERE ativo = TRUE
- AND LOWER(local_menu) = LOWER(%s)
+                WHERE ativo = TRUE AND LOWER(local_menu) = LOWER(%s)
                 ORDER BY ordem
             """, (posicao,))
 
         elif grupo == "Administrador":
-            print("🔒 Administrador logado - acesso da empresa")
+            print("🔒 Administrador logado - acesso com assinatura")
             cursor.execute("""
-                SELECT id, nome_menu, descricao, rota, data_page, icone, link_detalhe,
-                       tipo_abrir, ordem, parent_id
-                FROM tbl_menu
-                WHERE ativo = TRUE
- AND LOWER(local_menu) = LOWER(%s)
-                ORDER BY ordem
-            """, (posicao,))
+                SELECT m.id, m.nome_menu, m.descricao, m.rota, m.data_page, m.icone, m.link_detalhe,
+                       m.tipo_abrir, m.ordem, m.parent_id
+                FROM tbl_menu m
+                LEFT JOIN tbl_fatura_assinatura f ON f.id_modulo = m.id AND f.id_empresa = %s AND f.status = 'Ativo'
+                WHERE m.ativo = TRUE
+                  AND LOWER(m.local_menu) = LOWER(%s)
+                  AND (
+                      m.assinatura_app = FALSE
+                      OR (m.assinatura_app = TRUE AND f.id IS NOT NULL)
+                  )
+                ORDER BY m.ordem
+            """, (id_empresa, posicao))
 
         else:
             print("🔍 Grupo personalizado - buscando permissões")
@@ -859,15 +899,19 @@ def menu_por_posicao(posicao):
             cursor.execute("""
                 SELECT m.id, m.nome_menu, m.descricao, m.rota, m.data_page, m.icone, m.link_detalhe,
                        m.tipo_abrir, m.ordem, m.parent_id
-                FROM tbl_usuario_permissao p
+                FROM tbl_usuario_permissao_grupo p
                 JOIN tbl_menu m ON m.id = p.id_menu
+                LEFT JOIN tbl_fatura_assinatura f ON f.id_modulo = m.id AND f.id_empresa = %s AND f.status = 'Ativo'
                 WHERE m.ativo = TRUE
-
                   AND LOWER(m.local_menu) = LOWER(%s)
+                  AND p.id_empresa = %s
                   AND p.id_grupo = %s
-                  AND p.pode_visualizar = 1
+                  AND (
+                      m.assinatura_app = FALSE
+                      OR (m.assinatura_app = TRUE AND f.id IS NOT NULL)
+                  )
                 ORDER BY m.ordem
-            """, (posicao, id_grupo))
+            """, (id_empresa, posicao, id_empresa, id_grupo))
 
         menus = cursor.fetchall()
         colunas = [desc[0] for desc in cursor.description]
@@ -883,6 +927,7 @@ def menu_por_posicao(posicao):
     finally:
         if conn:
             conn.close()
+
 
 
 
@@ -2126,7 +2171,8 @@ def usuario_redefinir():
 
         id_usuario = usuario[0]
         senha_hash = bcrypt.hashpw(senha_plana.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        nova_data = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
+        nova_data = datetime.now() + timedelta(days=90)
+
 
         cursor.execute("""
             UPDATE tbl_usuario
@@ -2350,407 +2396,11 @@ def buscar_id_grupo():
 
 
 
-# ------------------------------------------------------------
-# ✅ ROTAS DE INTEGRAÇÃO EMAIL COM BREVO (SANDBLUE)
-# ------------------------------------------------------------
-
-# 🔁 Dicionário de tradução de erros
-ERROS_AMIGAVEIS = {
-    "Mailbox full": "Caixa de e-mail cheia",
-    "Temporary error": "⏳ Erro temporário no servidor do destinatário",
-    "Email address does not exist": "Endereço de e-mail inválido",
-    "User unknown": "Usuário de e-mail desconhecido",
-    "Blocked due to spam": "Bloqueado por suspeita de spam",
-    "Domain blacklisted": "Domínio bloqueado pelo provedor de destino",
-    "Marked as spam": "Marcado como spam pelo destinatário",
-    "Invalid email": "E-mail mal formatado",
-    "Unsubscribed user": "Usuário descadastrado da lista",
-    "Soft bounce - Relay not permitted": "Erro temporário: Rejeição pelo servidor do destinatário",
-    "Hard bounce - Content rejected": "Conteúdo rejeitado pelo servidor",
-    "Blocked (policy)": "Política de entrega bloqueou a mensagem"
-}
-
-@auth_bp.route("/email/webhook", methods=["POST"])
-def brevo_webhook():
-    print("📥 Headers recebidos:", dict(request.headers))
-    print("📥 Body recebido:", request.data.decode('utf-8'))
-
-    try:
-        dados = request.get_json(silent=True)
-        if not dados:
-            return jsonify({"erro": "JSON inválido ou ausente"}), 400
-
-        email = dados.get("email")
-        # ✅ Filtra apenas os eventos do e-mail desejado
-        #if email != "notifica@rufino.tech":
-        #    return jsonify({"status": "ignorado", "motivo": "E-mail fora do filtro"}), 200
-        evento = dados.get("event")
-        data_evento = dados.get("date")
-        motivo_bruto = dados.get("reason", "").strip()
-        motivo_amigavel = ERROS_AMIGAVEIS.get(motivo_bruto, motivo_bruto or "⚠️ Erro não especificado")
-
-        # Corrige a tag que pode vir como string JSON: '["user_24"]'
-        tag_raw = dados.get("tag", "sem_tag")
-        try:
-            tag_lista = json.loads(tag_raw) if isinstance(tag_raw, str) else tag_raw
-            tag = tag_lista[0] if isinstance(tag_lista, list) and tag_lista else "sem_tag"
-        except Exception:
-            tag = "sem_tag"
-
-        if not email or not evento:
-            return jsonify({"erro": "Campos obrigatórios ausentes"}), 400
-
-        conn = Var_ConectarBanco()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT ed.id_destinatario
-            FROM tbl_email_destinatario ed
-            JOIN tbl_email_envio ee ON ed.id_envio = ee.id_envio
-            WHERE ee.tag_email = %s AND ed.email = %s
-        """, (tag, email))
-
-        resultado = cursor.fetchone()
-
-        if not resultado:
-            print(f"⚠️ Nenhum destinatário localizado para tag={tag} e email={email}")
-            return jsonify({
-                "status": "ignorado",
-                "motivo": "Destinatário não localizado para este evento"
-            }), 200
-
-        id_destinatario = resultado[0]
-        try:
-            data_evento_fmt = datetime.fromisoformat(data_evento.replace("Z", "+00:00"))
-        except Exception:
-            data_evento_fmt = datetime.utcnow()
-
-        # Atualiza status atual do destinatário
-        cursor.execute("""
-            UPDATE tbl_email_destinatario
-            SET status_atual = %s, dt_ultimo_evento = %s
-            WHERE id_destinatario = %s
-        """, (evento, data_evento_fmt, id_destinatario))
-
-        # Insere no histórico de eventos
-        cursor.execute("""
-            INSERT INTO tbl_email_evento (id_destinatario, tipo_evento, data_evento, mensagem_erro)
-            VALUES (%s, %s, %s, %s)
-        """, (id_destinatario, evento, data_evento_fmt, motivo_amigavel))
-
-        conn.commit()
-        return jsonify({"status": "ok"})
-
-    except Exception as e:
-        print("❌ Erro no webhook Brevo:", str(e))
-        return jsonify({"erro": str(e)}), 500
-
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-
-
-@auth_bp.route("/email/enviar", methods=["POST"])
-def email_enviar():
-    try:
-        dados = request.get_json()
-        print("📨 Dados recebidos para envio:", dados)
-
-        destinatarios = dados.get("destinatarios", [])
-        assunto = dados.get("assunto", "").strip()
-        corpo_html = dados.get("corpo_html", "").strip()
-        tag = dados.get("tag", "sem_tag")
-
-        if not destinatarios or not assunto or not corpo_html:
-            return jsonify({"erro": "Assunto, corpo e destinatários são obrigatórios."}), 400
-
-        # 🧠 Recupera id_empresa da sessão ou do payload JSON
-        id_empresa = (
-            session.get("id_empresa") or
-            dados.get("id_empresa") or
-            dados.get("id_cliente")
-        )
-
-        if not id_empresa:
-            return jsonify({"erro": "Cliente não identificado na sessão ou na requisição."}), 403
-
-        # Envio para Brevo
-        payload = {
-            "sender": {
-                "name": os.getenv("BREVO_REMETENTE_NOME"),
-                "email": os.getenv("BREVO_REMETENTE_EMAIL")
-            },
-            "to": [{"email": email.strip()} for email in destinatarios],
-            "subject": assunto,
-            "htmlContent": corpo_html,
-            "tags": [tag],
-            "id_empresa": id_empresa
-        }
-
-        headers = {
-            "accept": "application/json",
-            "api-key": os.getenv("BREVO_API_KEY"),
-            "content-type": "application/json"
-        }
-
-        print("🌐 Enviando via Brevo API...")
-        response = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers)
-
-        if response.status_code not in [200, 201]:
-            print("❌ Falha ao enviar:", response.status_code, response.text)
-            return jsonify({"erro": "Erro ao enviar e-mail via API"}), 500
-
-        print("✅ E-mail enviado com sucesso via API.")
-
-        # 🔐 Gravação no banco como antes
-        conn = Var_ConectarBanco()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO tbl_email_envio (id_empresa, tag_email, assunto, corpo, dt_envio)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id_envio
-        """, (
-            id_empresa,
-            tag,
-            remover_tags_html(corpo_html),
-            assunto,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
-
-
-
-        id_envio = cursor.fetchone()[0]
-        print("📌 ID do envio registrado:", id_envio)
-
-        for email in destinatarios:
-            cursor.execute("""
-                INSERT INTO tbl_email_destinatario (id_envio, email, status_atual, tag_email)
-                VALUES (%s, %s, %s, %s)
-            """, (id_envio, email.strip(), "Enviado", tag))
-
-        cursor.execute("""
-            INSERT INTO tbl_email_log (
-                id_empresa, assunto, corpo, destinatario, status, tag, data_envio
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (
-            id_empresa,
-            assunto,
-            remover_tags_html(corpo_html),
-            ", ".join(destinatarios),
-            "Enviado",
-            tag,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({"status": "sucesso", "mensagem": "E-mail enviado com sucesso!"})
-
-    except Exception as e:
-        print("❌ Erro geral ao enviar via API:", str(e))
-        return jsonify({"erro": str(e)}), 500
-
-
-
-
-
-
-@auth_bp.route("/email/logs", methods=["POST"])
-def email_logs():
-    try:
-        dados = request.get_json()
-        status_filtro = dados.get("status", "").strip()
-        data_filtro = dados.get("data", "").strip()
-        busca = dados.get("busca", "").strip()
-
-        conn = Var_ConectarBanco()
-        cursor = conn.cursor()
-
-        query_envios = """
-            SELECT id_envio, tag_email, assunto, corpo, dt_envio
-            FROM tbl_email_envio
-            WHERE 1=1
-        """
-        params = []
-
-        if data_filtro:
-            query_envios += " AND DATE(dt_envio) = DATE(%s)"
-            params.append(data_filtro)
-
-        if busca:
-            query_envios += " AND (assunto LIKE %s OR corpo LIKE %s)"
-            params += [f"%{busca}%", f"%{busca}%"]
-
-        cursor.execute(query_envios, params)
-        envios = cursor.fetchall()
-
-        resultado = []
-        for envio in envios:
-            id_envio, tag, assunto, corpo, dt_envio = envio
-
-            cursor.execute("""
-                SELECT id_destinatario, email, status_atual, dt_ultimo_evento
-                FROM tbl_email_destinatario
-                WHERE id_envio = %s
-            """, (id_envio,))
-            destinatarios_raw = cursor.fetchall()
-
-            destinatarios = []
-            for d in destinatarios_raw:
-                if not status_filtro or d[2] == status_filtro:
-                    destinatarios.append({
-                        "id": d[0],
-                        "email": d[1],
-                        "status": d[2] or "Aguardando",
-                        "data": d[3] or ""
-                    })
-
-            if destinatarios:
-                resultado.append({
-                    "id_envio": id_envio,
-                    "tag": tag,
-                    "assunto": assunto,
-                    "destinatarios": destinatarios
-                })
-
-        return jsonify(resultado)
-
-    except Exception as e:
-        print(f"❌ Erro em /email/logs: {str(e)}")
-        return jsonify([])
-
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-
-
-
-
-@auth_bp.route("/email/eventos/<int:id_destinatario>")
-def email_eventos(id_destinatario):
-    try:
-        conn = Var_ConectarBanco()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT tipo_evento, data_evento, mensagem_erro
-            FROM tbl_email_evento
-            WHERE id_destinatario = %s
-            ORDER BY data_evento ASC
-        """, (id_destinatario,))
-
-        eventos = [
-            {
-                "tipo": row[0],
-                "data": datetime.fromisoformat(row[1]).strftime("%d/%m/%Y %H:%M") if row[1] else "-",
-                "mensagem": row[2] or "-"
-            }
-            for row in cursor.fetchall()
-        ]
-
-        return jsonify(eventos)
-
-    except Exception as e:
-        print(f"❌ Erro em /email/eventos: {str(e)}")
-        return jsonify([])
-
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-
-
-
-
-
-@auth_bp.route("/email/relatorio/pdf", methods=["POST"])
-def gerar_relatorio_pdf():
-    try:
-        dados = request.get_json()
-        status_filtro = dados.get("status", "").strip()
-        data_filtro = dados.get("data", "").strip()
-        busca = dados.get("busca", "").strip()
-
-        conn = Var_ConectarBanco()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            SELECT ee.assunto, ee.dt_envio, ed.email, ed.status_atual, ed.dt_ultimo_evento
-            FROM tbl_email_envio ee
-            JOIN tbl_email_destinatario ed ON ed.id_envio = ee.id_envio
-            WHERE 1=1
-        """)
-        registros = cursor.fetchall()
-
-        html = """
-        <html>
-        <head>
-            <style>
-                body { font-family: sans-serif; margin: 20px; }
-                h2 { text-align: center; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ccc; padding: 8px; font-size: 12px; }
-                th { background: #eee; }
-            </style>
-        </head>
-        <body>
-            <h2>📄 Relatório de E-mails Enviados</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Assunto</th>
-                        <th>Data de Envio</th>
-                        <th>Destinatário</th>
-                        <th>Status</th>
-                        <th>Último Evento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """
-
-        for assunto, dt_envio, email, status, dt_evento in registros:
-            html += f"""
-                <tr>
-                    <td>{assunto}</td>
-                    <td>{dt_envio or "-"}</td>
-                    <td>{email}</td>
-                    <td>{status or "Aguardando"}</td>
-                    <td>{dt_evento or "-"}</td>
-                </tr>
-            """
-
-        html += """
-                </tbody>
-            </table>
-        </body>
-        </html>
-        """
-
-        pdf = HTML(string=html).write_pdf()
-        response = make_response(pdf)
-        response.headers["Content-Type"] = "application/pdf"
-        response.headers["Content-Disposition"] = "inline; filename=relatorio_email_log.pdf"
-        return response
-
-    except Exception as e:
-        print(f"❌ Erro ao gerar PDF: {str(e)}")
-        return jsonify({"erro": str(e)}), 500
-
-    finally:
-        if 'conn' in locals():
-            conn.close()
-
-
-
 
 
 
 # ------------------------------------------------------------
-# ✅ ROTAS PARA O HTML email
+# ✅ ROTAS PARA O email dentro de configurações
 # ------------------------------------------------------------
 @auth_bp.route("/email/dados")
 def email_dados():
@@ -2932,7 +2582,6 @@ def email_reenviar(tag):
 # ────────────────────────────────────────────────
 @auth_bp.route("/marketplace/api", methods=["GET"])
 def api_marketplace():
-    import html
     conn = None
     try:
         id_empresa = session.get("id_empresa")
@@ -3384,7 +3033,7 @@ def gerar_fatura():
         conn.commit()
 
         # 🏦 Geração da cobrança
-        from sapiefi import gerar_cobranca_efi
+        
         resultado = gerar_cobranca_efi(id_fatura)
 
         if resultado.get("status") != "sucesso":
@@ -3517,3 +3166,156 @@ def forma_pagamento_empresa():
         return jsonify({"forma_pagamento_padrao": linha[0]})
     else:
         return jsonify({"forma_pagamento_padrao": "pix"})
+
+
+
+# ────────────────────────────────────────────────
+# Rotas para menu em Configurações
+# ────────────────────────────────────────────────
+@auth_bp.route("/menu/dados")
+@login_obrigatorio
+def menu_dados():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    pagina = int(request.args.get("pagina", 1))
+    por_pagina = int(request.args.get("porPagina", 20))
+    offset = (pagina - 1) * por_pagina
+
+    nome_menu = request.args.get("nome_menu", "").strip()
+    local_menu = request.args.get("local_menu", "").strip()  # <-- usa exatamente 'horizontal' ou 'lateral'
+
+    print(f"🔍 Filtro recebido: nome_menu='{nome_menu}', local_menu='{local_menu}'")
+
+    base_sql = "SELECT * FROM tbl_menu WHERE 1=1"
+    valores = []
+
+    if nome_menu:
+        base_sql += " AND nome_menu ILIKE %s"
+        print(f"🔍 Filtro recebido2: nome_menu='{nome_menu}', local_menu='{local_menu}'")
+        valores.append(f"%{nome_menu}%")
+
+    if local_menu:
+        base_sql += " AND local_menu = %s"
+        valores.append(local_menu)
+
+    sql_total = f"SELECT COUNT(*) FROM ({base_sql}) AS sub"
+    cursor.execute(sql_total, valores)
+    total_registros = cursor.fetchone()[0]
+    total_paginas = (total_registros + por_pagina - 1) // por_pagina
+
+    base_sql += " ORDER BY id LIMIT %s OFFSET %s"
+    valores.extend([por_pagina, offset])
+
+    cursor.execute(base_sql, valores)
+    colunas = [desc[0] for desc in cursor.description]
+    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({
+        "dados": registros,
+        "total_paginas": total_paginas
+    })
+
+
+@auth_bp.route("/menu/incluir")
+@login_obrigatorio
+def menu_incluir():
+    return render_template("frm_menu_apoio.html")
+
+
+@auth_bp.route("/menu/editar")
+@login_obrigatorio
+def menu_editar():
+    return render_template("frm_menu_apoio.html")
+
+
+@auth_bp.route("/menu/salvar", methods=["POST"])
+@login_obrigatorio
+def menu_salvar():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+
+    try:
+        if dados.get("id"):
+            cursor.execute("""
+                UPDATE tbl_menu
+                SET nome_menu = %s, descricao = %s, rota = %s, data_page = %s, icone = %s,
+                    link_detalhe = %s, tipo_abrir = %s, ordem = %s, parent_id = %s,
+                    ativo = %s, local_menu = %s, valor = %s, obs = %s
+                WHERE id = %s
+            """, (
+                dados["nome_menu"], dados["descricao"], dados["rota"], dados["data_page"], dados["icone"],
+                dados["link_detalhe"], dados["tipo_abrir"], dados["ordem"], dados["parent_id"],
+                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], dados["id"]
+            ))
+        else:
+            cursor.execute("""
+                INSERT INTO tbl_menu (
+                    nome_menu, descricao, rota, data_page, icone,
+                    link_detalhe, tipo_abrir, ordem, parent_id,
+                    ativo, local_menu, valor, obs
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (
+                dados["nome_menu"], dados["descricao"], dados["rota"], dados["data_page"], dados["icone"],
+                dados["link_detalhe"], dados["tipo_abrir"], dados["ordem"], dados["parent_id"],
+                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"]
+            ))
+            dados["id"] = cursor.fetchone()[0]
+
+        conn.commit()
+        return jsonify({"status": "sucesso", "id": dados["id"]})
+    except Exception as e:
+        print("Erro ao salvar menu:", e)
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+# 🔎 Obter dados de um menu específico
+@auth_bp.route("/menu/apoio/<int:id>", methods=["GET"])
+def apoio_menu(id):
+    try:
+        conn = Var_ConectarBanco()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, nome_menu, descricao, rota, data_page, icone, link_detalhe,
+                   tipo_abrir, ordem, parent_id, ativo, local_menu, valor, obs, assinatura_app
+            FROM tbl_menu
+            WHERE id = %s
+        """, (id,))
+        resultado = cursor.fetchone()
+
+        if not resultado:
+            return jsonify({"erro": "Menu não encontrado."}), 404
+
+        colunas = [desc[0] for desc in cursor.description]
+        menu = dict(zip(colunas, resultado))
+        return jsonify(menu)
+
+    except Exception as e:
+        print("❌ Erro ao buscar menu:", e)
+        return jsonify({"erro": "Erro ao carregar menu."}), 500
+
+    finally:
+        if conn:
+            conn.close()
+
+
+@auth_bp.route("/menu/delete", methods=["POST"])
+@login_obrigatorio
+def menu_delete():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+
+    try:
+        cursor.execute("DELETE FROM tbl_menu WHERE id = %s", (dados["id"],))
+        conn.commit()
+        return jsonify({"status": "sucesso", "mensagem": "Registro excluído com sucesso."})
+    except Exception as e:
+        print("Erro ao excluir menu:", e)
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()

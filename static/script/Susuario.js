@@ -40,28 +40,28 @@ if (typeof window.Usuario === "undefined") {
             document.querySelector("#ob_btnPrimeiro")?.addEventListener("click", () => {
                 if (Usuario.paginaAtual !== 1) {
                     Usuario.paginaAtual = 1;
-                    Usuario.renderizarTabela();
+                    Usuario.carregarUsuarios();
                 }
             });
 
             document.querySelector("#ob_btnAnterior")?.addEventListener("click", () => {
                 if (Usuario.paginaAtual > 1) {
                     Usuario.paginaAtual--;
-                    Usuario.renderizarTabela();
+                    Usuario.carregarUsuarios();
                 }
             });
 
             document.querySelector("#ob_btnProximo")?.addEventListener("click", () => {
                 if (Usuario.paginaAtual < Usuario.totalPaginas) {
                     Usuario.paginaAtual++;
-                    Usuario.renderizarTabela();
+                    Usuario.carregarUsuarios();
                 }
             });
 
             document.querySelector("#ob_btnUltimo")?.addEventListener("click", () => {
                 if (Usuario.paginaAtual !== Usuario.totalPaginas) {
                     Usuario.paginaAtual = Usuario.totalPaginas;
-                    Usuario.renderizarTabela();
+                    Usuario.carregarUsuarios();
                 }
             });
 

@@ -187,8 +187,11 @@ function configurarPin() {
 
 // 🔁 Função que carrega o menu pela posição
 function carregarMenu(posicao) {
-    fetch(`/menu/${posicao}`)
-        .then(res => res.json())
+    fetch(`/menu/${posicao}`, {
+        method: "GET",
+        credentials: "include"  // ⬅️ ESSENCIAL para manter a sessão
+    })
+    .then(res => res.json())
         .then(dados => {
             if (dados.erro) {
                 console.warn(`Erro ao carregar menu ${posicao}:`, dados.erro);
@@ -228,14 +231,15 @@ function renderizarMenu(itens, posicao) {
                     </div>
                 </div>`;
         } else {
-            html += `
-                <div class="menu-item" 
-                  data-link="${menu.rota}" 
-                  data-page="${sm.data_page}"
-                  data-tipo="${menu.tipo_abrir}">
-                    ${icone}<span>${menu.nome_menu}</span>
-                </div>`;
+          html += `
+            <div class="menu-item" 
+              data-link="${menu.rota}" 
+              data-page="${menu.data_page}"
+              data-tipo="${menu.tipo_abrir}">
+                ${icone}<span>${menu.nome_menu}</span>
+            </div>`;
         }
+
     });
 
     container.innerHTML = html;
@@ -311,8 +315,11 @@ document.addEventListener("click", function (e) {
 
 
 function carregarMenuHorizontalUsuario() {
-  fetch("/menu/horizontal")
-    .then(res => res.json())
+  fetch("/menu/horizontal", {
+    method: "GET",
+    credentials: "include"
+  })
+    .then(res => res.json()) // <- Faltava isso aqui!
     .then(menus => {
       const container = document.getElementById("menu-horizontal-usuario");
       container.innerHTML = "";
@@ -324,29 +331,27 @@ function carregarMenuHorizontalUsuario() {
         div.classList.add("submenu-horizontal-item");
         div.setAttribute("data-link", menu.rota);
         div.setAttribute("data-tipo", menu.tipo_abrir);
-        div.setAttribute("data-page", menu.data_page); // ✅ importante
+        div.setAttribute("data-page", menu.data_page);
         div.innerHTML = `${menu.icone || ""} ${menu.nome_menu}`;
         container.appendChild(div);
       });
-      // 🔥 Adiciona evento de clique
+
       container.querySelectorAll(".submenu-horizontal-item").forEach(item => {
-       item.addEventListener("click", (e) => {
-        const tipo = item.getAttribute("data-tipo");
-        const page = item.getAttribute("data-page");
-        const rota = item.getAttribute("data-link");
+        item.addEventListener("click", (e) => {
+          const tipo = item.getAttribute("data-tipo");
+          const page = item.getAttribute("data-page");
+          const rota = item.getAttribute("data-link");
 
-        // ✅ Fecha o menu horizontal do usuário
-        document.querySelector(".menu-usuario")?.classList.remove("active");
+          document.querySelector(".menu-usuario")?.classList.remove("active");
 
-        if (tipo === "index") {
-          carregarPagina(page);
-        } else if (tipo === "nova_aba") {
-          window.open(rota, "_blank");
-        } else if (tipo === "popup") {
-          alert("🚧 Modal ainda não implementado.");
-        }
-      });
-
+          if (tipo === "index") {
+            carregarPagina(page);
+          } else if (tipo === "nova_aba") {
+            window.open(rota, "_blank");
+          } else if (tipo === "popup") {
+            alert("🚧 Modal ainda não implementado.");
+          }
+        });
       });
     })
     .catch(err => console.warn("Erro ao carregar menu horizontal:", err));

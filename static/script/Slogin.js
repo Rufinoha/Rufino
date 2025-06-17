@@ -24,9 +24,11 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             const response = await fetch("/login", {
               method: "POST",
+              credentials: "include", // 🔐 ESSENCIAL para ativar a sessão Flask
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ email, senha })
             });
+
 
 
             const data = await response.json();

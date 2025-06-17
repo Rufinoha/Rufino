@@ -1,0 +1,236 @@
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* ========================== CONFIGURAÇÕES GERAIS ========================== */
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+}
+
+/* ========================== CONTAINER PRINCIPAL ========================== */
+.Cl_ConfigContainer {
+    margin: 70px auto;
+    padding: 8px;
+    max-width: 1200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================== TÍTULOS ========================== */
+h2 {
+    margin: 0;
+    color: #000;
+    text-align: right;
+}
+
+/* ========================== FILTROS ========================== */
+.Cl_Filtros {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    width: 99%;
+    gap: 10px;
+}
+
+.Cl_Filtros label {
+    font-weight: bold;
+}
+
+.Cl_Filtros input,
+.Cl_Filtros select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 150px;
+    padding: 10px;
+    font-size: 14px;
+}
+
+/* ========================== BOTÕES ========================== */
+.Cl_BtnIncluir, .Cl_botaoFiltro {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-bottom: 10px;
+    width: 150px;
+}
+
+.Cl_BtnIncluir:hover, .Cl_botaoFiltro:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* ========================== TABELA ========================== */
+
+/* ========================== TABELA DE MENUS ========================== */
+
+.Cl_TabelaMenu table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 90%;
+}
+
+.Cl_TabelaMenu th,
+.Cl_TabelaMenu td {
+    padding: 6px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.Cl_TabelaMenu th {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+
+.Cl_TabelaMenu tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.Cl_TabelaMenu tbody tr:hover {
+    background-color: #e0f7ff;
+}
+
+/* Coluna 1: Nome */
+#content-area-Menu table td:nth-child(1),
+#content-area-Menu table th:nth-child(1) {
+    width: 30px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Coluna 2: Rota */
+#content-area-Menu table td:nth-child(2),
+#content-area-Menu table th:nth-child(2) {
+    width: 250px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Coluna 3: Ícone */
+#content-area-Menu table td:nth-child(3),
+#content-area-Menu table th:nth-child(3) {
+    width: 100px;
+    text-align: center;
+}
+
+/* Coluna 4: Local */
+#content-area-Menu table td:nth-child(4),
+#content-area-Menu table th:nth-child(4) {
+    width: 100px;
+    text-align: center;
+}
+
+
+/* Coluna 4: Local */
+#content-area-Menu table td:nth-child(7),
+#content-area-Menu table th:nth-child(7) {
+    width: 30px;
+    text-align: center;
+}
+
+/* Coluna 4: Local */
+#content-area-Menu table td:nth-child(8),
+#content-area-Menu table th:nth-child(8) {
+    width: 100px;
+    text-align: center;
+}
+/* Coluna 5: Ações */
+#content-area-Menu table td:nth-child(9),
+#content-area-Menu table th:nth-child(9) {
+    width: 80px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ========================== BOTÕES DE AÇÃO ========================== */
+
+.Cl_BtnAcao {
+    background-color: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    margin: 0 3px;
+    padding: 2px;
+}
+
+.Cl_BtnAcao:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+/* ========================== PAGINAÇÃO ========================== */
+.Cl_Paginacao {
+    text-align: center;
+    margin-top: 15px;
+}
+ 
+.Cl_direcao {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.Cl_direcao:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* ========================== BOTÕES DE AÇÃO NA TABELA ========================== */
+.Cl_BtnAcao {
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.Cl_BtnAcao:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+

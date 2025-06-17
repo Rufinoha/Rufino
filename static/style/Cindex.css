@@ -41,7 +41,7 @@ body {
 ul {
   list-style: none;
 }
-
+ 
 /* herda a cor do elemento pai*/
 a {
   color: inherit;
@@ -110,7 +110,7 @@ button {
 }
 .submenu-usuario {
   position: absolute;
-  top: 48px;
+  top: 32px;
   right: 0;
   background: white;
   border: 1px solid #ccc;

@@ -1,7 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import CheckConstraint
 from datetime import datetime
-
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import relationship
 from extensoes import db
 
 
@@ -191,6 +192,7 @@ class TblMenu(db.Model):
     local_menu = db.Column(db.Text, default='lateral')
     valor = db.Column(db.Float)
     obs = db.Column(db.Text)
+    assinatura_app = db.Column(db.Boolean, default=False)
     __table_args__ = (
         CheckConstraint("tipo_abrir IN ('index', 'nova_aba', 'popup')"),
     )
@@ -233,21 +235,31 @@ class TblUsuario(db.Model):
     )
 
 
+# 🔹 Grupo de usuário por empresa
 class TblUsuarioGrupo(db.Model):
-    __tablename__ = "tbl_usuario_grupo"
+    __tablename__ = 'tbl_usuario_grupo'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_empresa = db.Column(db.Integer, nullable=False)
-    nome_grupo = db.Column(db.Text, nullable=False)
+    id_empresa = db.Column(db.Integer, db.ForeignKey('tbl_empresa.id'), nullable=False)
+    nome = db.Column(db.String, nullable=False)
     descricao = db.Column(db.Text)
-    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    __table_args__ = (
+        db.UniqueConstraint('id_empresa', 'nome', name='uq_empresa_grupo'),
+    )
+
+    # Relacionamentos (opcional)
+    permissoes = db.relationship("UsuarioPermissaoGrupo", back_populates="grupo")
 
 
-class TblUsuarioPermissao(db.Model):
-    __tablename__ = "tbl_usuario_permissao"
+# 🔹 Permissão de menu por grupo
+class TblUsuarioPermissaoGrupo(db.Model):
+    __tablename__ = 'tbl_usuario_permissao_grupo'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_grupo = db.Column(db.Integer, db.ForeignKey("tbl_usuario_grupo.id"), nullable=False)
-    id_menu = db.Column(db.Integer, db.ForeignKey("tbl_menu.id"), nullable=False)
-    pode_visualizar = db.Column(db.Boolean, default=True)
-    pode_incluir = db.Column(db.Boolean, default=False)
-    pode_editar = db.Column(db.Boolean, default=False)
-    pode_excluir = db.Column(db.Boolean, default=False)
+    id_empresa = db.Column(db.Integer, db.ForeignKey('tbl_empresa.id'), nullable=False)
+    id_grupo = db.Column(db.Integer, db.ForeignKey('tbl_usuario_grupo.id'), nullable=False)
+    id_menu = db.Column(db.Integer, db.ForeignKey('tbl_menu.id'), nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint('id_empresa', 'id_grupo', 'id_menu', name='uq_empresa_grupo_menu'),
+    )
+
+    # Relacionamentos (opcional)
+    grupo = db.relationship("UsuarioGrupo", back_populates="permissoes")
