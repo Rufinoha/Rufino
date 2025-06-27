@@ -68,7 +68,7 @@ body {
 .container-troca button {
   width: 100%;
   padding: 12px;
-  background-color: #007bff;
+  background-color: #85C300;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -77,11 +77,11 @@ body {
 }
 
 .container-troca button:hover {
-  background-color: #0056b3;
+  background-color: #6FA700;
 }
 
 .mensagem-erro {
-  color: red;
+  color: #E53935;
   margin-top: 10px;
   font-size: 0.9rem;
 }

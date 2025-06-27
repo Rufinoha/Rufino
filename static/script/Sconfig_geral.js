@@ -176,6 +176,8 @@ if (typeof window.Config === "undefined") {
     }
 }
 
+window.Config.configurarEventos();
+
 window.addEventListener("message", function handler(event) {
     if (event.data && event.data.grupo === "apoioPronto") {
         const idEditando = window.__idConfigEditando__;

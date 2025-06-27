@@ -9,6 +9,7 @@ import requests
 import calendar
 import psycopg2
 import html
+import traceback
 from datetime import date, datetime, timedelta
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
@@ -36,31 +37,14 @@ from global_utils import (
     formata_moeda,
     valida_email,
 )
-
+from global_utils import Var_ConectarBanco #, login_obrigatorio, get_base_url, configurar_tempo_sessao
 
 
 
 # Carrega variáveis do .env
 load_dotenv()
 
-# ────────────────────────────────────────────────
-# 4️⃣ FUNÇÃO PARA CONECTAR NO BANCO DE DADOS PostgreSQL
-# ────────────────────────────────────────────────
-def Var_ConectarBanco():
-    usuario = os.getenv("BANK_USER")
-    senha = os.getenv("BANK_KEY")
-    banco = os.getenv("BANK_NAME")
-    host = os.getenv("BANK_HOST")
-    porta = os.getenv("BANK_PORT")
 
-    conn = psycopg2.connect(
-        dbname=banco,
-        user=usuario,
-        password=senha,
-        host=host,
-        port=porta
-    )
-    return conn
 
 
 
@@ -364,10 +348,16 @@ def autenticar_login():
         if not bcrypt.checkpw(senha.encode('utf-8'), senha_em_bytes):
             return jsonify(success=False, message="Senha inválida."), 401
 
-        # Buscar nome da empresa
-        cursor.execute("SELECT nome_empresa FROM tbl_empresa WHERE id = %s", (id_empresa,))
+        # Buscar nome fantasia e razão social da empresa na tbl_hub_favorecido
+        cursor.execute("""
+            SELECT nome, razao_social
+            FROM tbl_hub_favorecido
+            WHERE id = %s
+        """, (id_empresa,))
+
         empresa_row = cursor.fetchone()
-        nome_empresa = empresa_row[0] if empresa_row else ""
+        nome_empresa = empresa_row[0] if empresa_row and empresa_row[0] else ""
+        razao_social_empresa = empresa_row[1] if empresa_row and empresa_row[1] else ""
 
         #Atualiza sessão
         session["usuario_id"] = id_usuario
@@ -398,7 +388,8 @@ def autenticar_login():
             "imagem": imagem,
             "ultimo_login": str(ultimo_login) if ultimo_login else "",
             "horaLogin": str(datetime.now()),
-            "nome_empresa": nome_empresa,
+            "nome_empresa": nome_empresa,                  # <- nome fantasia (se tiver)
+            "razao_social_empresa": razao_social_empresa,  # <- fallback
             "consentimento_lgpd": bool(consentimento_lgpd),
             "consentimento_marketing": bool(consentimento_marketing)
         }
@@ -593,37 +584,35 @@ def configuracoes(id_empresa):
         return jsonify(success=False, message=str(e))
 
 
-# 🔍 Buscar CNPJ via API ReceitaWS
-@auth_bp.route('/api/buscacnpj', methods=['POST'])
-def buscar_cnpj():
+
+
+@auth_bp.route("/config/tempo_sessao", methods=["GET"])
+def tempo_sessao():
     try:
-        dados = request.get_json()
-        cnpj = dados.get("cnpj", "").replace(".", "").replace("/", "").replace("-", "")
+        id_empresa = session.get("id_empresa")
+        if not id_empresa:
+            return jsonify({"erro": "Sessão expirada"}), 401
 
-        if len(cnpj) != 14:
-            return jsonify({"erro": "CNPJ inválido"}), 400
+        conn = Var_ConectarBanco()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT valor FROM tbl_config 
+            WHERE chave = 'tempo_sessao_minutos' AND id_empresa = %s
+        """, (id_empresa,))
+        resultado = cursor.fetchone()
+        conn.close()
 
-        resposta = requests.get(f"https://www.receitaws.com.br/v1/cnpj/{cnpj}")
-        data = resposta.json()
-
-        if data.get("status") == "ERROR":
-            return jsonify({"erro": data.get("message", "Erro na consulta")}), 400
-
-        resultado = {
-            "empresa": data.get("nome"),
-            "endereco": data.get("logradouro"),
-            "numero": data.get("numero", ""),
-            "bairro": data.get("bairro"),
-            "cidade": data.get("municipio"),
-            "uf": data.get("uf"),
-            "cep": data.get("cep"),
-            "ie": data.get("inscricao_estadual", "")
-        }
-
-        return jsonify(resultado)
-
+        if resultado:
+            return jsonify({"valor": resultado[0]})
+        else:
+            return jsonify({"valor": 30})  # valor padrão
     except Exception as e:
-        return jsonify({"erro": "Erro inesperado ao consultar CNPJ"}), 500
+        print("Erro ao buscar tempo de sessão:", str(e))
+        return jsonify({"valor": 30})  # fallback
+
+
+
+
 
 
 
@@ -643,6 +632,8 @@ def frm_cadastro():
 def cadastro_novo():
     try:
         dados = request.get_json()
+        print("📥 Dados recebidos:", dados)
+        print("🛠 MODO_PRODUCAO:", os.getenv("MODO_PRODUCAO"))
         if not dados:
             return jsonify({"mensagem": "Dados não recebidos."}), 400
 
@@ -705,9 +696,10 @@ def cadastro_novo():
 
         for nome_grupo, descricao in grupos_padrao:
             cursor.execute("""
-                INSERT INTO tbl_usuario_grupo (id_empresa, nome_grupo, descricao, criado_em)
-                VALUES (%s, %s, %s, %s)
-            """, (id_empresa, nome_grupo, descricao, agora))
+                INSERT INTO tbl_usuario_grupo (id_empresa, nome, descricao)
+                VALUES (%s, %s, %s)
+            """, (id_empresa, nome_grupo, descricao))
+
 
 
         # 👤 Cria o primeiro usuário
@@ -744,40 +736,41 @@ def cadastro_novo():
 
        # ✉️ Aqui começa o corpo completo do e‑mail (bloco triple-quote)
         corpo_html = f"""<!DOCTYPE html>
-<html lang="pt-br">
-<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
-  <table width="100%" cellpadding="0" cellspacing="0">
-    <tr><td align="center">
-      <table width="100%" style="max-width:600px;background:#ffffff;" cellpadding="20" cellspacing="0">
-        <tr><td style="text-align:left;">
-          <img src="{url_logo}" alt="Rufino Logo" style="max-width:200px;height:auto;display:block;">
-        </td></tr>
-        <tr><td style="border-top:1px solid #ddd;"></td></tr>
-        <tr><td>
-          <p>Olá <strong>{nome}</strong>,</p>
-          <p>Seja bem‑vindo à família Rufino! Ficamos muito felizes por tê‑lo conosco.</p>
-          <p>Seu cadastro inicial foi concluído. Para criar sua senha e acessar o sistema, <a href="{url_redefinicao}" style="color:#85C300;text-decoration:none;">clique aqui</a> ou copie e cole este link no navegador:</p>
-          <p><a href="{url_redefinicao}" style="word-break:break-all;color:#555;">{url_redefinicao}</a></p>
-        </td></tr>
-        <tr><td style="background:#f9f9f9;padding:15px;border-radius:4px;font-size:14px;color:#666;">
-          <p><strong>Este e‑mail foi enviado exclusivamente por notificas@rufino.tech.</strong></p>
-          <ul style="margin:10px 0 0 15px;padding:0;">
-            <li>Não pedimos sua senha por e‑mail.</li>
-            <li>Verifique sempre se o link começa com <strong>rufino.tech</strong>.</li>
-            <li>Nunca informe dados sensíveis via e‑mail.</li>
-            <li>Se você não solicitou este acesso, ignore esta mensagem.</li>
-          </ul>
-        </td></tr>
-        <tr><td style="font-size:14px;color:#666;">
-          <p>Dúvidas? Consulte nossa <a href="{url_privacidade}" style="color:#85C300;text-decoration:none;">Política de Privacidade</a>.</p>
-        </td></tr>
-        <tr><td style="font-size:12px;color:#999;text-align:center;padding-top:20px;">
-          Obrigado por escolher a Rufino! © 2025 Rufino. Todos os direitos reservados.
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>"""  
+            <html lang="pt-br">
+            <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                <tr><td align="center">
+                <table width="100%" style="max-width:600px;background:#ffffff;" cellpadding="20" cellspacing="0">
+                    <tr><td style="text-align:left;">
+                    <img src="{url_logo}" alt="Rufino Logo" style="max-width:200px;height:auto;display:block;">
+                    </td></tr>
+                    <tr><td style="border-top:1px solid #ddd;"></td></tr>
+                    <tr><td>
+                    <p>Olá <strong>{nome}</strong>,</p>
+                    <p>Seja bem‑vindo à família Rufino! Ficamos muito felizes por tê‑lo conosco.</p>
+                    <p>Seu cadastro inicial foi concluído. Para criar sua senha e acessar o sistema, <a href="{url_redefinicao}" style="color:#85C300;text-decoration:none;">clique aqui</a> ou copie e cole este link no navegador:</p>
+                    <p><a href="{url_redefinicao}" style="word-break:break-all;color:#555;">{url_redefinicao}</a></p>
+                    </td></tr>
+                    <tr><td style="background:#f9f9f9;padding:15px;border-radius:4px;font-size:14px;color:#666;">
+                    <p><strong>Este e‑mail foi enviado exclusivamente por notifica@rufino.tech.</strong></p>
+                    <ul style="margin:10px 0 0 15px;padding:0;">
+                        <li>Não pedimos sua senha por e‑mail.</li>
+                        <li>Verifique sempre se o link começa com <strong>rufino.tech</strong>.</li>
+                        <li>Nunca informe dados sensíveis via e‑mail.</li>
+                        <li>Se você não solicitou este acesso, ignore esta mensagem.</li>
+                    </ul>
+                    </td></tr>
+                    <tr><td style="font-size:14px;color:#666;">
+                    <p>Dúvidas? Consulte nossa <a href="{url_privacidade}" style="color:#85C300;text-decoration:none;">Política de Privacidade</a>.</p>
+                    </td></tr>
+                    <tr><td style="font-size:12px;color:#999;text-align:center;padding-top:20px;">
+                    Obrigado por escolher a Rufino! © 2025 Rufino. Todos os direitos reservados.
+                    </td></tr>
+                </table>
+                </td></tr>
+            </table>
+            </body></html>
+        """  
 
         # Agora fazemos o envio para o serviço de email
         requests.post(f"{base_url}/email/enviar", json={
@@ -793,7 +786,386 @@ def cadastro_novo():
 
     except Exception as e:
         print("❌ Erro no cadastro:", str(e))
+        print("❌ ERRO NA ROTA /cadastro/novo:")
+        traceback.print_exc()  # imprime stack trace no log
         return jsonify({"mensagem": "Erro interno ao processar o cadastro."}), 500
+
+
+
+
+
+#Cadastro de plano de contas padrão para cliente novo
+@auth_bp.route('/cadastro/planocontas', methods=['POST'])
+@login_obrigatorio
+def cadastrar_plano_padrao():
+   # Tenta primeiro via sessão (prioritário)
+    id_empresa = session.get("id_empresa")
+
+    # Se não estiver na sessão (ex: chamada externa), tenta via corpo JSON
+    if not id_empresa:
+        dados = request.get_json(silent=True) or {}
+        id_empresa = dados.get("id_empresa")
+
+    if not id_empresa:
+        return jsonify({"success": False, "mensagem": "id_empresa é obrigatório."}), 400
+    
+    modelo_itg = [
+    {"codigo": "1", "descricao": "Ativo", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1", "descricao": "Ativo Circulante", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.1", "descricao": "Disponibilidades", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.1.01", "descricao": "Caixa", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.1.01.01", "descricao": "Caixa", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.1.01.02", "descricao": "Fundo Fixo de Caixa", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.1.02", "descricao": "Depósitos Bancários à Vista", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.1.02.01", "descricao": "Bancos Conta Movimento", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.1.03", "descricao": "Aplicações Financeiras", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.1.03.01", "descricao": "Aplicação Financeira de Liquidez Imediata", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2", "descricao": "Créditos", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.01", "descricao": "Recebíveis de clientes", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.01.01", "descricao": "Contas a Receber", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.01.02", "descricao": "PECLD", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.02", "descricao": "Créditos de Colaboradores", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.02.01", "descricao": "Adiantamento Quinzenal", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.02.02", "descricao": "Empréstimos a colaboradores", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.02.03", "descricao": "Antecipação de Salários", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.02.04", "descricao": "Antecipação de Férias", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.02.05", "descricao": "Antecipação de 13º Salário", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.03", "descricao": "Créditos de Fornecedores", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.03.01", "descricao": "Adiantamentos a Fornecedores", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.04", "descricao": "Tributos Retidos na Fonte", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.04.01", "descricao": "IRRF", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.04.02", "descricao": "CSLL Retida na Fonte", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.04.03", "descricao": "PIS Retido na fonte", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.04.04", "descricao": "COFINS Retida na Fonte", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.04.05", "descricao": "INSS Retido na Fonte", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05", "descricao": "Tributos a Recuperar", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.01", "descricao": "IPI a Recuperar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.02", "descricao": "ICMS a Recuperar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.03", "descricao": "PIS a Recuperar - Crédito Básico", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.04", "descricao": "PIS a Recuperar - Crédito Presumido", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.05", "descricao": "COFINS a Recuperar - Crédito Básico", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.06", "descricao": "COFINS a Recuperar - Crédito Presumido", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.07", "descricao": "CIDE a Recuperar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.08", "descricao": "Outros Impostos e Contribuições a Recuperar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.09", "descricao": "Saldo Negativo - IRPJ", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.05.10", "descricao": "Saldo Negativo - CSLL", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.06", "descricao": "Tributos a Compensar", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.2.06.01", "descricao": "IRPJ Estimativa", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.06.02", "descricao": "CSLL Estimativa", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.06.03", "descricao": "COFINS a Compensar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.06.04", "descricao": "PIS/PASEP a Compensar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.06.05", "descricao": "IPI a Compensar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.2.06.06", "descricao": "INSS a compensar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3", "descricao": "Estoques", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.3.01", "descricao": "Estoques de Mercadorias", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.3.01.01", "descricao": "Mercadorias para Revenda", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.01.02", "descricao": "(-) Perda por Ajuste ao Valor Realizável Líquido - Estoque Mercadorias", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.02", "descricao": "Estoques de Produtos", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.3.02.01", "descricao": "Insumos (materiais diretos)", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.02.02", "descricao": "Outros Materiais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.02.03", "descricao": "Produtos em Elaboração", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.02.04", "descricao": "Produtos Acabados", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.02.05", "descricao": "(-) Perda por Ajuste ao Valor Realizável Líquido - Estoque Produtos", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.03", "descricao": "Outros Estoques", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.3.03.01", "descricao": "Materiais para Consumo", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.3.03.02", "descricao": "Materiais para Reposição", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.4", "descricao": "Despesas Pagas Antecipadamente", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.4.01", "descricao": "Despesas do Exercício Seguinte", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.1.4.01.01", "descricao": "Aluguéis e Arredamentos Pagos Antecipadamente", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.4.01.02", "descricao": "Prêmios de Seguros a Apropriar", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.1.6.01.99", "descricao": "Outras Despesas Antecipadas", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2", "descricao": "Ativo Não Circulante", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.1", "descricao": "Realizável a Longo Prazo", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.1.01", "descricao": "Créditos de Longo Prazo", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.01", "descricao": "Clientes - Longo Prazo", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.02", "descricao": "PCLD Longo Prazo", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.03", "descricao": "Juros a apropriar Clientes LP", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.04", "descricao": "Empréstimos de LP", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.05", "descricao": "Juros a apropriar Empréstimos LP", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.1.02", "descricao": "Ativos Fiscais Diferidos", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.01", "descricao": "IRPJ Diferido", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.1.01.02", "descricao": "CSLL Diferido", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.2", "descricao": "Investimentos", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.2.01", "descricao": "Investimentos Societários", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.2.01.01", "descricao": "Investimentos em Controladas", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.2.01.02", "descricao": "Ágio pago pela mais valia", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.2.01.03", "descricao": "Ágio pago por Goodwill", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.2.01.04", "descricao": "Investimentos em Coligadas", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.2.01.05", "descricao": "Investimentos em Joint Ventures", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3", "descricao": "Imobilizado", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.3.01", "descricao": "Imobilizado - Aquisição", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.10", "descricao": "Terrenos", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.11", "descricao": "Impairment Terrenos", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.20", "descricao": "Edifícios e Construções", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.21", "descricao": "Impairment Edifícios e Construções", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.30", "descricao": "Benfeitorias em Imóveis de Terceiros", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.31", "descricao": "Impairment Benfeitorias em Imóveis de Terceiros", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.40", "descricao": "Máquinas, Equipamentos e Instalações Industriais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.41", "descricao": "Impairment Máquinas, Equipamentos e Instalações Industriais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.50", "descricao": "Móveis, Utensílios e Instalações Comerciais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.51", "descricao": "Impairment Móveis, Utensílios e Instalações Comerciais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.60", "descricao": "Veículos", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.61", "descricao": "Impairment Veículos", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.02", "descricao": "Imobilizado - Depreciação Acumulada", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.3.02.20", "descricao": "Depreciação Acumulada - Edifícios e Construções", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.02.30", "descricao": "Depreciação Acumulada - Benfeitorias em Imóveis de Terceiros", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.02.40", "descricao": "Depreciação Acumulada - Máquinas, Equipamentos e Instalações Industriais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.02.50", "descricao": "Depreciação Acumulada - Móveis, Utensílios e Instalações Comerciais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.02.51", "descricao": "Depreciação Acumulada - Veículos", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01", "descricao": "Propriedades para Investimento", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.10", "descricao": "Terrenos para Investimento - Custo", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.20", "descricao": "Edifícios para Investimento - Custo", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.3.01.21", "descricao": "Edifícios para Investimento - Depreciação", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4", "descricao": "Intangível", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.4.01", "descricao": "Intangível - Aquisição", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.10", "descricao": "Softwares", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.11", "descricao": "Impairment - Softwares", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.20", "descricao": "Marcas", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.21", "descricao": "Impairment - Marcas", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.30", "descricao": "Patentes e Segredos Industriais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.31", "descricao": "Impairment - Patentes e Segredos Industriais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.01.40", "descricao": "Goodwill", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.02", "descricao": "Intangível - Amortização", "tipo": "Sintética", "plano": "Ativo"},
+    {"codigo": "1.2.4.02.10", "descricao": "Amortização Acumulada - Softwares", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.02.20", "descricao": "Amortização Acumulada - Marcas", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "1.2.4.02.30", "descricao": "Amortização Acumulada - Patentes e Segredos Industriais", "tipo": "Analítica", "plano": "Ativo"},
+    {"codigo": "2", "descricao": "Passivo", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1", "descricao": "Passivo Circulante", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.1", "descricao": "Obrigações Trabalhistas", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.1.01", "descricao": "Obrigações com Pessoal", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.01", "descricao": "Salários e Remunerações a Pagar", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.02", "descricao": "Participações no Resultado a Pagar", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.03", "descricao": "INSS a Recolher", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.04", "descricao": "FGTS a Recolher", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.05", "descricao": "INSS desoneração da folha", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.06", "descricao": "Férias", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.07", "descricao": "13º Salário", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.08", "descricao": "INSS - Férias", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.09", "descricao": "FGTS - Férias", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.10", "descricao": "INSS - 13º Salário", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.1.01.11", "descricao": "FGTS - 13º Salário", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.2", "descricao": "Obrigações com Terceiros", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.2.01", "descricao": "Fornecedores", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.2.01.01", "descricao": "Fornecedores Nacionais", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.2.01.02", "descricao": "Fornecedores Exterior", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.2.02", "descricao": "Contas a Pagar", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.2.02.01", "descricao": "Aluguéis e Arrendamentos a Pagar", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.2.02.02", "descricao": "Adiantamento de Clientes", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.2.02.03", "descricao": "Outras Contas a Pagar", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.3", "descricao": "Empréstimos e Financiamentos (CP)", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.3.01", "descricao": "Empréstimos de Terceiros", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.3.01.01", "descricao": "Duplicatas Descontadas", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.3.01.02", "descricao": "Empréstimos e Financiamentos", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4", "descricao": "Obrigações Fiscais", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.4.01", "descricao": "Retenções a Recolher", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.4.01.01", "descricao": "IRRF", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.01.02", "descricao": "CSRF", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.01.03", "descricao": "ISS retido na Fonte", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.01.04", "descricao": "INSS retido na Fonte", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02", "descricao": "Impostos a Pagar", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.01", "descricao": "IRPJ", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.02", "descricao": "CSLL", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.03", "descricao": "PIS", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.04", "descricao": "COFINS", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.05", "descricao": "IPI", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.06", "descricao": "ICMS", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.07", "descricao": "IOF", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.08", "descricao": "ISS", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.09", "descricao": "Tributos Municipais", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.02.10", "descricao": "Simples Nacional", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.03", "descricao": "Parcelamentos Fiscais", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.4.03.01", "descricao": "Tributos Federais", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.4.03.02", "descricao": "Tributos Estaduais e Municipais", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.5", "descricao": "Provisões", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.5.01", "descricao": "Provisões Tributárias", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.5.01.01", "descricao": "IRPJ", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.5.01.02", "descricao": "CSLL", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.6", "descricao": "Outras Obrigações", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.6.01", "descricao": "Obrigações com Sócios", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.1.6.01.01", "descricao": "Lucros a Pagar", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.1.6.01.02", "descricao": "Mútuo com Partes Relacionadas", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2", "descricao": "Passivo Não Circulante", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.1", "descricao": "Obrigações com Terceiros LP", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.1.01", "descricao": "Fornecedores LP", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.1.01.01", "descricao": "Fornecedores Nacionais", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.1.01.02", "descricao": "Fornecedores Exterior", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.1.01.03", "descricao": "Juros a apropriar Obrigações LP", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.1.02", "descricao": "Empréstimos e Financiamentos LP", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.1.02.01", "descricao": "Empréstimos e Financiamentos LP", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.1.02.02", "descricao": "Duplicatas Descontadas LP", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.1.02.03", "descricao": "Juros a apropriar Empréstimos LP", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.2", "descricao": "Obrigações Fiscais (LP)", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.2.01", "descricao": "Parcelamentos Fiscais (LP)", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.01", "descricao": "Tributos Federais LP", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.02", "descricao": "Tributos Estaduais e Municipais LP", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.2.01", "descricao": "Tributos Diferidos", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.01", "descricao": "IRPJ Diferido", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.02", "descricao": "CSLL Diferido", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.3", "descricao": "Outras Obrigações de LP", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.3.01", "descricao": "Obrigações com Partes Relacionadas", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.01", "descricao": "Empréstimos de Sócios", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.02", "descricao": "Mútuos com Partes Relacionadas", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.2.2.01.03", "descricao": "Juros a Apropriar Partes Relacionadas", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.3", "descricao": "Patrimônio Líquido", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.3.1", "descricao": "Capital Social Integralizado", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.3.1.01", "descricao": "Capital Social Subscrito", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.3.1.01.01", "descricao": "Capital Social Subscrito", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.8.1.02", "descricao": "Capital Social a Integralizar", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.1.02.01", "descricao": "Capital Social a Integralizar", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.8.2", "descricao": "Reservas de Capital", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.2.01", "descricao": "Adiantamento de Capital", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.2.01.01", "descricao": "Adiantamento para Futuro Aumento de Capital", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.8.3", "descricao": "Reservas de Lucro", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.3.01", "descricao": "Lucros a Distribuir", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.3.01.01", "descricao": "Lucros a Distribuir", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.8.8", "descricao": "Resultados Acumulados", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.8.01", "descricao": "Lucros Acumulados", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.8.01.01", "descricao": "Lucros Acumulados", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "2.8.8.02", "descricao": "Prejuízos Acumulados", "tipo": "Sintética", "plano": "Passivo"},
+    {"codigo": "2.8.8.02.01", "descricao": "Prejuízos Acumulados", "tipo": "Analítica", "plano": "Passivo"},
+    {"codigo": "3", "descricao": "Resultado", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1", "descricao": "RECEITAS", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1.1", "descricao": "RECEITA BRUTA", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1.1.01", "descricao": "RECEITA BRUTA OPERACIONAL", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1.1.01.01", "descricao": "Serviços Prestados", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.1.01.02", "descricao": "Mercadorias Vendidas", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.1.01.03", "descricao": "Produtos Vendidos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2", "descricao": "DEDUÇÕES DA RECEITA BRUTA", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1.2.01", "descricao": "IMPOSTOS S/ FATURAMENTO", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1.2.01.01", "descricao": "PIS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.01.02", "descricao": "COFINS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.01.03", "descricao": "ISS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.01.04", "descricao": "ICMS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.01.05", "descricao": "SIMPLES NACIONAL", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.02", "descricao": "OUTRAS DEDUÇÕES DA RECEITA BRUTA", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.1.2.02.01", "descricao": "DESCONTOS E ABATIMENTOS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.02.02", "descricao": "DEVOLUÇÕES", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.1.2.02.03", "descricao": "JUROS DE AVP", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.2", "descricao": "Custos", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.2.1", "descricao": "Custos dos bens e serviços", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.2.1.01", "descricao": "Custos dos bens e serviços vendidos", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.2.1.01.01", "descricao": "Custos dos Produtos Vendidos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.2.1.01.02", "descricao": "Custos das Mercadorias Vendidas", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.2.1.01.03", "descricao": "Custos dos Serviços Prestados", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3", "descricao": "Despesas Operacionais", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.1", "descricao": "Despesas com Vendas", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.1.01", "descricao": "Despesas com Pessoal", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.01", "descricao": "Salários", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.02", "descricao": "Gratificações", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.03", "descricao": "Férias", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.04", "descricao": "13º Salário", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.05", "descricao": "INSS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.06", "descricao": "FGTS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.07", "descricao": "Vale Refeição/Refeitório", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.08", "descricao": "Vale Transporte", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.09", "descricao": "Assistência Médica", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.10", "descricao": "Seguro de Vida", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.01.11", "descricao": "Treinamento", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.02", "descricao": "Outras Despesas com Vendas", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.1.02.01", "descricao": "Comissões sobre Vendas", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.02.02", "descricao": "Propaganda e publicidade", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.1.02.03", "descricao": "Brindes e material promocional", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2", "descricao": "Despesas Administrativas", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.2.01", "descricao": "Despesas com Pessoal", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.01", "descricao": "Salários", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.02", "descricao": "Gratificações", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.03", "descricao": "Férias", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.04", "descricao": "13º Salário", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.05", "descricao": "INSS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.06", "descricao": "FGTS", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.07", "descricao": "Vale Refeiçãoo/Refeitório", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.08", "descricao": "Vale Transporte", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.09", "descricao": "Assistência Médica", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.10", "descricao": "Seguro de Vida", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.11", "descricao": "Treinamento", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.01.12", "descricao": "Pro Labore", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02", "descricao": "Despesas Gerais", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.01", "descricao": "Aluguéis e Arrendamentos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.02", "descricao": "Condomínios e Estacionamentos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.03", "descricao": "Despesas com Veículos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.04", "descricao": "Depreciação", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.05", "descricao": "Amortização", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.06", "descricao": "Serviços Profissionais Contratados", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.07", "descricao": "Energia", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.08", "descricao": "Água e Esgoto", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.09", "descricao": "Telefone e Internet", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.10", "descricao": "Correios e Malotes", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.11", "descricao": "Seguros", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.12", "descricao": "Multas", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.13", "descricao": "Bens de Pequeno Valor", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.02.14", "descricao": "Material de Escritório", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.03", "descricao": "Tributos e Contribuições", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.2.03.01", "descricao": "Taxas e Tributos Municipais", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.03.02", "descricao": "PIS s/ Outras Receitas", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.2.03.03", "descricao": "COFINS s/ Outras Receitas", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.9", "descricao": "Outros Resultados Operacionais", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.9.01", "descricao": "Ganhos e Perdas de Capital", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.9.01.01", "descricao": "Receita na Venda de Imobilizado", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.9.01.02", "descricao": "Custo do Imobilizado Baixado", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.9.02", "descricao": "Perdas", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.9.02.01", "descricao": "PECLD", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.9.02.02", "descricao": "Perda de recuperabilidade (Impairment)", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.9.03", "descricao": "Resultado de Participação em Outras Sociedades", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.3.9.03.01", "descricao": "Resultado Positivo de Equivalência Patrimonial", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.3.9.03.02", "descricao": "Resultado Negativo de Equivalência Patrimonial", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4", "descricao": "Resultado Financeiro", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.4.1", "descricao": "Encargos Financeiros Líquidos", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.4.1.01", "descricao": "Despesas Financeiras", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.4.1.01.01", "descricao": "Juros Passivos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.01.02", "descricao": "Despesas Bancárias", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.01.03", "descricao": "IOF", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.01.04", "descricao": "Descontos Concedidos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.01.05", "descricao": "Variação Cambial Passiva", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.02", "descricao": "Receitas Financeiras", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.4.1.02.01", "descricao": "Rendimentos de Aplicação Financeira", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.02.02", "descricao": "Juros Ativos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.02.03", "descricao": "Descontos Obtidos", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.4.1.02.04", "descricao": "Variação Cambial Ativa", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.8", "descricao": "Provisão de Impostos", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.8.1", "descricao": "Tributos sobre Lucro", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.8.1.01", "descricao": "Impostos", "tipo": "Sintética", "plano": "Resultado"},
+    {"codigo": "3.8.1.01.01", "descricao": "IRPJ Corrente", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.8.1.01.02", "descricao": "CSLL Corrente", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.8.1.01.03", "descricao": "IRPJ Diferido", "tipo": "Analítica", "plano": "Resultado"},
+    {"codigo": "3.8.1.01.04", "descricao": "CSLL Diferido", "tipo": "Analítica", "plano": "Resultado"},
+]
+
+    try:
+        conn = Var_ConectarBanco()
+        cursor = conn.cursor()
+
+        for conta in modelo_itg:
+            nivel = conta["codigo"].count('.') + 1
+
+            # Verifica se já existe o código para a empresa
+            cursor.execute("""
+                SELECT 1 FROM tbl_hub_plano_contas
+                WHERE id_empresa = %s AND codigo = %s
+            """, (id_empresa, conta["codigo"]))
+
+            if cursor.fetchone():
+                continue  # pula se já existe
+
+            cursor.execute("""
+                INSERT INTO tbl_hub_plano_contas 
+                (codigo, descricao, tipo, nivel, id_empresa, status, plano)
+                VALUES (%s, %s, %s, %s, %s, TRUE, %s)
+            """, (
+                conta["codigo"], conta["descricao"], conta["tipo"],
+                nivel, id_empresa, conta["plano"]
+            ))
+
+        conn.commit()
+        return jsonify({"success": True, "mensagem": "Plano de contas padrão criado com sucesso."})
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Erro:", e)
+        return jsonify({"success": False, "mensagem": "Erro ao cadastrar plano padrão."}), 500
+
+
+
+
 
 
 # ────────────────────────────────────────────────
@@ -843,7 +1215,7 @@ def exibir_troca_senha():
 
 
 # ────────────────────────────────────────────────
-# 4️⃣ ROTAS MENU DINAMICO
+# ROTAS MENU DINAMICO
 # ────────────────────────────────────────────────
 @auth_bp.route("/menu/<posicao>", methods=["GET"])
 def menu_por_posicao(posicao):
@@ -997,6 +1369,46 @@ def menu_acoes():
 
     except Exception as e:
         return jsonify({"erro": f"Erro ao consultar ações: {str(e)}"}), 500
+    
+
+# Rota para marcar novidades como lidas
+@auth_bp.route("/menu/novidades/atualizar", methods=["POST"])
+def marcar_novidades_como_lidas():
+    try:
+        id_usuario = session.get("id_usuario")
+        if not id_usuario:
+            return jsonify({"erro": "Sessão expirada"}), 401
+
+        # Conexão e busca do último ID da tabela de novidades
+        conn = Var_ConectarBanco()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT MAX(id) FROM tbl_novidades")
+        resultado = cursor.fetchone()
+        if not resultado or resultado[0] is None:
+            conn.close()
+            return jsonify({"erro": "Nenhuma novidade encontrada"}), 404
+
+        ultimo_id = resultado[0]
+
+        # Atualizar id_ultima_novidade_visualizada do usuário
+        cursor.execute("""
+            UPDATE tbl_usuario
+               SET id_ultima_novidade_visualizada = %s
+             WHERE id_usuario = %s
+        """, (ultimo_id, id_usuario))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"sucesso": True, "max_id": ultimo_id})
+
+    except Exception as e:
+        return jsonify({"erro": f"Erro ao marcar novidades como lidas: {str(e)}"}), 500
+
+
+
+
 
 # ────────────────────────────────────────────────
 # 2️⃣ Rotas para Carregar Menu
@@ -1619,6 +2031,7 @@ def novidades_salvar():
             cursor.execute("""
                 INSERT INTO tbl_novidades (emissao, modulo, descricao, link)
                 VALUES (%s, %s, %s, %s)
+                RETURNING id
             """, (dados["emissao"], dados["modulo"], dados["descricao"], dados["link"]))
             dados["id"] = cursor.fetchone()[0]
 
@@ -1724,12 +2137,20 @@ def rota_configuracoes_salvar():
     descricao = dados.get("descricao", "").strip()
     valor = dados.get("valor", "").strip()
 
+    # 🔐 Recupera id_empresa da sessão
+    id_empresa = session.get("id_empresa")
+    if not id_empresa:
+        return jsonify({"erro": "Sessão expirada ou empresa não identificada."}), 403
+
     conexao = Var_ConectarBanco()
     cursor = conexao.cursor()
 
     try:
-        # Verifica se a chave já existe
-        cursor.execute("SELECT 1 FROM tbl_config WHERE chave = %s", (chave,))
+        # Verifica se a chave já existe para esta empresa
+        cursor.execute("""
+            SELECT 1 FROM tbl_config 
+            WHERE chave = %s AND id_empresa = %s
+        """, (chave, id_empresa))
         existe = cursor.fetchone()
 
         if existe:
@@ -1737,24 +2158,34 @@ def rota_configuracoes_salvar():
             cursor.execute("""
                 UPDATE tbl_config
                 SET descricao = %s, valor = %s, atualizado_em = CURRENT_TIMESTAMP
-                WHERE chave = %s
-            """, (descricao, valor, chave))
+                WHERE chave = %s AND id_empresa = %s
+            """, (descricao, valor, chave, id_empresa))
             conexao.commit()
-            return jsonify({"status": "sucesso", "mensagem": "Configuração atualizada com sucesso!", "chave": chave})
+            return jsonify({
+                "status": "sucesso",
+                "mensagem": "Configuração atualizada com sucesso!",
+                "chave": chave
+            })
         else:
             # Insere
             cursor.execute("""
-                INSERT INTO tbl_config (chave, descricao, valor, atualizado_em)
-                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
-            """, (chave, descricao, valor))
+                INSERT INTO tbl_config (id_empresa, chave, descricao, valor, atualizado_em)
+                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+            """, (id_empresa, chave, descricao, valor))
             conexao.commit()
-            return jsonify({"status": "sucesso", "mensagem": "Configuração incluída com sucesso!", "chave": chave})
+            return jsonify({
+                "status": "sucesso",
+                "mensagem": "Configuração incluída com sucesso!",
+                "chave": chave
+            })
 
     except Exception as e:
         conexao.rollback()
         return jsonify({"erro": f"Erro ao salvar configuração: {str(e)}"}), 500
+
     finally:
         conexao.close()
+
 
 
 
@@ -2302,10 +2733,10 @@ def listar_grupos_permissao():
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT id, nome_grupo 
+            SELECT id, nome 
             FROM tbl_usuario_grupo 
             WHERE id_empresa = %s 
-            ORDER BY nome_grupo ASC
+            ORDER BY nome ASC
         """, (id_empresa,))
         grupos = [{"id": row[0], "grupo": row[1]} for row in cursor.fetchall()]
         return jsonify(grupos)
@@ -2354,17 +2785,28 @@ def permissao_combobox():
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
 
-        # Grupos personalizados
-        cursor.execute("SELECT id, nome_grupo FROM tbl_usuario_grupo ORDER BY nome_grupo ASC")
+        id_empresa = session.get("id_empresa")
+        if not id_empresa:
+            return jsonify({"status": "erro", "mensagem": "Empresa não identificada na sessão."}), 401
+
+        # Consulta com filtro por empresa e alias para 'nome'
+        cursor.execute("""
+            SELECT id, nome_grupo AS nome 
+            FROM tbl_usuario_grupo 
+            WHERE id_empresa = %s 
+            ORDER BY nome_grupo ASC
+        """, (id_empresa,))
+        
         grupos = [{"id": row[0], "nome": row[1]} for row in cursor.fetchall()]
 
-        # Insere opções fixas no topo com id nulo
+        # Insere opção fixa
         grupos.insert(0, {"id": None, "nome": "Administrador"})
 
         return jsonify({"status": "sucesso", "dados": grupos})
-    
+
     except Exception as e:
         return jsonify({"status": "erro", "mensagem": str(e)}), 500
+
     finally:
         conn.close()
 
@@ -2382,7 +2824,7 @@ def buscar_id_grupo():
         conn = Var_ConectarBanco()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM tbl_usuario_grupo WHERE nome_grupo = %s", (nome_grupo,))
+        cursor.execute("SELECT id FROM tbl_usuario_grupo WHERE nome = %s", (nome_grupo,))
         resultado = cursor.fetchone()
         conn.close()
 
@@ -3243,35 +3685,40 @@ def menu_salvar():
                 UPDATE tbl_menu
                 SET nome_menu = %s, descricao = %s, rota = %s, data_page = %s, icone = %s,
                     link_detalhe = %s, tipo_abrir = %s, ordem = %s, parent_id = %s,
-                    ativo = %s, local_menu = %s, valor = %s, obs = %s
+                    ativo = %s, local_menu = %s, valor = %s, obs = %s, assinatura_app = %s
                 WHERE id = %s
             """, (
                 dados["nome_menu"], dados["descricao"], dados["rota"], dados["data_page"], dados["icone"],
                 dados["link_detalhe"], dados["tipo_abrir"], dados["ordem"], dados["parent_id"],
-                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], dados["id"]
+                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], dados["assinatura_app"],
+                dados["id"]
             ))
         else:
             cursor.execute("""
                 INSERT INTO tbl_menu (
-                    nome_menu, descricao, rota, data_page, icone,
-                    link_detalhe, tipo_abrir, ordem, parent_id,
-                    ativo, local_menu, valor, obs
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                RETURNING id
+                    nome_menu, descricao, rota, data_page, icone, link_detalhe, tipo_abrir,
+                    ordem, parent_id, ativo, local_menu, valor, obs, assinatura_app
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s
+                )
             """, (
                 dados["nome_menu"], dados["descricao"], dados["rota"], dados["data_page"], dados["icone"],
                 dados["link_detalhe"], dados["tipo_abrir"], dados["ordem"], dados["parent_id"],
-                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"]
+                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], dados["assinatura_app"]
             ))
-            dados["id"] = cursor.fetchone()[0]
 
         conn.commit()
-        return jsonify({"status": "sucesso", "id": dados["id"]})
+        return jsonify({"mensagem": "Registro salvo com sucesso!"})
+
     except Exception as e:
-        print("Erro ao salvar menu:", e)
-        return jsonify({"erro": str(e)}), 500
+        conn.rollback()
+        return jsonify({"erro": f"Erro ao salvar o menu: {str(e)}"}), 500
+
     finally:
+        cursor.close()
         conn.close()
+
 
 # 🔎 Obter dados de um menu específico
 @auth_bp.route("/menu/apoio/<int:id>", methods=["GET"])
@@ -3316,6 +3763,655 @@ def menu_delete():
         return jsonify({"status": "sucesso", "mensagem": "Registro excluído com sucesso."})
     except Exception as e:
         print("Erro ao excluir menu:", e)
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+
+# ────────────────────────────────────────────────
+# 📁 ROTAS: PLANO DE CONTAS (formato padrão funcional)
+# ────────────────────────────────────────────────
+
+@auth_bp.route("/plano_contas/dados")
+@login_obrigatorio
+def plano_contas_dados():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    tipo = request.args.get("tipo", "").strip()
+    id_empresa = session.get("id_empresa")
+
+    print(f"🔎 Plano de contas filtro: tipo={tipo}, empresa={id_empresa}")
+
+    sql = """
+        SELECT codigo, descricao, status
+        FROM tbl_hub_plano_contas
+        WHERE id_empresa = %s
+    """
+    valores = [id_empresa]
+
+    if tipo:
+        sql += " AND plano = %s"
+        valores.append(tipo)
+
+    sql += " ORDER BY codigo"
+
+    cursor.execute(sql, valores)
+    colunas = [desc[0] for desc in cursor.description]
+    dados = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({ "dados": dados })
+
+
+@auth_bp.route("/plano_contas/editar", methods=["POST"])
+@login_obrigatorio
+def plano_contas_editar():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.get_json()
+    id_empresa = session.get("id_empresa")
+
+    try:
+        cursor.execute("""
+            UPDATE tbl_hub_plano_contas
+            SET descricao = %s
+            WHERE id_empresa = %s AND codigo = %s
+        """, (
+            dados.get("descricao"),
+            id_empresa,
+            dados.get("codigo")
+        ))
+        conn.commit()
+        return jsonify({"mensagem": "Atualizado com sucesso"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"erro": f"Erro ao atualizar: {str(e)}"}), 500
+
+    finally:
+        conn.close()
+
+
+@auth_bp.route("/plano_contas/incluir", methods=["POST"])
+@login_obrigatorio
+def plano_contas_incluir():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.get_json()
+    id_empresa = session.get("id_empresa")
+
+    try:
+        codigo_pai = dados.get("codigo_pai")
+        descricao = dados.get("descricao")
+        plano = dados.get("plano")
+
+        # Buscar último código filho
+        cursor.execute("""
+            SELECT codigo FROM tbl_hub_plano_contas
+            WHERE id_empresa = %s AND codigo LIKE %s
+            ORDER BY codigo DESC LIMIT 1
+        """, (id_empresa, f"{codigo_pai}.%"))
+
+        ultimo = cursor.fetchone()
+        if ultimo:
+            partes = ultimo[0].split(".")
+            partes[-1] = str(int(partes[-1]) + 1).zfill(2)
+            novo_codigo = ".".join(partes)
+        else:
+            novo_codigo = f"{codigo_pai}.01"
+
+        # Calcular o nível
+        nivel = novo_codigo.count(".") + 1
+
+        if nivel > 5:
+            return jsonify({"erro": "Limite máximo de níveis (5) atingido."}), 400
+
+        # Definir tipo com base no nível
+        tipo = "Sintética" if nivel <= 3 else "Analítica"
+
+        # Inserir novo plano
+        cursor.execute("""
+            INSERT INTO tbl_hub_plano_contas (id_empresa, codigo, descricao, tipo, nivel, status, plano)
+            VALUES (%s, %s, %s, %s, %s, true, %s)
+        """, (id_empresa, novo_codigo, descricao, tipo, nivel, plano))
+
+        conn.commit()
+        return jsonify({"codigo": novo_codigo, "descricao": descricao})
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Erro ao incluir plano de contas:", e)
+        return jsonify({"erro": str(e)}), 500
+
+    finally:
+        conn.close()
+
+
+
+@auth_bp.route("/plano_contas/ocultar", methods=["POST"])
+@login_obrigatorio
+def plano_contas_ocultar():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.get_json()
+    id_empresa = session.get("id_empresa")
+
+    try:
+        cursor.execute("""
+            UPDATE tbl_hub_plano_contas
+            SET status = NOT status
+            WHERE id_empresa = %s AND codigo = %s
+        """, (id_empresa, dados.get("codigo")))
+
+        conn.commit()
+        return jsonify({"mensagem": "Status alterado"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"erro": str(e)}), 500
+
+    finally:
+        conn.close()
+
+
+@auth_bp.route("/plano_contas/existe", methods=["GET"])
+@login_obrigatorio
+def plano_contas_existe():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    id_empresa = session.get("id_empresa")
+
+    cursor.execute("""
+        SELECT COUNT(*) FROM tbl_hub_plano_contas WHERE id_empresa = %s
+    """, (id_empresa,))
+    total = cursor.fetchone()[0]
+    return jsonify({"existe": total > 0})
+
+
+
+@auth_bp.route("/plano_contas/buscar")
+@login_obrigatorio
+def buscar_contas_contabeis():
+    termo = request.args.get("termo", "").strip()
+    tipo_plano = request.args.get("tipo", "").strip()
+    id_empresa = session.get("id_empresa")
+
+    if len(termo) < 3:
+        return jsonify([])
+
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    try:
+        # Buscar apenas contas analíticas de nível 5 que atendam aos critérios
+        cursor.execute("""
+            SELECT id, codigo, descricao
+            FROM tbl_hub_plano_contas
+            WHERE nivel = 5
+              AND tipo = 'Analítica'
+              AND status = true
+              AND plano = %s
+              AND id_empresa = %s
+              AND descricao ILIKE %s
+        """, (tipo_plano, id_empresa, f"%{termo}%"))
+
+        contas = cursor.fetchall()
+        resultados = []
+
+        for id_final, cod_final, desc_final in contas:
+            hierarquia = []
+
+            # Separar o código em partes e ir subindo nos níveis
+            partes = cod_final.split('.')
+            for nivel in range(2, 6):  # níveis 2 a 5
+                codigo_nivel = '.'.join(partes[:nivel])
+                cursor.execute("""
+                    SELECT descricao FROM tbl_hub_plano_contas
+                    WHERE codigo = %s AND id_empresa = %s
+                """, (codigo_nivel, id_empresa))
+                resultado = cursor.fetchone()
+                if resultado:
+                    hierarquia.append({
+                        "nivel": nivel,
+                        "descricao": resultado[0]
+                    })
+
+            resultados.append({
+                "id": id_final,
+                "codigo": cod_final,
+                "descricao_final": desc_final,
+                "hierarquia": hierarquia
+            })
+
+        return jsonify(resultados)
+
+    except Exception as e:
+        print("❌ Erro ao buscar contas:", e)
+        return jsonify([]), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# ────────────────────────────────────────────────
+# Rotas para categoria em HUB
+# ────────────────────────────────────────────────
+@auth_bp.route("/categoria/dados")
+@login_obrigatorio
+def categoria_dados():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    pagina = int(request.args.get("pagina", 1))
+    por_pagina = int(request.args.get("porPagina", 20))
+    offset = (pagina - 1) * por_pagina
+
+    id_empresa = session.get("id_empresa")
+    nome = request.args.get("nome_categoria", "").strip()
+    onde = request.args.get("onde_usa", "").strip()
+    status = request.args.get("status")
+
+    sql = """
+        SELECT c.*, pc.descricao AS desc_conta_contabil
+        FROM tbl_hub_categoria c
+        LEFT JOIN tbl_hub_plano_contas pc ON pc.id = c.id_conta_contabil
+        WHERE c.id_empresa = %s
+    """
+    valores = [id_empresa]
+
+    if nome:
+        sql += " AND c.nome_categoria ILIKE %s"
+        valores.append(f"%{nome}%")
+
+    if onde:
+        sql += " AND c.onde_usa ILIKE %s"
+        valores.append(f"%{onde}%")
+
+    if status != "":
+        sql += " AND c.status = %s"
+        valores.append(status == "true")
+
+    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
+    cursor.execute(sql_total, valores)
+    total_registros = cursor.fetchone()[0]
+    total_paginas = (total_registros + por_pagina - 1) // por_pagina
+
+    sql += " ORDER BY c.id LIMIT %s OFFSET %s"
+    valores.extend([por_pagina, offset])
+
+    cursor.execute(sql, valores)
+    colunas = [desc[0] for desc in cursor.description]
+    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({
+        "dados": registros,
+        "total_paginas": total_paginas
+    })
+
+
+@auth_bp.route("/categoria/incluir")
+@login_obrigatorio
+def categoria_incluir():
+    return render_template("frm_hub_categoria_apoio.html")
+
+
+@auth_bp.route("/categoria/editar")
+@login_obrigatorio
+def categoria_editar():
+    return render_template("frm_hub_categoria_apoio.html")
+
+
+@auth_bp.route("/categoria/salvar", methods=["POST"])
+@login_obrigatorio
+def categoria_salvar():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+    id_empresa = session.get("id_empresa")
+
+    try:
+        if dados.get("id"):
+            cursor.execute("""
+                UPDATE tbl_hub_categoria
+                SET nome_categoria = %s, onde_usa = %s, status = %s, id_conta_contabil = %s
+                WHERE id = %s AND id_empresa = %s
+            """, (
+                dados["nome_categoria"], dados["onde_usa"], dados["status"],
+                dados["id_conta_contabil"], dados["id"], id_empresa
+            ))
+        else:
+            cursor.execute("""
+                INSERT INTO tbl_hub_categoria (id_empresa, nome_categoria, onde_usa, status, id_conta_contabil)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                id_empresa, dados["nome_categoria"], dados["onde_usa"],
+                dados["status"], dados["id_conta_contabil"]
+            ))
+
+        conn.commit()
+        return jsonify({"mensagem": "Categoria salva com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"erro": f"Erro ao salvar a categoria: {str(e)}"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@auth_bp.route("/categoria/apoio/<int:id>", methods=["GET"])
+@login_obrigatorio
+def apoio_categoria(id):
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT 
+                c.id,
+                c.nome_categoria,
+                c.onde_usa,
+                c.status,
+                c.id_conta_contabil,
+                c.tipo_plano,
+                p.descricao AS desc_conta_contabil,
+                p.codigo AS codigo_conta_contabil 
+            FROM tbl_hub_categoria c
+            LEFT JOIN tbl_hub_plano_contas p 
+            ON p.id = c.id_conta_contabil AND p.id_empresa = c.id_empresa
+            WHERE c.id = %s AND c.id_empresa = %s
+        """, (id, session.get("id_empresa")))
+        
+        dados = cursor.fetchone()
+        if not dados:
+            return jsonify({"erro": "Categoria não encontrada."}), 404
+        
+        colunas = [desc[0] for desc in cursor.description]
+        return jsonify(dict(zip(colunas, dados)))
+        
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+
+
+
+@auth_bp.route("/categoria/delete", methods=["POST"])
+@login_obrigatorio
+def categoria_delete():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+    try:
+        cursor.execute("DELETE FROM tbl_hub_categoria WHERE id = %s AND id_empresa = %s", (dados["id"], session.get("id_empresa")))
+        conn.commit()
+        return jsonify({"status": "sucesso", "mensagem": "Categoria excluída com sucesso."})
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+
+
+# ────────────────────────────────────────────────
+# Rotas para FAVORECIDOS em HUB
+# ────────────────────────────────────────────────
+@auth_bp.route("/favorecido/dados")
+@login_obrigatorio
+def favorecido_dados():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    pagina = int(request.args.get("pagina", 1))
+    por_pagina = int(request.args.get("porPagina", 200))
+    offset = (pagina - 1) * por_pagina
+
+    id_empresa = session.get("id_empresa")
+    documento = request.args.get("documento", "").strip()
+    id_categoria = request.args.get("id_categoria", "").strip()
+    razao_social = request.args.get("razao_social", "").strip()
+    status = request.args.get("status")
+
+    sql = """
+        SELECT f.id, f.documento, f.razao_social, f.cidade, f.uf,
+               cat.nome_categoria AS categoria_nome,
+               f.status
+        FROM tbl_hub_favorecido f
+        LEFT JOIN tbl_hub_categoria cat ON cat.id = f.id_categoria AND cat.id_empresa = f.id_empresa
+        WHERE f.id_empresa = %s
+    """
+    valores = [id_empresa]
+
+    if documento:
+        sql += " AND f.documento ILIKE %s"
+        valores.append(f"%{documento}%")
+
+    if id_categoria:
+        sql += " AND f.id_categoria::text = %s"
+        valores.append(id_categoria)
+
+    if razao_social:
+        sql += " AND f.razao_social ILIKE %s"
+        valores.append(f"%{razao_social}%")
+
+    if status != "":
+        sql += " AND f.status = %s"
+        valores.append(status == "true")
+
+    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
+    cursor.execute(sql_total, valores)
+    total_registros = cursor.fetchone()[0]
+    total_paginas = (total_registros + por_pagina - 1) // por_pagina
+
+    sql += " ORDER BY f.razao_social ASC LIMIT %s OFFSET %s"
+    valores.extend([por_pagina, offset])
+
+    cursor.execute(sql, valores)
+    colunas = [desc[0] for desc in cursor.description]
+    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({
+        "dados": registros,
+        "total_paginas": total_paginas
+    })
+
+
+@auth_bp.route("/favorecido/incluir")
+@login_obrigatorio
+def favorecido_incluir():
+    return render_template("frm_hub_favorecido_apoio.html")
+
+
+@auth_bp.route("/favorecido/editar")
+@login_obrigatorio
+def favorecido_editar():
+    return render_template("frm_hub_favorecido_apoio.html")
+
+
+
+@auth_bp.route("/favorecido/salvar", methods=["POST"])
+@login_obrigatorio
+def salvar_favorecido():
+    def tratar_data(valor):
+        return valor if valor else None
+
+    def tratar_valor(valor):
+        return valor if valor not in ("", None) else None
+
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+    id_empresa = session.get("id_empresa")
+
+    try:
+        print("📦 Dados recebidos para salvar favorecido:", dados)
+
+        if dados.get("id"):  # UPDATE
+            cursor.execute("""
+                UPDATE tbl_hub_favorecido
+                SET tipo = %s, documento = %s, razao_social = %s, nome = %s, email = %s, telefone = %s,
+                    inscricao_estadual = %s, inscricao_municipal = %s, cep = %s, logradouro = %s,
+                    numero = %s, complemento = %s, bairro = %s, cidade = %s, uf = %s,
+                    data_abertura = %s, natureza_juridica = %s, cnae_principal = %s, cnaes_secundarios = %s,
+                    situacao_cadastral = %s, data_situacao = %s, observacoes = %s, id_categoria = %s, status = %s
+                WHERE id = %s AND id_empresa = %s
+            """, (
+                dados.get("tipo"),
+                dados.get("documento"),
+                dados.get("razao_social"),
+                dados.get("nome"),
+                dados.get("email"),
+                dados.get("telefone"),
+                dados.get("inscricao_estadual"),
+                dados.get("inscricao_municipal"),
+                dados.get("cep"),
+                dados.get("logradouro"),
+                dados.get("numero"),
+                dados.get("complemento"),
+                dados.get("bairro"),
+                dados.get("cidade"),
+                dados.get("uf"),
+                tratar_data(dados.get("data_abertura")),
+                dados.get("natureza_juridica"),
+                dados.get("cnae_principal"),
+                dados.get("cnaes_secundarios"),
+                dados.get("situacao_cadastral"),
+                tratar_data(dados.get("data_situacao")),
+                dados.get("observacoes"),
+                tratar_valor(dados.get("id_categoria")),
+                tratar_valor(dados.get("status")),
+                dados.get("id"),
+                id_empresa
+            ))
+
+        else:  # INSERT
+            cursor.execute("""
+                INSERT INTO tbl_hub_favorecido (
+                    id_empresa, tipo, documento, razao_social, nome, email, telefone,
+                    inscricao_estadual, inscricao_municipal, cep, logradouro, numero, complemento,
+                    bairro, cidade, uf, data_abertura, natureza_juridica, cnae_principal,
+                    cnaes_secundarios, situacao_cadastral, data_situacao, observacoes, id_categoria, status
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                id_empresa,
+                dados.get("tipo"),
+                dados.get("documento"),
+                dados.get("razao_social"),
+                dados.get("nome"),
+                dados.get("email"),
+                dados.get("telefone"),
+                dados.get("inscricao_estadual"),
+                dados.get("inscricao_municipal"),
+                dados.get("cep"),
+                dados.get("logradouro"),
+                dados.get("numero"),
+                dados.get("complemento"),
+                dados.get("bairro"),
+                dados.get("cidade"),
+                dados.get("uf"),
+                tratar_data(dados.get("data_abertura")),
+                dados.get("natureza_juridica"),
+                dados.get("cnae_principal"),
+                dados.get("cnaes_secundarios"),
+                dados.get("situacao_cadastral"),
+                tratar_data(dados.get("data_situacao")),
+                dados.get("observacoes"),
+                tratar_valor(dados.get("id_categoria")),
+                tratar_valor(dados.get("status"))
+            ))
+
+
+        conn.commit()
+        return jsonify({"sucesso": True, "mensagem": "Favorecido salvo com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        print("❌ Erro ao salvar favorecido:", str(e))
+        return jsonify({"sucesso": False, "mensagem": f"Erro ao salvar favorecido: {str(e)}"}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+
+@auth_bp.route("/favorecido/delete", methods=["POST"])
+@login_obrigatorio
+def favorecido_delete():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+
+    try:
+        cursor.execute("""
+            DELETE FROM tbl_hub_favorecido
+            WHERE id = %s AND id_empresa = %s
+        """, (dados["id"], session.get("id_empresa")))
+        conn.commit()
+        return jsonify({"status": "sucesso", "mensagem": "Favorecido excluído com sucesso."})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@auth_bp.route("/favorecido/apoio/<int:id>", methods=["GET"])
+@login_obrigatorio
+def apoio_favorecido(id):
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            SELECT 
+                f.id,
+                f.tipo,
+                f.nome,
+                f.razao_social,
+                f.documento,
+                f.inscricao_estadual,
+                f.inscricao_municipal,
+                f.email,
+                f.telefone,
+                f.cep,
+                f.logradouro,
+                f.numero,
+                f.complemento,
+                f.bairro,
+                f.cidade,
+                f.uf,
+                f.data_abertura,
+                f.natureza_juridica,
+                f.cnae_principal,
+                f.cnaes_secundarios,
+                f.situacao_cadastral,
+                f.data_situacao,
+                f.observacoes,
+                f.id_empresa,
+                f.status,
+                f.id_categoria,
+                cat.nome_categoria -- ✅ sem vírgula aqui!
+            FROM tbl_hub_favorecido f
+            LEFT JOIN tbl_hub_categoria cat ON cat.id = f.id_categoria AND cat.id_empresa = f.id_empresa
+            WHERE f.id = %s AND f.id_empresa = %s
+        """, (id, session.get("id_empresa")))
+
+        dados = cursor.fetchone()
+        if not dados:
+            return jsonify({"erro": "Favorecido não encontrado."}), 404
+
+        colunas = [desc[0] for desc in cursor.description]
+        return jsonify(dict(zip(colunas, dados)))
+
+    except Exception as e:
         return jsonify({"erro": str(e)}), 500
     finally:
         conn.close()

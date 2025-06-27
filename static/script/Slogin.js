@@ -149,3 +149,14 @@ document.getElementById("linkCadastro").addEventListener("click", function (e) {
   );
 });
 
+
+
+// Funçãi de carrega email
+function abrirEmail() {
+  try {
+    window.location.href = "mailto:dpo@rufino.tech";
+  } catch (e) {
+    alert("Não foi possível abrir seu aplicativo de e-mail. Copie: dpo@rufino.tech");
+  }
+  return false;
+}

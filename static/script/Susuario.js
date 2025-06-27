@@ -10,7 +10,7 @@ if (typeof window.Usuario === "undefined") {
         configurarEventos: function () {
             // Botão "Novo Usuário"
             document.querySelector("#ob_btnIncluir").addEventListener("click", () => {
-                let largura = 800;
+                let largura = 600;
                 let altura = 500;
                 let esquerda = (window.screen.width - largura) / 2;
                 let topo = (window.screen.height - altura) / 2;
@@ -190,7 +190,7 @@ if (typeof window.Usuario === "undefined") {
                         };
 
             
-                        const largura = 800;
+                        const largura = 600;
                         const altura = 500;
                         const esquerda = (window.screen.width - largura) / 2;
                         const topo = (window.screen.height - altura) / 2;

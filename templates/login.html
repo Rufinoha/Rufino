@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Login | Rufino</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style/Clogin.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Caviso_cookie.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -11,10 +12,19 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+<div id="aviso-cookies">
+  <p>
+    Oi! Nós usamos cookies para oferecer uma navegação melhor, lembrar suas preferências e entender como você usa nosso site.
+    Fique tranquilo, tudo é feito com responsabilidade e segurança. Ao continuar, você concorda com nossa 
+    <a href="/privacidade">Política de Privacidade</a>.
+  </p>
+  <button onclick="aceitarCookies()">Tudo bem, entendi</button>
+</div>
+
 
   <div class="container-login">
 
-    <!-- 📦 COLUNA ESQUERDA (MUDEI DE LADO): VITRINE DE SISTEMAS -->
+    <!-- COLUNA ESQUERDA (MUDEI DE LADO): VITRINE DE SISTEMAS -->
     <div class="coluna-esquerda">
       <h3>Soluções disponíveis</h3>
       <div class="cards-sistemas">
@@ -127,27 +137,32 @@
   </div>
 
 
-  <footer class="contato-rodape">
-    <div class="conteudo-contato">
-      <h2>Deus abre caminhos onde plantamos nossos sonhos. Vamos conversar?</h2>
-      <div class="botoes-contato">
-        <a href="https://wa.me/5511999999999" target="_blank" class="botao-whatsapp">
-          <alt="WhatsApp"> WhatsApp
-        </a>
-        <a href="mailto:contato@rufino.tech" target="_blank" class="botao-email">
-          <alt="Email"> E-mail
-        </a>
-        <a href="https://instagram.com/seuinstagram" target="_blank" class="botao-instagram">
-          <alt="Instagram"> Instagram
-        </a>
-        <a href="https://linkedin.com/in/seulinkedin" target="_blank" class="botao-linkedin">
-          <alt="LinkedIn"> LinkedIn
-        </a>
-      </div>
-      <p class="mensagem-final">O que Deus abençoa, ninguém impede.</p>
-    </div>
-  </footer>
-  <script src="{{ url_for('static', filename='script/Slogin.js') }}"></script>
+  <footer class="rodape">
+  <p id="versiculo-rotativo">
+    Rufino Tech · CNPJ 51.594.053/00001-19
+  </p>
 
+  <p>© 2025 Tech Plataforma de Gestão. Todos os direitos reservados.</p>
+
+  <p>
+    <a href="/privacidade" class="link-rodape">Política de Privacidade</a> |
+    <a href="/termouso" class="link-rodape">Termos de Uso</a> |
+    <a href="mailto:dpo@rufino.tech" class="link-rodape" onclick="return abrirEmail();">Encarregado de Dados (DPO)</a>
+  </p>
+
+  <p>Atualizado em: 19/06/2025</p>
+
+  <div class="redes-sociais">
+    <a href="https://instagram.com" target="_blank">
+      <img src="{{ url_for('static', filename='imge/instagram.png') }}" alt="Instagram">
+    </a>
+    <a href="https://linkedin.com" target="_blank">
+      <img src="{{ url_for('static', filename='imge/linkedin.png') }}" alt="LinkedIn">
+    </a>
+  </div>
+</footer>
+
+  <script src="{{ url_for('static', filename='script/Slogin.js') }}"></script>
+  <script src="{{ url_for('static', filename='script/Saviso_cookie.js') }}"></script>
 </body>
 </html>

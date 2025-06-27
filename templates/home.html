@@ -6,13 +6,26 @@
   <title>Rufino | Soluções Inteligentes</title>
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/Chome.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Caviso_cookie.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
+<div id="aviso-cookies">
+  <p>
+    Oi! Nós usamos cookies para oferecer uma navegação melhor, lembrar suas preferências e entender como você usa nosso site.
+    Fique tranquilo, tudo é feito com responsabilidade e segurança. Ao continuar, você concorda com nossa 
+    <a href="/privacidade">Política de Privacidade</a>.
+  </p>
+  <button onclick="aceitarCookies()">Tudo bem, entendi</button>
+</div>
+
+
 <body>
 
-  <!-- 🔝 TOPO FIXO -->
+  <!-- TOPO FIXO -->
   <header class="header-fixo">
     <div class="container-topo">
       <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo Rufino" class="logo-rufino">
@@ -132,13 +145,14 @@
     <section class="secao-contato">
       <h3>Deus abre caminhos onde plantamos nossos sonhos.</H3>
       <H3> Vamos conversar?</h3>
-      <form class="form-contato">
-        <input type="text" placeholder="Nome completo" required>
-        <input type="email" placeholder="E-mail" required>
-        <input type="text" placeholder="Assunto" required>
-        <textarea placeholder="Mensagem" rows="5" required></textarea>
+      <form class="form-contato" id="form-contato">
+        <input type="text" name="nome" placeholder="Nome completo" required>
+        <input type="email" name="email" placeholder="E-mail" required>
+        <input type="text" name="assunto" placeholder="Assunto" required>
+        <textarea name="mensagem" placeholder="Mensagem" rows="5" required></textarea>
         <button type="submit">Enviar Mensagem</button>
       </form>
+
 
       <div class="contato-rodape">
         <div class="conteudo-contato">
@@ -162,19 +176,35 @@
   </main>
 
   
-  <!-- 🧱 RODAPÉ -->
   <footer class="rodape">
-    <p id="versiculo-rotativo">"O Senhor é meu pastor e nada me faltará." – Salmos 23:1</p>
-    <p>© Rufino. Todos os direitos reservados.</p>
-    <div class="redes-sociais">
+  <p id="versiculo-rotativo">
+    Rufino Tech · CNPJ 51.594.053/00001-19
+  </p>
+
+  <p>© 2025 Tech Plataforma de Gestão. Todos os direitos reservados.</p>
+
+  <p>
+    <a href="/privacidade" class="link-rodape">Política de Privacidade</a> |
+    <a href="/termouso" class="link-rodape">Termos de Uso</a> |
+    <a href="mailto:dpo@rufino.tech" class="link-rodape" onclick="return abrirEmail();">Encarregado de Dados (DPO)</a>
+  </p>
+
+  <p>Atualizado em: 19/06/2025</p>
+
+  <div class="redes-sociais">
+    <a href="https://instagram.com" target="_blank">
       <img src="{{ url_for('static', filename='imge/instagram.png') }}" alt="Instagram">
+    </a>
+    <a href="https://linkedin.com" target="_blank">
       <img src="{{ url_for('static', filename='imge/linkedin.png') }}" alt="LinkedIn">
-    </div>
-  </footer>
+    </a>
+  </div>
+</footer>
+
 
   <!-- ✅ JS do módulo home -->
 <script src="{{ url_for('static', filename='script/Shome.js') }}"></script>
-
+<script src="{{ url_for('static', filename='script/Saviso_cookie.js') }}"></script>
  
 </body>
 </html>

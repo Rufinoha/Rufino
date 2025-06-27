@@ -68,7 +68,7 @@ body {
     border-radius: 4px;
     border: 1px solid #ccc;
     background-color: #e9ecef;
-    color: #4c00ff;
+    color: #85C300;
 }
 
 /* ========================== CONTAINER PRINCIPAL ========================== */
@@ -126,7 +126,7 @@ body {
 }
 
 .Cl_BtnSalvar, .Cl_BtnCancelar {
-    background-color: #007bff;
+    background-color: #85C300;
     margin-right: 20px;
     color: #fff;
     border: none;
@@ -138,11 +138,11 @@ body {
 }
 
 .Cl_BtnSalvar:hover, .Cl_BtnCancelar:hover {
-    background-color: #0056b3;
+    background-color: #6FA700;
 }
 
 .Cl_BtnExcluir {
-    background-color: #dc3545;
+    background-color: #E53935;
     color: #fff;
     border: none;
     padding: 12px 24px;
@@ -153,5 +153,5 @@ body {
 }
 
 .Cl_BtnExcluir:hover {
-    background-color: #c82333;
+    background-color: #C62828;
 }

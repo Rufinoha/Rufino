@@ -9,13 +9,15 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+
+  <div class="titulo-container">
+    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('configuracoes')">
+      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para Configurações
+    </button>
+  </div>
+
   <div class="Cl_ConfigContainer">
     <h2>Gestão de Menus</h2>
-
-    <div class="Cl_TituloContainer">
-      <button id="ob_btnVoltar">⬅ Voltar a configurações</button>
-    </div>
-
     <div class="Cl_Filtros">
       <label class="Cl_labelfiltro" for="ob_filtroNome">Nome do Menu:</label>
       <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome">

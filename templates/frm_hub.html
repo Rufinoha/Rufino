@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>HUB - Central Contábil</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Chub.css') }}">
+</head>
+<body>
+    <div class="hub-container">
+        <h1>HUB - Central Contábil</h1>
+        <hr>
+        <p class="subtitulo">Sua base de estrutura contábil e financeira</p>
+
+        <div class="hub-cards">
+            <div class="hub-card" onclick="GlobalUtils.carregarPagina('hub_plano_contas')">
+                <span class="icon">🧾</span>Plano de Contas
+            </div>
+            <div class="hub-card" onclick="GlobalUtils.carregarPagina('hub_categoria')">
+                <span class="icon">🔗</span>Categorias
+            </div>
+            <div class="hub-card" onclick="GlobalUtils.carregarPagina('hub_favorecido')">
+                <span class="icon">👥</span>Favorecidos
+            </div>
+            <div class="hub-card" onclick="GlobalUtils.carregarPagina('contas_financeiras')">
+                <span class="icon">🏦</span>Livro Diário
+            </div>
+
+            <div class="hub-card disabled">
+                <span class="icon">📋</span>Espaço 01
+            </div>
+            <div class="hub-card disabled">
+                <span class="icon">📋</span>Espaço 02
+            </div>
+            <div class="hub-card disabled">
+                <span class="icon">📋</span>Espaço 03
+            </div>
+            <div class="hub-card disabled">
+                <span class="icon">📋</span>Espaço 04
+            </div>
+        </div>
+
+        <div class="hub-validacoes">
+            <h3>Validações</h3>
+            <hr>
+            <p class="ok">✅ Nenhuma validação pendente</p>
+            <ul class="hub-indicadores">
+                <li><strong>154</strong> contas contábeis</li>
+                <li><strong>23</strong> categorias</li>
+                <li><strong>12</strong> favorecidos</li>
+                <li><strong>4</strong> contas financeiras</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

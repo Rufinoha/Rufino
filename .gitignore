@@ -13,10 +13,6 @@ __doc/
 dist/
 build/
 
-# 💾 Banco de dados local
-*.db
-*.sqlite3
-+database/*.db     
 
 # 🧪 Testes temporários
 *.log
@@ -40,3 +36,6 @@ flask_session/
 # 📝 Arquivos de documentação (se quiser ignorar)
 *.md
 +# *.md          
+
+# diretorios que não podem ser sobescritos no VPS
+/static/imge/imguser/

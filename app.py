@@ -2,6 +2,7 @@ from extensoes import criar_app
 from srotas import init_app as auth_init
 from srotas_api_email_brevo import init_app as brevo_init
 from srotas_api_efi import init_app as efi_init
+from global_utils import init_app as global_init
 
 app = criar_app()
 
@@ -9,6 +10,7 @@ app = criar_app()
 auth_init(app)
 brevo_init(app)
 efi_init(app)
+global_init(app)
 
 if __name__ == "__main__":
     import os

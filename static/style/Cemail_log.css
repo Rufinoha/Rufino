@@ -33,12 +33,13 @@ body {
 
 /* ========================== CONTAINER PRINCIPAL ========================== */
 .Cl_UsuarioContainer {
-  margin: 70px auto;
+  margin: 0px auto;
   padding: 8px;
   max-width: 1200px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
 }
 
 /* ========================== TÍTULOS ========================== */
@@ -60,7 +61,7 @@ h2 {
   margin-bottom: 20px;
   background-color: #f9f9f9;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  width: 98%;
   max-width: 1180px;
   gap: 10px;
 }
@@ -134,7 +135,7 @@ h2 {
 }
 
 .Cl_TabelaUsuarios tbody tr:hover {
-  background-color: #e0f7ff;
+  background-color: #efffe0;
 }
 
 
@@ -190,8 +191,8 @@ h2 {
 .Cl_TituloContainer {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: flex-start;
+  justify-content: flex-end; 
 }
 
 /* ========================== RESPONSIVIDADE ========================== */
@@ -222,5 +223,45 @@ h2 {
 .status.enviado { background-color: #888; color: #fff; padding: 3px 6px; border-radius: 4px; }
 .status.entregue { background-color: #3399FF; color: #fff; padding: 3px 6px; border-radius: 4px; }
 .status.aberto { background-color: #85C300; color: #fff; padding: 3px 6px; border-radius: 4px; }
-.status.falha { background-color: #D9534F; color: #fff; padding: 3px 6px; border-radius: 4px; }
+.status.falha { background-color: #E53935; color: #fff; padding: 3px 6px; border-radius: 4px; }
 .status.aguardando { background-color: #AAAAAA; color: #fff; padding: 3px 6px; border-radius: 4px; }
+
+
+/* ========================== BOTAO VOLTAR ========================== */
+.btn-voltar {
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-voltar:hover {
+  background-color: #333;
+}
+
+.titulo-container {
+  margin: 0px auto;
+  padding: 0px;
+  max-width: 1200px;
+  background-color: transparent;
+  border-radius: 8px;
+  text-align: right;
+}
+
+
+.btn-voltar {
+  height: 40px;
+  padding: 10;
+
+}
+
+.icon-voltar {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}

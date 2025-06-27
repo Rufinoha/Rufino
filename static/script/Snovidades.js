@@ -1,3 +1,5 @@
+console.log("Carregando novidades...");
+
 if (typeof window.Novidades === "undefined") {
   window.Novidades = {
       paginaAtual: 1,
@@ -68,7 +70,7 @@ if (typeof window.Novidades === "undefined") {
               const linha = document.createElement("tr");
               linha.innerHTML = `
                   <td>${n.id}</td>
-                  <td>${window.Util.formatarData(n.emissao)}</td>
+                  <td>${window.Util.formatarDataPtBr(n.emissao)}</td>
                   <td>${n.modulo}</td>
                   <td>${n.descricao}</td>
                   <td>${n.link ? `<a href='${n.link}' target='_blank'>Link</a>` : "-"}</td>
@@ -146,11 +148,4 @@ if (window.Novidades?.configurarEventos) {
   window.Novidades.configurarEventos();
 }
 
-// Botão Voltar (modelo oficial igual ao Usuário)
-if (document.getElementById("ob_btnVoltar")) {
-  document.getElementById("ob_btnVoltar").addEventListener("click", () => {
-      carregarPagina("configuracoes"); // Chamando o painel de configurações
-  });
 
-  window.Util?.removerCSSAtual("frm_novidades.html"); // Se precisar remover o CSS antigo
-}

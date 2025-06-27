@@ -7,15 +7,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style/Cemcontrucao_config.css') }}">
 </head>
 <body>
-<div class="Cl_UsuarioContainer">
-    <div class="Cl_button">
-        <button id="ob_btnVoltar">⬅ Voltar a configurações</button>
-    </div> 
-    <div class="Cl_container">
-        <h1>EM CONSTRUÇÃO</h1>
-        <p>Essa parte do sistema ainda está em construção. Qualquer necessidade ou solicitação, favor entrar em contato com Hazael Rufino pelo telefone <strong>(11) 97483-4614</strong>.</p>
+
+    <div class="titulo-container">
+        <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('configuracoes')">
+            <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para Configurações
+        </button>
     </div>
-</div>
+    <div class="Cl_UsuarioContainer">
+        <div class="Cl_container">
+            <h1>EM CONSTRUÇÃO</h1>
+            <p>Essa parte do sistema ainda está em construção. Qualquer necessidade ou solicitação, favor entrar em contato com Hazael Rufino pelo telefone <strong>(11) 97483-4614</strong>.</p>
+        </div>
+    </div>
 
 </body>
 

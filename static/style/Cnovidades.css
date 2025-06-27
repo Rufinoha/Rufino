@@ -39,6 +39,7 @@ body {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
   }
   
   /* ========================== TÍTULOS ========================== */
@@ -46,9 +47,10 @@ body {
 .Cl_TituloContainer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  text-align: right;
   padding: 10px 20px;
   gap: 10px;
+  justify-content: flex-end; /* Alinha os itens para a direita */
 }
 
   
@@ -71,7 +73,7 @@ body {
     margin-bottom: 20px;
     background-color: #f9f9f9;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-    width: 100%;
+    width: 98%;
     max-width: 1180px;
     gap: 10px;
   }
@@ -95,7 +97,7 @@ body {
   /* ========================== BOTÕES ========================== */
   .Cl_BtnIncluir,
   .Cl_botaoFiltro {
-    background-color: #007BFF;
+    background-color: #85C300;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -109,12 +111,12 @@ body {
   
   .Cl_BtnIncluir:hover,
   .Cl_botaoFiltro:hover {
-    background-color: #0056b3;
+    background-color: #6FA700;
     transform: scale(1.05);
   }
   
   .Cl_botaoFiltro:active {
-    background-color: #003d80;
+    background-color: #85C300;
     transform: scale(0.95);
   }
   
@@ -137,7 +139,7 @@ body {
   }
   
   .Cl_TabelaUsuarios th {
-    background-color: #007bff;
+    background-color: #85C300;
     color: #fff;
   }
   
@@ -146,9 +148,15 @@ body {
   }
   
   .Cl_TabelaUsuarios tbody tr:hover {
-    background-color: #e0f7ff;
+    background-color: #efffe0;
   }
   
+
+.Cl_TabelaUsuarios td:nth-child(1),
+.Cl_TabelaUsuarios th:nth-child(1) {
+    width: 60px;
+    text-align: center;
+}
 
   
 .Cl_TabelaUsuarios td:nth-child(5),
@@ -157,7 +165,11 @@ body {
     text-align: center;
 }
 
-
+.Cl_TabelaUsuarios td:nth-child(6),
+.Cl_TabelaUsuarios th:nth-child(6) {
+    width: 60px;
+    text-align: center;
+}
   /* ========================== LINHA DE CARREGAMENTO ========================== */
   .Cl_Carregando td {
     text-align: center;
@@ -217,3 +229,44 @@ body {
   #ob_btnVoltar:hover {
     background-color: #333;
   }
+
+
+  /* ====================== Botão VOLTAR ========================== */
+.btn-voltar {
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-voltar:hover {
+  background-color: #333;
+}
+
+
+  .titulo-container {
+  margin: 0px auto;
+  padding: 0px;
+  max-width: 1200px;
+  background-color: transparent;
+  border-radius: 8px;
+  text-align: right;
+}
+
+
+.btn-voltar {
+  height: 40px;
+  padding: 10;
+
+}
+
+.icon-voltar {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}

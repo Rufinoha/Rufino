@@ -15,11 +15,24 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
   const uf            = document.getElementById("uf").value.trim().toUpperCase();
 
  // Validação obrigatória
-  if (!nome_completo || !email || !cnpj || !empresa || !cep || !endereco || !numero || !bairro || !cidade || !uf) {
-    return Swal.fire("Campos obrigatórios", "Preencha todos os campos obrigatórios.", "warning");
+  if (
+    !nome_completo || !email || !cnpj || !empresa || !cep ||
+    !endereco || !numero || !bairro || !cidade || !uf
+  ) {
+    return Swal.fire({
+      title: "Campos obrigatórios",
+      text: "Preencha todos os campos obrigatórios.",
+      icon: "warning",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: 'swal-confirm'
+      },
+      buttonsStyling: false
+    });
   }
 
-  // ✉️ Validação de e-mail
+
+  // Validação de e-mail
   const regexEmail = /^[\w\.-]+@[\w\.-]+\.\w{2,}$/;
   if (!regexEmail.test(email)) {
     return Swal.fire("E-mail inválido", "Informe um e-mail válido (ex: nome@empresa.com.br).", "warning")
@@ -40,36 +53,51 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
     const resultado = await resp.json();
 
     if (resp.ok) {
-      return Swal.fire("Sucesso!", resultado.mensagem, "success")
-        .then(() => window.close()); 
-    } 
+      return Swal.fire({
+        title: "Sucesso!",
+        text: resultado.mensagem,
+        icon: "success",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton: 'swal-confirm'
+        },
+        buttonsStyling: false
+      }).then(() => window.close());
+    }
+
 
     // Caso de erro
-    return Swal.fire("Erro", resultado.mensagem || "Erro no cadastro.", "error")
-      .then(() => {
-        if (resultado.mensagem && resultado.mensagem.includes("e‑mail já está cadastrado")) {
-          window.close();
-        }
-      });
+    return Swal.fire({
+      title: "Erro",
+      text: resultado.mensagem || "Erro no cadastro.",
+      icon: "error",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: 'swal-confirm'
+      },
+      buttonsStyling: false
+    }).then(() => {
+      if (resultado.mensagem && resultado.mensagem.includes("e‑mail já está cadastrado")) {
+        window.close();
+      }
+    });
 
-  } catch (erro) {
-    console.error("❌ Erro ao cadastrar:", erro);
-    return Swal.fire("Erro", "Falha na comunicação com o servidor.", "error");
-  }
+
+ } catch (erro) {
+  console.error("❌ Erro ao cadastrar:", erro);
+  return Swal.fire({
+    title: "Erro",
+    text: "Falha na comunicação com o servidor.",
+    icon: "error",
+    confirmButtonText: "OK",
+    customClass: {
+      confirmButton: 'swal-confirm'
+    },
+    buttonsStyling: false
+  });
+}
+
 });
-
-
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   
   //===================================================================
@@ -83,7 +111,17 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
     const cnpj = document.getElementById("cnpj").value.replace(/\D/g, "");
 
     if (cnpj.length !== 14) {
-      Swal.fire("CNPJ inválido", "Informe um CNPJ com 14 dígitos.", "warning");
+      Swal.fire({
+      title: "CNPJ inválido",
+      text: "Informe um CNPJ com 14 dígitos.",
+      icon: "warning",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: 'swal-confirm'
+      },
+      buttonsStyling: false
+    });
+
       return;
     }
 
@@ -97,7 +135,16 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
       const data = await response.json();
 
       if (data.erro) {
-        Swal.fire("Empresa não encontrada", "Não conseguimos localizar este CNPJ. Por favor, preencha os dados manualmente.", "info");
+       Swal.fire({
+          title: "Empresa não encontrada",
+          text: "Não conseguimos localizar este CNPJ. Por favor, preencha os dados manualmente.",
+          icon: "info",
+          confirmButtonText: "OK",
+          customClass: {
+            confirmButton: 'swal-confirm'
+          },
+          buttonsStyling: false
+      });
         return;
       }
 
@@ -110,11 +157,30 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
       document.getElementById("cep").value = data.cep || "";
       document.getElementById("ie").value = data.ie || "";
 
-      Swal.fire("Empresa localizada!", "Dados preenchidos automaticamente com sucesso.", "success");
+     Swal.fire({
+        title: "Empresa localizada!",
+        text: "Dados preenchidos automaticamente com sucesso.",
+        icon: "success",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton: 'swal-confirm'
+        },
+        buttonsStyling: false
+      });
 
     } catch (error) {
       console.error("Erro ao buscar CNPJ:", error);
-      Swal.fire("Erro", "Erro inesperado ao consultar o CNPJ. Tente novamente.", "error");
+        Swal.fire({
+        title: "Erro",
+        text: "Erro inesperado ao consultar o CNPJ. Tente novamente.",
+        icon: "error",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton: 'swal-confirm'
+        },
+        buttonsStyling: false
+      });
+
     }
   });
 
@@ -130,7 +196,17 @@ if (btnBuscarCEP) {
     const cep = document.getElementById("cep").value.replace(/\D/g, "");
 
     if (cep.length !== 8) {
-      Swal.fire("CEP inválido", "Informe um CEP com 8 dígitos.", "warning");
+      Swal.fire({
+        title: "CEP inválido",
+        text: "Informe um CEP com 8 dígitos.",
+        icon: "warning",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton: 'swal-confirm'
+        },
+        buttonsStyling: false
+      });
+
       return;
     }
 
@@ -139,7 +215,17 @@ if (btnBuscarCEP) {
       const data = await response.json();
 
       if (data.erro) {
-        Swal.fire("CEP não encontrado", "Preencha os dados manualmente.", "info");
+        Swal.fire({
+          title: "CEP não encontrado",
+          text: "Preencha os dados manualmente.",
+          icon: "info",
+          confirmButtonText: "OK",
+          customClass: {
+            confirmButton: 'swal-confirm'
+          },
+          buttonsStyling: false
+        });
+
         return;
       }
 
@@ -148,11 +234,31 @@ if (btnBuscarCEP) {
       document.getElementById("cidade").value = data.localidade || "";
       document.getElementById("uf").value = data.uf || "";
 
-      Swal.fire("Endereço localizado!", "Campos preenchidos com sucesso.", "success");
+      Swal.fire({
+        title: "Endereço localizado!",
+        text: "Campos preenchidos com sucesso.",
+        icon: "success",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton: 'swal-confirm'
+        },
+        buttonsStyling: false
+      });
+
 
     } catch (error) {
       console.error("Erro ao buscar CEP:", error);
-      Swal.fire("Erro", "Erro ao consultar o CEP. Tente novamente.", "error");
+      Swal.fire({
+        title: "Erro",
+        text: "Erro ao consultar o CEP. Tente novamente.",
+        icon: "error",
+        confirmButtonText: "OK",
+        customClass: {
+          confirmButton: 'swal-confirm'
+        },
+        buttonsStyling: false
+      });
+
     }
   });
 }
@@ -167,13 +273,19 @@ document.getElementById("email").addEventListener("blur", () => {
   const regexEmail = /^[\w\.-]+@[\w\.-]+\.\w{2,}$/;
 
   if (email && !regexEmail.test(email)) {
-    Swal.fire({
-      icon: "warning",
-      title: "E-mail inválido",
-      text: "Informe um e-mail válido (ex: nome@empresa.com.br).",
-    }).then(() => {
-      document.getElementById("email").focus();
-    });
-  }
+  Swal.fire({
+    icon: "warning",
+    title: "E-mail inválido",
+    text: "Informe um e-mail válido (ex: nome@empresa.com.br).",
+    confirmButtonText: "OK",
+    customClass: {
+      confirmButton: 'swal-confirm'
+    },
+    buttonsStyling: false
+  }).then(() => {
+    document.getElementById("email").focus();
+  });
+}
+
 });
  

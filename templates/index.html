@@ -75,10 +75,16 @@
       <span>🆕 Novidades</span>
       <button onclick="fecharPainelNovidades()">✖️</button>
     </div>
-    <div id="listaNovidades" class="corpo-novidades">
-      <!-- Conteúdo via JS -->
+
+    <div class="abas-novidades">
+      <button class="aba-novidades ativa" onclick="trocarAbaNovidades('novas')" id="aba-novas">Novas</button>
+      <button class="aba-novidades" onclick="trocarAbaNovidades('lidas')" id="aba-lidas">Lidas</button>
     </div>
+
+    <div id="listaNovidadesNovas" class="corpo-novidades"></div>
+    <div id="listaNovidadesLidas" class="corpo-novidades" style="display: none;"></div>
   </section>
+
 
   <!-- ✅ Rodapé -->
   <footer class="rodape">

@@ -4,6 +4,9 @@
 import os
 import json
 import requests
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from flask import Blueprint, request, jsonify, make_response, session
 from datetime import datetime
 from weasyprint import HTML
@@ -192,3 +195,39 @@ def email_enviar():
     finally:
         if 'conn' in locals():
             conn.close()
+
+
+
+# rota especifico para envio de email sem conexao via SMTP brevo
+@brevo_bp.route("/email/smtpbrevo/enviar", methods=["POST"])
+def enviar_email_smtp_brevo():
+    try:
+        dados = request.get_json()
+
+        assunto = dados.get("assunto", "").strip()
+        corpo_html = dados.get("corpo_html", "").strip()
+        destinatarios = dados.get("destinatarios", [])
+
+        if not assunto or not corpo_html or not destinatarios:
+            return jsonify({"erro": "Assunto, corpo e destinatários são obrigatórios."}), 400
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = assunto
+        msg["From"] = f"{os.getenv('SMTP_REMETENTE_NOME')} <{os.getenv('SMTP_REMETENTE_EMAIL')}>"
+        msg["To"] = ", ".join(destinatarios)
+
+        parte_html = MIMEText(corpo_html, "html", "utf-8")
+        msg.attach(parte_html)
+
+        with smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT"))) as servidor:
+            servidor.starttls()
+            servidor.login(os.getenv("SMTP_USUARIO"), os.getenv("SMTP_SENHA"))
+            servidor.sendmail(os.getenv("SMTP_REMETENTE_EMAIL"), destinatarios, msg.as_string())
+
+        return jsonify({
+            "status": "sucesso",
+            "mensagem": "Sua mensagem foi enviada com sucesso! Nossa equipe responderá em breve com carinho e agilidade."
+        })
+
+    except Exception as e:
+        return jsonify({"erro": f"Erro ao enviar e-mail: {str(e)}"}), 500

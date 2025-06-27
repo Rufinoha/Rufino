@@ -105,6 +105,6 @@ body {
 .card.carregando {
     opacity: 0.6;
     transform: scale(0.80);
-    box-shadow: 0 0 10px #00aaff88;
+    box-shadow: 0 0 10px #6FA700;
     transition: all 0.3s ease-in-out;
 }

@@ -70,13 +70,16 @@
             </div>
         </div>
 
-        <!-- Botões -->
-        <div class="Cl_Botoes">
-            <button type="submit" id="btnSalvar">Salvar</button>
-            <button type="button" onclick="window.close()">Cancelar</button>
-        </div>
+
     </form>
 </div>
+
+    <!-- Botões -->
+    <div class="Cl_Botoes">
+        <button type="submit" class="Cl_BtnSalvar" id="btnSalvar">Salvar</button>
+        <button type="button" class="Cl_BtnCancelar" onclick="window.close()">Cancelar</button>
+        <button type="submit" class="Cl_BtnExcluir" id="btnExcluir">Excluir</button>
+    </div>
 
 <!-- Script do módulo -->
 <script src="{{ url_for('static', filename='script/Susuario_apoio.js') }}"></script>

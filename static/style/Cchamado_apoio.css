@@ -103,16 +103,7 @@ textarea, input, select {
 }
 
 .Cl_BtnSalvar {
-  background-color: #2ecc71;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.Cl_BtnCancelar {
-  background-color: #e74c3c;
+  background-color: #85C300;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -121,11 +112,21 @@ textarea, input, select {
 }
 
 .Cl_BtnSalvar:hover {
-  background-color: #27ae60;
+  background-color: #6FA700;
 }
 
+.Cl_BtnCancelar {
+  background-color: #E53935;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
 .Cl_BtnCancelar:hover {
-  background-color: #c0392b;
+  background-color: #C62828;
 }
 
 

@@ -346,3 +346,92 @@ button {
   display: inline-block;
   text-align: center;
 }
+
+
+
+
+
+/* CSS - Estilos para painel de novidades com abas, badge e categorias */
+
+.abas-novidades {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.aba-novidades {
+  background: #ccc;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333333;
+}
+
+.aba-novidades.ativa {
+  background: #85C300;
+  color: white;
+}
+
+.card-novidade {
+  background: white;
+  border: 1px solid #ddd;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.card-novidade .cabecalho {
+  font-size: 12px;
+  color: #777;
+  margin-bottom: 6px;
+}
+
+.card-novidade .descricao {
+  font-size: 14px;
+  color: #333;
+}
+
+.card-novidade .link {
+  display: block;
+  margin-top: 8px;
+  color: #0066cc;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.badge-notificacao {
+  background: #E53935;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-weight: bold;
+}
+
+#btnnovidades {
+  position: relative;
+}
+
+/* Estilos por categoria */
+.tipo-aviso {
+  border-left: 4px solid #E53935;
+}
+
+.tipo-atualizacao {
+  border-left: 4px solid #3498db;
+}
+
+.tipo-recurso {
+  border-left: 4px solid #85C300;
+}
+
+.tipo-padrao {
+  border-left: 4px solid #ccc;
+}

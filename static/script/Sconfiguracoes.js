@@ -1,16 +1,18 @@
-// Protege contra duplicações
+console.log("🟢 Sconfiguracoes.js carregado..."); 
+
+// contra duplicações
 if (typeof window.Configuracoes === "undefined") {
     window.Configuracoes = {
         cardsDisponiveis: [
-            { card_id: "usuarios", titulo: "Usuários", texto: "Gerencie contas e permissões do sistema.", pagina: "frm_usuario.html" },
-            { card_id: "perfil", titulo: "Perfil de Usuário", texto: "Gerencie os menus de cada perfil de acesso.", pagina: "frm_usuario_perfil.html" },
-            { card_id: "novidades", titulo: "Novidades", texto: "Gerencie os cards exibidos na lateral do sistema.", pagina: "frm_novidades.html" },
-            { card_id: "email", titulo: "Log de E-mail", texto: "Verifique aqui o status de todos os emails enviados pelo sistema.", pagina: "frm_email_log.html" },
-            { card_id: "geral", titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.", pagina: "frm_config_geral" },
-            { card_id: "ajuda", titulo: "Central de Ajuda", texto: "Cadastre dicas e explicações para os módulos.", pagina: "frm_emcontrucao_config.html" },
-            { card_id: "banco", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "frm_emcontrucao_config.html" },
-            { card_id: "Cobrancas", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "frm_cobranca.html" },
-            { card_id: "Menu", titulo: "Menu", texto: "Controle de conteudo dos Menus lateral e topo.", pagina: "frm_menu.html" }
+            { card_id: "usuarios", titulo: "Usuários", texto: "Gerencie contas e permissões do sistema.", pagina: "usuario" },
+            { card_id: "perfil", titulo: "Perfil de Usuário", texto: "Gerencie os menus de cada perfil de acesso.", pagina: "usuario_perfil" },
+            { card_id: "novidades", titulo: "Novidades", texto: "Gerencie os cards exibidos na lateral do sistema.", pagina: "novidades" },
+            { card_id: "email", titulo: "Log de E-mail", texto: "Verifique aqui o status de todos os emails enviados pelo sistema.", pagina: "email_log" },
+            { card_id: "geral", titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.", pagina: "config_geral" },
+            { card_id: "ajuda", titulo: "Central de Ajuda", texto: "Cadastre dicas e explicações para os módulos.", pagina: "emcontrucao_config" },
+            { card_id: "banco", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "emcontrucao_config" },
+            { card_id: "Cobrancas", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "cobranca" },
+            { card_id: "Menu", titulo: "Menu", texto: "Controle de conteudo dos Menus lateral e topo.", pagina: "menu" }
         ], 
 
         configurarEventos: async function () {
@@ -84,7 +86,7 @@ if (typeof window.Configuracoes === "undefined") {
                 if (info.pagina) {
                     const pagina = info.pagina.replace("frm_", "").replace(".html", "");
                     card.classList.add("carregando");
-                    carregarPagina(pagina);
+                    GlobalUtils.carregarPagina(pagina);
                     setTimeout(() => card.classList.remove("carregando"), 1000);
                 }
             };
@@ -92,45 +94,6 @@ if (typeof window.Configuracoes === "undefined") {
             return card;
         },
 
-        aoSoltar: function (e) {
-            const card_id = e.dataTransfer.getData("card_id");
-            if (!e.currentTarget.querySelector(".card")) {
-                const cardInfo = window.Configuracoes.cardsDisponiveis.find(c => c.card_id === card_id);
-                if (!cardInfo) return;
-                const card = window.Configuracoes.renderizarCard(cardInfo);
-                e.currentTarget.appendChild(card);
-                window.Configuracoes.salvarLayout();
-            }
-        },
-
-        permitirArrastar: function () {
-            document.querySelectorAll(".card").forEach(card => {
-                card.draggable = true;
-            });
-        },
-
-        salvarLayout: async function () {
-            const usuarioId = window.App?.Varid;
-            if (!usuarioId) return;
-
-            const layout = [];
-            document.querySelectorAll(".slot").forEach(slot => {
-                const card = slot.querySelector(".card");
-                if (card) {
-                    layout.push({
-                        card_id: card.dataset.cardId,
-                        linha: parseInt(slot.dataset.linha),
-                        coluna: parseInt(slot.dataset.coluna)
-                    });
-                }
-            });
-
-            await fetch("/configuracoes/layout/salvar", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ usuario_id: usuarioId, layout })
-            });
-        }
     };
 }
 

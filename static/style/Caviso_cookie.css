@@ -1,0 +1,60 @@
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+
+#aviso-cookies {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 50%;
+  padding: 20px;
+  background-color: #FFFCFB;
+  color: #333333;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  border-left: 6px solid #85C300;
+  border-radius: 8px;
+  font-family: 'Arboria', sans-serif;
+  font-size: 14px;
+}
+
+#aviso-cookies a {
+  color: #85C300;
+  text-decoration: underline;
+}
+
+#aviso-cookies button {
+  background-color: #85C300;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#aviso-cookies button:hover {
+  background-color: #6FA700;
+}

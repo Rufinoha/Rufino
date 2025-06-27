@@ -190,3 +190,49 @@ function carregarCombobox(idSelecionado = null) {
         });
 }
 
+// ----------------------------------------------------------------------
+// ❌ 8. Evento do botão Excluir
+// ----------------------------------------------------------------------
+document.getElementById("btnExcluir").addEventListener("click", async () => {
+    const id = document.getElementById("ob_id").value.trim();
+
+    if (!id) {
+        Swal.fire("Atenção", "Nenhum usuário selecionado para exclusão.", "warning");
+        return;
+    }
+
+    const confirmacao = await Swal.fire({
+        title: "Excluir este usuário?",
+        text: "Essa ação não poderá ser desfeita!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sim, excluir",
+        cancelButtonText: "Cancelar"
+    });
+
+    if (!confirmacao.isConfirmed) return;
+
+    try {
+        const resposta = await fetch("/usuario/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: parseInt(id) })
+        });
+
+        const retorno = await resposta.json();
+
+        if (resposta.ok && retorno.status === "sucesso") {
+            Swal.fire("Excluído!", "Usuário excluído com sucesso.", "success").then(() => {
+                if (window.opener?.Usuario?.carregarUsuarios) {
+                    window.opener.Usuario.carregarUsuarios();
+                }
+                window.close();
+            });
+        } else {
+            Swal.fire("Erro", retorno.mensagem || "Erro ao excluir o usuário.", "error");
+        }
+    } catch (erro) {
+        console.error("Erro ao excluir:", erro);
+        Swal.fire("Erro", "Erro inesperado ao excluir usuário.", "error");
+    }
+});

@@ -82,7 +82,7 @@ h2 {
 /* ========================== BOTÕES ========================== */
 .Cl_BtnIncluir,
 .Cl_botaoFiltro {
-    background-color: #007BFF;
+    background-color: #85C300;
     color: white;
     border: none;
     border-radius: 8px;
@@ -95,13 +95,13 @@ h2 {
 
 .Cl_BtnIncluir:hover,
 .Cl_botaoFiltro:hover {
-    background-color: #0056b3;
+    background-color: #6FA700;
     transform: scale(1.05);
 }
 
 .Cl_BtnIncluir:active,
 .Cl_botaoFiltro:active {
-    background-color: #003d80;
+    background-color: #85C300;
     transform: scale(0.95);
 }
 
@@ -124,7 +124,7 @@ h2 {
 }
 
 .Cl_TabelaEmpresa th {
-    background-color: #007bff;
+    background-color: #85C300;
     color: #fff;
 }
 
@@ -133,7 +133,7 @@ h2 {
 }
 
 .Cl_TabelaEmpresa tbody tr:hover {
-    background-color: #e0f7ff;
+    background-color: #efffe0;
 }
 
 /* ========================== BOTÕES DE AÇÃO ========================== */
@@ -162,14 +162,14 @@ h2 {
     margin: 2px;
     cursor: pointer;
     border-radius: 4px;
-    border: 1px solid #007bff;
+    border: 1px solid #85C300;
     background-color: #fff;
-    color: #007bff;
+    color: #85C300;
     transition: all 0.3s;
 }
 
 .Cl_direcao:hover {
-    background-color: #007bff;
+    background-color: #6FA700;
     color: white;
 }
 

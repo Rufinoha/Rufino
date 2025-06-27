@@ -19,7 +19,7 @@
     };
   }
 })();
-
+ 
 async function verificarSessaoTempo() {
   try {
     const resp = await fetch("/config/tempo_sessao", {
@@ -53,10 +53,11 @@ async function verificarSessaoTempo() {
 document.addEventListener("DOMContentLoaded", () => {
   carregarUsuarioLogado();
   configurarMenuUsuario();
-  configurarNovidades();
   configurarPin();
   carregarMenu("lateral");
   carregarMenu("horizontal");
+  configurarNovidades();
+  verificarNovidadesBadge();
 
 });
 
@@ -65,13 +66,21 @@ function carregarUsuarioLogado() {
   const usuario = JSON.parse(localStorage.getItem("usuarioLogado") || "{}");
 
   const nome = usuario?.nome?.split(" ")[0] || "Usuário";
-  const empresa = usuario?.nome_empresa || "Empresa";
+
+
+  // Aqui pega o nome fantasia da empresa (campo nome da tbl_hub_favorecido)
+  const empresaFantasia = usuario?.nome_empresa?.trim();
+  const empresaRazao = usuario?.razao_social_empresa?.trim();
+  const empresa = empresaFantasia !== "" ? empresaFantasia : (empresaRazao || "Empresa");
+
   const imagem = usuario?.imagem || "userpadrao.png";
 
   document.getElementById("usuarioNome").textContent = nome;
   document.getElementById("usuarioEmpresa").textContent = empresa;
   document.getElementById("iconeUsuario").src = `/static/imge/imguser/${imagem}`;
 }
+
+
 
 
 // 🔽 Submenu do usuário
@@ -92,7 +101,7 @@ function configurarMenuUsuario() {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const pagina = e.target.getAttribute("data-page");
-      carregarPagina(pagina);
+      GlobalUtils.carregarPagina(pagina);
     });
   });
 
@@ -284,7 +293,7 @@ document.addEventListener("click", function (e) {
         submenu.style.display = "block";
       }
 
-      carregarPagina(pagina);
+      GlobalUtils.carregarPagina(pagina);
     } else if (tipo === "nova_aba") {
       window.open(rota, "_blank");
     } else if (tipo === "popup") {
@@ -345,7 +354,7 @@ function carregarMenuHorizontalUsuario() {
           document.querySelector(".menu-usuario")?.classList.remove("active");
 
           if (tipo === "index") {
-            carregarPagina(page);
+            GlobalUtils.carregarPagina(page);
           } else if (tipo === "nova_aba") {
             window.open(rota, "_blank");
           } else if (tipo === "popup") {
@@ -362,78 +371,135 @@ function carregarMenuHorizontalUsuario() {
 // ---------------------------------------------------------------
 // -----------------------ETAPA 4: PAINEL DE NOVIDADES------------
 // ---------------------------------------------------------------
+// JS - Controle de Novidades com atraso de leitura e scroll inteligente
 
-function configurarNovidades() {
-  document.getElementById("btnnovidades").addEventListener("click", async () => {
-    try {
-      const resp = await fetch("/menu/novidades");
-      const novidades = await resp.json();
+let observerFimNovidades;
+let tempoPainelAberto = null;
 
-      const container = document.getElementById("listaNovidades");
-      container.innerHTML = "";
+function trocarAbaNovidades(aba) {
+  document.getElementById("aba-novas").classList.remove("ativa");
+  document.getElementById("aba-lidas").classList.remove("ativa");
+  document.getElementById("listaNovidadesNovas").style.display = "none";
+  document.getElementById("listaNovidadesLidas").style.display = "none";
 
-      novidades.forEach(n => {
-        const div = document.createElement("div");
-        div.className = "card-novidade";
-        div.innerHTML = `
-          <div class="cabecalho">📅 ${n.emissao} | ${n.modulo}</div>
-          <div class="descricao">${n.descricao}</div>
-          ${n.link ? `<a href="${n.link}" class="link" target="_blank">Saber mais</a>` : ""}
-        `;
-        container.appendChild(div);
-      });
-
-      document.getElementById("painelNovidades").classList.add("ativo");
-    } catch (err) {
-      Swal.fire("Erro", "Falha ao carregar novidades", "error");
-    }
-  });
+  if (aba === "novas") {
+    document.getElementById("aba-novas").classList.add("ativa");
+    document.getElementById("listaNovidadesNovas").style.display = "block";
+  } else {
+    document.getElementById("aba-lidas").classList.add("ativa");
+    document.getElementById("listaNovidadesLidas").style.display = "block";
+  }
 }
 
 function fecharPainelNovidades() {
   document.getElementById("painelNovidades").classList.remove("ativo");
+  tempoPainelAberto = null;
 }
 
-// ---------------------------------------------------------------
-// -----------------------ETAPA 5: ABERTURA DE PÁGINAS------------
-// ---------------------------------------------------------------
+function togglePainelNovidades() {
+  const painel = document.getElementById("painelNovidades");
+  if (painel.classList.contains("ativo")) {
+    fecharPainelNovidades();
+  } else {
+    abrirPainelNovidades();
+  }
+}
 
-function carregarPagina(pagina) {
-  const conteudo = document.getElementById("content-area");
-  if (!conteudo) return;
+async function abrirPainelNovidades() {
+  try {
+    const resp = await fetch("/menu/novidades");
+    const novidades = await resp.json();
 
-  // 1. Limpa conteúdo e scripts antigos
-  conteudo.innerHTML = "";
-  document.querySelectorAll("script[data-page-script]").forEach(s => s.remove());
+    const divNovas = document.getElementById("listaNovidadesNovas");
+    const divLidas = document.getElementById("listaNovidadesLidas");
+    divNovas.innerHTML = "";
+    divLidas.innerHTML = "";
 
-  // 2. Remove módulo antigo
-  const modulo = pagina.charAt(0).toUpperCase() + pagina.slice(1);
-  delete window[modulo];
+    const visualizado = parseInt(localStorage.getItem("ultima_novidade_visualizada")) || 0;
+    let maiorID = visualizado;
 
-  // 3. Carrega o HTML da tela
-  fetch(`/${pagina}`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.text();
-    })
-    .then(html => {
-      conteudo.innerHTML = html;
-      conteudo.setAttribute("data-page", pagina);
+    novidades.forEach(n => {
+      const div = document.createElement("div");
+      div.className = "card-novidade tipo-" + (n.tipo || "padrao");
+      div.innerHTML = `
+        <div class="cabecalho">📅 ${window.Util.formatarDataPtBr(n.emissao)} | ${n.modulo}</div>
+        <div class="descricao">${n.descricao}</div>
+        ${n.link ? `<a href="${n.link}" class="link" target="_blank">Saber mais</a>` : ""}
+      `;
 
-      // 4. Injeta o script novo
-      const script = document.createElement("script");
-      script.src = `/static/script/S${modulo}.js?t=${Date.now()}`;
-      script.defer = true;
-      script.setAttribute("data-page-script", pagina);
-      document.body.appendChild(script);
-
-      
-    })
-    .catch(err => {
-      console.error(`Erro ao carregar ${pagina}`, err);
-      Swal.fire("Erro", `Não foi possível abrir ${pagina}`, "error");
+      if (n.id > visualizado) {
+        divNovas.appendChild(div);
+        if (n.id > maiorID) maiorID = n.id;
+      } else {
+        divLidas.appendChild(div);
+      }
     });
+
+    const sentinel = document.createElement("div");
+    sentinel.id = "sentinelaFinalNovidades";
+    divNovas.appendChild(sentinel);
+
+    if (observerFimNovidades) observerFimNovidades.disconnect();
+    observerFimNovidades = new IntersectionObserver(async (entries) => {
+      if (entries[0].isIntersecting && maiorID > visualizado && tempoPainelAberto) {
+        const tempoVisivel = (Date.now() - tempoPainelAberto) / 1000;
+        if (tempoVisivel >= 2) {
+          await fetch("/menu/novidades/atualizar", { method: "POST" });
+          localStorage.setItem("ultima_novidade_visualizada", maiorID);
+          const badge = document.getElementById("badgeNovidades");
+          if (badge) badge.remove();
+        }
+      }
+    });
+    observerFimNovidades.observe(sentinel);
+
+    document.getElementById("painelNovidades").classList.add("ativo");
+    tempoPainelAberto = Date.now();
+    trocarAbaNovidades("novas");
+
+  } catch (err) {
+    Swal.fire("Erro", "Falha ao carregar novidades", "error");
+  }
 }
+
+function configurarNovidades() {
+  document.getElementById("btnnovidades").addEventListener("click", togglePainelNovidades);
+
+  document.addEventListener("click", function(event) {
+    const painel = document.getElementById("painelNovidades");
+    const botao = document.getElementById("btnnovidades");
+    if (painel.classList.contains("ativo") && !painel.contains(event.target) && !botao.contains(event.target)) {
+      fecharPainelNovidades();
+    }
+  });
+}
+
+async function verificarNovidadesBadge() {
+  try {
+    const resp = await fetch("/menu/novidades");
+    const novidades = await resp.json();
+    const visualizado = parseInt(localStorage.getItem("ultima_novidade_visualizada")) || 0;
+    const ultimo = Math.max(...novidades.map(n => n.id));
+
+    if (ultimo > visualizado) {
+      const badge = document.createElement("span");
+      badge.id = "badgeNovidades";
+      badge.className = "badge-notificacao";
+      badge.textContent = ultimo - visualizado;
+      document.querySelector("#btnnovidades").appendChild(badge);
+    }
+  } catch (e) {
+    console.warn("Erro ao verificar badge de novidades");
+  }
+}
+
+
+
+
+// ---------------------------------------------------------------
+// ------------------ABERTURA DA PAGINA ESTA NO GLOBAL------------
+// ---------------------------------------------------------------
+
 
 
 (function iniciarControleSessao() {
@@ -466,3 +532,4 @@ function carregarPagina(pagina) {
     }, 30000); // Verifica a cada 30s
   }
 })();
+

@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from extensoes import db
+from sqlalchemy import Column, Integer, String, Boolean, Date, Text, Enum, ForeignKey
 
 
 class TblAssinaturaCliente(db.Model):
@@ -245,9 +246,8 @@ class TblUsuarioGrupo(db.Model):
     __table_args__ = (
         db.UniqueConstraint('id_empresa', 'nome', name='uq_empresa_grupo'),
     )
+    permissoes = db.relationship("TblUsuarioPermissaoGrupo", back_populates="grupo")
 
-    # Relacionamentos (opcional)
-    permissoes = db.relationship("UsuarioPermissaoGrupo", back_populates="grupo")
 
 
 # 🔹 Permissão de menu por grupo
@@ -260,6 +260,100 @@ class TblUsuarioPermissaoGrupo(db.Model):
     __table_args__ = (
         db.UniqueConstraint('id_empresa', 'id_grupo', 'id_menu', name='uq_empresa_grupo_menu'),
     )
+    grupo = db.relationship("TblUsuarioGrupo", back_populates="permissoes")
 
-    # Relacionamentos (opcional)
-    grupo = db.relationship("UsuarioGrupo", back_populates="permissoes")
+
+
+
+
+#===============================================================================================================
+# TABELAS para o HUB
+#===============================================================================================================
+
+# Plano de Contas
+class TblHubPlanoContas(db.Model):
+    __tablename__ = 'tbl_hub_plano_contas'
+
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(20), nullable=False)
+    descricao = db.Column(db.String(100), nullable=False)
+    tipo = db.Column(db.Enum('Analítico', 'Sintético'), nullable=False)
+    nivel = db.Column(db.Integer, nullable=False)
+    id_empresa = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.Boolean, default=True, nullable=False)
+    plano = db.Column(db.Enum('Ativo', 'Passivo', 'Resultado'), nullable=False, default='Resultado')
+
+
+
+# Categorias
+class TblHubCategoria(db.Model):
+    __tablename__ = 'tbl_hub_categoria'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome_categoria = db.Column(db.String(100), nullable=False)
+    onde_usa = db.Column(db.Enum('Favorecido', 'Despesas', 'Receitas'), nullable=False)
+    id_conta_contabil = db.Column(db.Integer, db.ForeignKey('tbl_hub_plano_contas.id'), nullable=False)
+    id_empresa = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.Boolean, default=True, nullable=False)
+
+
+# Favorecido
+class TblHubFavorecido(db.Model):
+    __tablename__ = 'tbl_hub_favorecido'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tipo = db.Column(db.Enum('Pessoa Física', 'Pessoa Jurídica'), nullable=False)
+    nome = db.Column(db.String(100), nullable=False)
+    razao_social = db.Column(db.String(150))
+    documento = db.Column(db.String(20), nullable=False) 
+    inscricao_estadual = db.Column(db.String(20))
+    inscricao_municipal = db.Column(db.String(20))
+    email = db.Column(db.String(100))
+    telefone = db.Column(db.String(20))
+    cep = db.Column(db.String(10))
+    logradouro = db.Column(db.String(100))
+    numero = db.Column(db.String(10))
+    complemento = db.Column(db.String(50))
+    bairro = db.Column(db.String(50))
+    cidade = db.Column(db.String(100))
+    uf = db.Column(db.String(2))
+    data_abertura = db.Column(db.Date)
+    natureza_juridica = db.Column(db.String(100))
+    cnae_principal = db.Column(db.String(100))
+    cnaes_secundarios = db.Column(db.Text)
+    situacao_cadastral = db.Column(db.String(50))
+    data_situacao = db.Column(db.Date)
+    observacoes = db.Column(db.Text)
+    id_empresa = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.Boolean, default=True, nullable=False)
+
+
+# Livro Diário
+class TblHubLivroDiario(db.Model):
+    __tablename__ = 'tbl_hub_livro_diario'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome_exibicao = db.Column(db.String(100), nullable=False)
+    tipo_conta = db.Column(db.Enum('Banco', 'Cartão', 'Digital', 'Investimento', 'Adiantamento', 'Pré-pago'), nullable=False)
+    id_conta_contabil = db.Column(db.Integer, db.ForeignKey('tbl_hub_plano_contas.id'), nullable=False)
+    banco_codigo = db.Column(db.String(10))
+    agencia = db.Column(db.String(10))
+    conta = db.Column(db.String(20))
+    tipo_operacao = db.Column(db.String(20))
+    documento_vinculado = db.Column(db.String(20))
+    possui_integracao = db.Column(db.Boolean, default=False)
+    token_integracao = db.Column(db.Text)
+    webhook_url = db.Column(db.String(255))
+    status = db.Column(db.Boolean, default=True, nullable=False)
+    id_empresa = db.Column(db.Integer, nullable=False)
+
+
+#  Centro de Custo
+class TblHubCentroCusto(db.Model):
+    __tablename__ = 'tbl_hub_centro_custo'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text)
+    status = db.Column(db.Boolean, default=True, nullable=False)
+    id_empresa = db.Column(db.Integer, nullable=False)

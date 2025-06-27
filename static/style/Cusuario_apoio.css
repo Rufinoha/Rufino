@@ -74,7 +74,7 @@ body {
 
 .Cl_GrupoCampo input,
 .Cl_GrupoCampo select {
-    width: 100%;
+    width: 95%;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -91,37 +91,44 @@ body {
     flex: 1;
 }
 
+
+/* ========================== BOTÕES ========================== */
 .Cl_Botoes {
     display: flex;
-    justify-content: space-between;
+    justify-content: right;
     margin-top: 20px;
+    margin-right: 40px;
+    gap: 10px;
 }
 
-.Cl_Botoes button {
-    padding: 10px 20px;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.Cl_Botoes button:first-child {
+.Cl_BtnSalvar,
+.Cl_BtnCancelar {
     background-color: #85C300;
-    color: white;
-}
-
-.Cl_Botoes button:first-child:hover {
-    background-color: #6FA700; /* um verde mais escuro */
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-.Cl_Botoes button:last-child {
-    background-color: #f44336;
-    color: white;
+.Cl_BtnSalvar:hover,
+.Cl_BtnCancelar:hover {
+    background-color: #6FA700;
 }
 
-.Cl_Botoes button:last-child:hover {
-    background-color: #d32f2f; /* um vermelho mais escuro */
+.Cl_BtnExcluir {
+    background-color: #E53935;
+    color: #fff;
+    border: none;
+    padding: 12px 24px;
+    font-size: 14px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
+.Cl_BtnExcluir:hover {
+    background-color: #C62828;
+}
