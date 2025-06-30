@@ -348,26 +348,35 @@ def autenticar_login():
         if not bcrypt.checkpw(senha.encode('utf-8'), senha_em_bytes):
             return jsonify(success=False, message="Senha inválida."), 401
 
-        # Buscar nome fantasia e razão social da empresa na tbl_hub_favorecido
+        # Buscar nome fantasia e razão social da empresa na tbl_empresa
         cursor.execute("""
-            SELECT nome, razao_social
-            FROM tbl_hub_favorecido
+            SELECT nome, nome_empresa
+            FROM tbl_empresa
             WHERE id = %s
         """, (id_empresa,))
+
 
         empresa_row = cursor.fetchone()
         nome_empresa = empresa_row[0] if empresa_row and empresa_row[0] else ""
         razao_social_empresa = empresa_row[1] if empresa_row and empresa_row[1] else ""
 
-        #Atualiza sessão
+        # Atualiza sessão
         session["usuario_id"] = id_usuario
         session["id_usuario"] = id_usuario
         session["id_empresa"] = id_empresa
         session["grupo"] = grupo 
 
-        #Configura tempo de sessão com base na empresa
+        # Configura tempo da sessão com base na empresa
         session.permanent = True
         app.permanent_session_lifetime = configurar_tempo_sessao(id_empresa)
+
+        # Atualiza último login
+        cursor.execute("""
+            UPDATE tbl_usuario
+            SET ultimo_login = CURRENT_TIMESTAMP
+            WHERE id_usuario = %s
+        """, (id_usuario,))
+        conn.commit()
 
         # Verifica se está na hora de trocar a senha
         if trocasenha_em and datetime.now().date() >= trocasenha_em.date():
@@ -639,6 +648,7 @@ def cadastro_novo():
 
         # 🔍 Dados recebidos
         nome_completo = dados.get("nome_completo", "").strip()
+        nome = dados.get("nome", "").strip() or empresa
         email = dados.get("email", "").strip().lower()
         cnpj = dados.get("cnpj", "").strip()
         empresa = dados.get("empresa", "").strip()
@@ -677,14 +687,15 @@ def cadastro_novo():
         # 🏢 Insere nova empresa
         cursor.execute("""
             INSERT INTO tbl_empresa (
-                tipo, cnpj, nome_empresa, endereco, numero, bairro,
+                tipo, cnpj, nome_empresa, nome, endereco, numero, bairro,
                 cidade, uf, cep, ie, tipofavorecido, status
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """, (
-            "Juridica", cnpj, empresa, endereco, numero, bairro,
+            "Juridica", cnpj, empresa, nome, endereco, numero, bairro,
             cidade, uf, cep, ie, "Empresa", "Ativo"
         ))
+
         id_empresa = cursor.fetchone()[0]
 
         # 👥 Cria os grupos padrões para a empresa
@@ -696,7 +707,7 @@ def cadastro_novo():
 
         for nome_grupo, descricao in grupos_padrao:
             cursor.execute("""
-                INSERT INTO tbl_usuario_grupo (id_empresa, nome, descricao)
+                INSERT INTO tbl_usuario_grupo (id_empresa, nome_grupo, descricao)
                 VALUES (%s, %s, %s)
             """, (id_empresa, nome_grupo, descricao))
 
@@ -3680,6 +3691,8 @@ def menu_salvar():
     dados = request.json
 
     try:
+        assinatura_app = bool(dados.get("assinatura_app", False))
+
         if dados.get("id"):
             cursor.execute("""
                 UPDATE tbl_menu
@@ -3690,7 +3703,7 @@ def menu_salvar():
             """, (
                 dados["nome_menu"], dados["descricao"], dados["rota"], dados["data_page"], dados["icone"],
                 dados["link_detalhe"], dados["tipo_abrir"], dados["ordem"], dados["parent_id"],
-                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], dados["assinatura_app"],
+                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], assinatura_app,
                 dados["id"]
             ))
         else:
@@ -3705,11 +3718,12 @@ def menu_salvar():
             """, (
                 dados["nome_menu"], dados["descricao"], dados["rota"], dados["data_page"], dados["icone"],
                 dados["link_detalhe"], dados["tipo_abrir"], dados["ordem"], dados["parent_id"],
-                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], dados["assinatura_app"]
+                dados["ativo"], dados["local_menu"], dados["valor"], dados["obs"], assinatura_app
             ))
 
+
         conn.commit()
-        return jsonify({"mensagem": "Registro salvo com sucesso!"})
+        return jsonify({"status": "sucesso", "mensagem": "Registro salvo com sucesso!"})
 
     except Exception as e:
         conn.rollback()
@@ -4411,6 +4425,174 @@ def apoio_favorecido(id):
         colunas = [desc[0] for desc in cursor.description]
         return jsonify(dict(zip(colunas, dados)))
 
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+
+
+
+# ────────────────────────────────────────────────
+# Rotas para Livro Diário em HUB
+# ────────────────────────────────────────────────
+@auth_bp.route("/livro_diario/dados")
+@login_obrigatorio
+def livro_diario_dados():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+
+    pagina = int(request.args.get("pagina", 1))
+    por_pagina = int(request.args.get("porPagina", 20))
+    offset = (pagina - 1) * por_pagina
+
+    id_empresa = session.get("id_empresa")
+    nome = request.args.get("nome", "").strip()
+    tipo = request.args.get("tipo_conta", "").strip()
+    status = request.args.get("status")
+
+    sql = """
+        SELECT ld.*, pc.descricao AS desc_conta_contabil
+        FROM tbl_hub_livro_diario ld
+        LEFT JOIN tbl_hub_plano_contas pc ON pc.id = ld.id_conta_contabil
+        WHERE ld.id_empresa = %s
+    """
+    valores = [id_empresa]
+
+    if nome:
+        sql += " AND ld.nome_exibicao ILIKE %s"
+        valores.append(f"%{nome}%")
+
+    if tipo:
+        sql += " AND ld.tipo_conta = %s"
+        valores.append(tipo)
+
+    if status != "":
+        sql += " AND ld.status = %s"
+        valores.append(status == "true")
+
+    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
+    cursor.execute(sql_total, valores)
+    total_registros = cursor.fetchone()[0]
+    total_paginas = (total_registros + por_pagina - 1) // por_pagina
+
+    sql += " ORDER BY ld.id LIMIT %s OFFSET %s"
+    valores.extend([por_pagina, offset])
+
+    cursor.execute(sql, valores)
+    colunas = [desc[0] for desc in cursor.description]
+    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
+    conn.close()
+
+    return jsonify({
+        "dados": registros,
+        "total_paginas": total_paginas
+    })
+
+
+@auth_bp.route("/livro_diario/incluir")
+@login_obrigatorio
+def livro_diario_incluir():
+    return render_template("frm_hub_livro_diario_apoio.html")
+
+
+@auth_bp.route("/livro_diario/editar")
+@login_obrigatorio
+def livro_diario_editar():
+    return render_template("frm_hub_livro_diario_apoio.html")
+
+
+@auth_bp.route("/livro_diario/salvar", methods=["POST"])
+@login_obrigatorio
+def livro_diario_salvar():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+    id_empresa = session.get("id_empresa")
+
+    try:
+        if dados.get("id"):
+            cursor.execute("""
+                UPDATE tbl_hub_livro_diario SET
+                    nome_exibicao = %s, tipo_conta = %s, status = %s, id_conta_contabil = %s,
+                    banco_codigo = %s, agencia_numero = %s, agencia_dv = %s,
+                    conta_numero = %s, conta_dv = %s,
+                    tipo_plano = %s, bandeira_cartao = %s,
+                    possui_integracao = %s, token_integracao = %s, webhook_url = %s
+                WHERE id = %s AND id_empresa = %s
+            """, (
+                dados["nome_exibicao"], dados["tipo_conta"], dados["status"], dados["id_conta_contabil"],
+                dados["banco_codigo"], dados["agencia_numero"], dados["agencia_dv"],
+                dados["conta_numero"], dados["conta_dv"],
+                dados["tipo_plano"], dados["bandeira_cartao"],
+                dados["possui_integracao"], dados["token_integracao"], dados["webhook_url"],
+                dados["id"], id_empresa
+            ))
+        else:
+            cursor.execute("""
+                INSERT INTO tbl_hub_livro_diario (
+                    id_empresa, nome_exibicao, tipo_conta, status, id_conta_contabil,
+                    banco_codigo, agencia_numero, agencia_dv,
+                    conta_numero, conta_dv,
+                    tipo_plano, bandeira_cartao,
+                    possui_integracao, token_integracao, webhook_url
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                id_empresa, dados["nome_exibicao"], dados["tipo_conta"], dados["status"], dados["id_conta_contabil"],
+                dados["banco_codigo"], dados["agencia_numero"], dados["agencia_dv"],
+                dados["conta_numero"], dados["conta_dv"],
+                dados["tipo_plano"], dados["bandeira_cartao"],
+                dados["possui_integracao"], dados["token_integracao"], dados["webhook_url"]
+            ))
+
+        conn.commit()
+        return jsonify({"mensagem": "Conta salva com sucesso!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"erro": str(e)}), 500
+
+    finally:
+        conn.close()
+
+
+
+@auth_bp.route("/livro_diario/apoio/<int:id>")
+@login_obrigatorio
+def apoio_livro_diario(id):
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT ld.*, pc.descricao AS desc_conta_contabil, pc.codigo AS codigo_conta_contabil
+            FROM tbl_hub_livro_diario ld
+            LEFT JOIN tbl_hub_plano_contas pc ON pc.id = ld.id_conta_contabil AND pc.id_empresa = ld.id_empresa
+            WHERE ld.id = %s AND ld.id_empresa = %s
+        """, (id, session.get("id_empresa")))
+
+        dados = cursor.fetchone()
+        if not dados:
+            return jsonify({"erro": "Conta não encontrada."}), 404
+
+        colunas = [desc[0] for desc in cursor.description]
+        return jsonify(dict(zip(colunas, dados)))
+
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@auth_bp.route("/livro_diario/delete", methods=["POST"])
+@login_obrigatorio
+def livro_diario_delete():
+    conn = Var_ConectarBanco()
+    cursor = conn.cursor()
+    dados = request.json
+    try:
+        cursor.execute("DELETE FROM tbl_hub_livro_diario WHERE id = %s AND id_empresa = %s", (dados["id"], session.get("id_empresa")))
+        conn.commit()
+        return jsonify({"status": "sucesso", "mensagem": "Conta excluída com sucesso."})
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
     finally:

@@ -30,6 +30,7 @@ body {
     font-family: 'Arboria', 'Segoe UI', sans-serif;
     background-color: #f4f4f4;
     box-sizing: border-box;
+    font-size: large;
 }
 
 
@@ -70,9 +71,11 @@ button {
   position: relative;
   z-index: 10;
 }
+
 .logo img {
-  margin-left: 50px ;
-  height: 80px;
+  height: 100%;         /* ← adapta à altura da barra */
+  max-height: 60px;     /* segurança */
+  margin-left: 50px;
 }
 .menu-direito {
   display: flex;

@@ -9,11 +9,11 @@
 </head>
 <body>
 
-  <div class="container-cadastro">
-    <h2>Solicitação de Cadastro</h2>
-    <p>Preencha os dados abaixo para solicitar o primeiro acesso.</p>
+<div class="container-cadastro">
+  <h2>Solicitação de Cadastro</h2>
+  <p>Preencha os dados abaixo para solicitar o primeiro acesso.</p>
 
-    <form id="formCadastro" onsubmit="return false;">
+  <form id="formCadastro" onsubmit="return false;">
 
   <!-- 🔹 Linha 1: Nome completo + Email -->
   <div class="grupo-linha">
@@ -44,11 +44,15 @@
       <label for="empresa">Empresa</label>
       <input type="text" id="empresa" name="empresa" required class="uppercase">
     </div>
+      <!-- 🔹 Linha: Nome Fantasia / Nome Amigável -->
     <div class="grupo-input">
-      <label for="ie">IE</label>
-      <input type="text" id="ie" name="ie">
-    </div>
+      <label for="nome">Nome Fantasia / Nome Amigável</label>
+      <input type="text" id="nome" name="nome" required>
+    </div> 
   </div>
+
+
+
 
   <!-- 🔹 Linha 4: CEP + Botão Buscar -->
   <div class="grupo-linha">
@@ -94,7 +98,8 @@
     <button type="submit" id="btnCadastrar">Cadastrar</button>
     <a href="/" class="btn-voltar">Voltar ao Login</a>
   </div>
-
+</div>
+</body>
 </form>
 
   </div>

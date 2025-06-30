@@ -533,3 +533,15 @@ async function verificarNovidadesBadge() {
   }
 })();
 
+
+// ✅ Fecha o submenu do usuário se clicar fora
+document.addEventListener("click", (event) => {
+  const menuBox = document.querySelector(".menu-usuario");
+  const submenu = document.getElementById("submenuUsuario");
+
+  const clicouFora = !menuBox.contains(event.target);
+
+  if (menuBox.classList.contains("active") && clicouFora) {
+    menuBox.classList.remove("active");
+  }
+});

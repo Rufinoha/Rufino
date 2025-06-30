@@ -3,10 +3,11 @@ console.log("Scadastro.js carregado");
 // Validação e envio do formulário
 document.getElementById("btnCadastrar").addEventListener("click", async () => {
   const nome_completo = document.getElementById("nome_completo").value.trim();
+  const nome = document.getElementById("nome").value.trim();
   const email         = document.getElementById("email").value.trim();
   const cnpj          = document.getElementById("cnpj").value.trim();
   const empresa       = document.getElementById("empresa").value.trim();
-  const ie            = document.getElementById("ie").value.trim();
+  const ie            = " ";
   const cep           = document.getElementById("cep").value.trim();
   const endereco      = document.getElementById("endereco").value.trim();
   const numero        = document.getElementById("numero").value.trim();
@@ -42,7 +43,10 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
   }
 
 
-  const dados = { nome_completo, email, cnpj, empresa, ie, cep, endereco, numero, bairro, cidade, uf };
+  const dados = {
+    nome_completo, nome, email, cnpj, empresa, ie, cep,
+    endereco, numero, bairro, cidade, uf
+  };
 
   try {
     const resp = await fetch("/cadastro/novo", {
@@ -103,27 +107,26 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
   //===================================================================
   // Evento botões buscar CNPJ
   //===================================================================
-  const btnBuscar = document.getElementById("btnBuscarCNPJ");
+  let animacaoPontinhos;
+const btnBuscar = document.getElementById("btnBuscarCNPJ");
 
-  // 🔍 Buscar dados da Receita Federal
-  if (btnBuscar) {
-    btnBuscar.addEventListener("click", async () => {
+if (btnBuscar) {
+  btnBuscar.addEventListener("click", async () => {
     const cnpj = document.getElementById("cnpj").value.replace(/\D/g, "");
 
     if (cnpj.length !== 14) {
-      Swal.fire({
-      title: "CNPJ inválido",
-      text: "Informe um CNPJ com 14 dígitos.",
-      icon: "warning",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: 'swal-confirm'
-      },
-      buttonsStyling: false
-    });
-
+      Swal.fire({ title: "CNPJ inválido", text: "Informe um CNPJ com 14 dígitos.", icon: "warning" });
       return;
     }
+
+    // 🔄 Animação "Localizando..."
+    let pontos = "";
+    btnBuscar.disabled = true;
+    btnBuscar.textContent = "Localizando";
+    animacaoPontinhos = setInterval(() => {
+      pontos = pontos.length < 3 ? pontos + "." : "";
+      btnBuscar.textContent = "Localizando" + pontos;
+    }, 500);
 
     try {
       const response = await fetch("/api/buscacnpj", {
@@ -135,29 +138,19 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
       const data = await response.json();
 
       if (data.erro) {
-       Swal.fire({
-          title: "Empresa não encontrada",
-          text: "Não conseguimos localizar este CNPJ. Por favor, preencha os dados manualmente.",
-          icon: "info",
-          confirmButtonText: "OK",
-          customClass: {
-            confirmButton: 'swal-confirm'
-          },
-          buttonsStyling: false
-      });
-        return;
+        throw new Error(data.erro);
       }
 
-      document.getElementById("empresa").value = data.empresa || "";
+      document.getElementById("empresa").value = data.razao_social || "";
+      document.getElementById("nome").value = data.fantasia || data.razao_social || "";
       document.getElementById("endereco").value = data.endereco || "";
       document.getElementById("numero").value = data.numero || "";
       document.getElementById("bairro").value = data.bairro || "";
       document.getElementById("cidade").value = data.cidade || "";
       document.getElementById("uf").value = data.uf || "";
       document.getElementById("cep").value = data.cep || "";
-      document.getElementById("ie").value = data.ie || "";
 
-     Swal.fire({
+      Swal.fire({
         title: "Empresa localizada!",
         text: "Dados preenchidos automaticamente com sucesso.",
         icon: "success",
@@ -170,21 +163,15 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
 
     } catch (error) {
       console.error("Erro ao buscar CNPJ:", error);
-        Swal.fire({
-        title: "Erro",
-        text: "Erro inesperado ao consultar o CNPJ. Tente novamente.",
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          confirmButton: 'swal-confirm'
-        },
-        buttonsStyling: false
-      });
-
+      Swal.fire({ title: "Erro", text: error.message || "Erro ao consultar o CNPJ.", icon: "error" });
+    } finally {
+      clearInterval(animacaoPontinhos);
+      btnBuscar.disabled = false;
+      btnBuscar.textContent = "Buscar";
     }
   });
+}
 
-  }
 
   //===================================================================
   // Evento botões buscar CEP

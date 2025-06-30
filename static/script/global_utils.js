@@ -18,12 +18,13 @@ Object.assign(window.App, {
   Varnomecompleto: usuario.nome_completo,
   Varemail: usuario.email,
   Vargrupo: usuario.grupo,
-  Vardepartamento: usuario.departamento,
   Varwhatsapp: usuario.whatsapp,
-  Varstatus: usuario.status,
   Varfoto: usuario.foto,
-  VarlastLogin: usuario.horaLogin
+  Varnomeempresa: usuario.fantasia,
+  Varrazaosocial: usuario.razao_social
 });
+
+
 
 // ------------------------------
 // ⚙️ CARREGAR CONFIGURAÇÕES
@@ -109,6 +110,21 @@ window.GlobalUtils.carregarPagina = function (pagina) {
       Swal.fire("Erro", `Não foi possível abrir a página "${pagina}"`, "error");
     });
 };
+
+
+
+// --------------------------------------------------------------------------
+// TIPOS DE CONTA PADRÃO (aqui é pra carregar no combobox do livro diário)
+// --------------------------------------------------------------------------
+window.Util.TIPOS_CONTA_PADRAO = [
+  { valor: "Banco", label: "Conta Bancária" },
+  { valor: "Cartão", label: "Cartão de Crédito" },
+  { valor: "Digital", label: "Conta Digital" },
+  { valor: "Investimento", label: "Conta de Investimento" },
+  { valor: "Adiantamento", label: "Adiantamento a Funcionário" },
+  { valor: "Pré-pago", label: "Cartão Pré-pago" }
+];
+
 
 
 

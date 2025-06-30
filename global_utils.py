@@ -118,40 +118,44 @@ def buscar_cnpj():
         if len(cnpj) != 14:
             return jsonify({"erro": "CNPJ inválido"}), 400
 
-        resposta = requests.get(f"https://www.receitaws.com.br/v1/cnpj/{cnpj}")
+        resposta = requests.get(f"https://publica.cnpj.ws/cnpj/{cnpj}", timeout=10)
+
+        if resposta.status_code != 200:
+            return jsonify({"erro": "Não foi possível consultar o CNPJ no momento."}), 400
+
         data = resposta.json()
 
-        if data.get("status") == "ERROR":
-            return jsonify({"erro": data.get("message", "Erro na consulta")}), 400
-        resultado = {
-            "razao_social": data.get("nome"),
-            "fantasia": data.get("fantasia"),
-            "email": data.get("email"),
-            "telefone": data.get("telefone"),
-            "cep": data.get("cep"),
-            "endereco": data.get("logradouro"),
-            "numero": data.get("numero", ""),
-            "bairro": data.get("bairro"),
-            "cidade": data.get("municipio"),
-            "uf": data.get("uf"),
-            "ie": data.get("inscricao_estadual", ""),
-            "data_abertura": data.get("abertura") or "",  # formato: "2000-12-31"
-            "natureza_juridica": data.get("natureza_juridica", ""),
-            "cnae_principal": data.get("atividade_principal", [{}])[0].get("code", ""),
-            "cnaes_secundarios": ", ".join([
-                item.get("code", "") for item in data.get("atividades_secundarias", [])
-            ]),
-            "situacao_cadastral": data.get("situacao", ""),
-            "data_situacao": data.get("data_situacao") or ""  # também "aaaa-mm-dd"
-        }
+        estabelecimento = data.get("estabelecimento", {})
+        cidade = estabelecimento.get("cidade", {})
+        estado = estabelecimento.get("estado", {})
 
+        resultado = {
+            "razao_social": data.get("razao_social", ""),
+            "fantasia": data.get("nome_fantasia", ""),
+            "email": estabelecimento.get("email", ""),
+            "telefone": estabelecimento.get("telefone1", ""),
+            "cep": estabelecimento.get("cep", ""),
+            "endereco": estabelecimento.get("logradouro", ""),
+            "numero": estabelecimento.get("numero", ""),
+            "bairro": estabelecimento.get("bairro", ""),
+            "cidade": cidade.get("nome", ""),
+            "uf": estado.get("sigla", ""),
+            "ie": estabelecimento.get("inscricao_estadual", ""),
+            "data_abertura": estabelecimento.get("data_inicio_atividade", ""),
+            "natureza_juridica": data.get("natureza_juridica", {}).get("descricao", ""),
+            "cnae_principal": estabelecimento.get("atividade_principal", {}).get("id", ""),
+            "cnaes_secundarios": ", ".join([
+                item.get("id", "") for item in estabelecimento.get("atividades_secundarias", [])
+            ]),
+            "situacao_cadastral": estabelecimento.get("situacao_cadastral", ""),
+            "data_situacao": estabelecimento.get("data_situacao_cadastral", "")
+        }
 
         return jsonify(resultado)
 
-    except Exception:
+    except Exception as e:
+        print("❌ Erro na consulta de CNPJ:", str(e))
         return jsonify({"erro": "Erro inesperado ao consultar CNPJ"}), 500
-
-
 
 # ────────────────────────────────────────────────
 # FUNÇÕES GLOBAIS
