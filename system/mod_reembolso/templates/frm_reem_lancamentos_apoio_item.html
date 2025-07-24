@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lançamento de Item da Reembolso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Cdesp_lancamentos_apoio_item.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body onblur="window.focus()">
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Lançamento de Reembolso</h1>
+    </div>
+    <div class="Cl_MenuID">
+      <label for="id">ID:</label>
+      <input type="text" id="id" disabled>
+    </div>
+  </div>
+
+  <div class="apoio-item-container">
+
+    <!-- Campos ocultos -->
+    <input type="hidden" id="id_item">
+    <input type="hidden" id="id_reembolso" name="id_reembolso">
+    <input type="hidden" id="id_empresa">
+
+
+    <!-------- LINHA 01 --------->
+    <div class="form-linha01">
+      <div class="form-campo">
+        <label>Anexe aqui sua nota</label>
+        <div class="anexo-wrapper Cl_bordaanexo">
+          <label class="botao-arquivo" for="anexo">Anexar Nota Fiscal</label>
+          <input type="file" id="anexo" accept=".pdf,.xml,.jpg,.jpeg,.png" style="display: none;" />
+          <span id="texto-arquivo">Nenhum arquivo escolhido</span>
+        </div>
+      </div>
+      <div class="form-campo">
+        <label for="data">Data da Nota:</label>
+        <input type="date" id="data" />
+      </div>
+    </div>
+
+    <!-------- LINHA 02 --------->
+    <div class="form-linha02"> 
+      <div class="form-campo">
+        <label for="descricao">Descrição:</label>
+        <input type="text" id="descricao" />
+      </div>
+
+      <div class="form-campo">
+        <label for="documento">Nº. Documento</label>
+        <input type="text" id="documento" />
+      </div>
+
+
+      <div class="form-campo">
+        <label for="valor">Valor (R$):</label>
+        <input type="number" id="valor" step="0.01" min="0" />
+      </div>
+    </div>
+
+
+    <!-------- LINHA 03 --------->
+    <div class="form-linha03">
+      <div class="form-campo">
+        <label for="id_categoria">Categoria:</label>
+        <select id="id_categoria">
+          <option value="">Selecione</option>
+        </select>
+      </div>
+
+      <div class="form-campo">
+        <label for="forma_pagamento">Forma de Pagamento:</label>
+        <select id="forma_pagamento">
+          <option value="">Selecione</option>
+        </select>
+      </div>
+
+      <div class="form-campo">
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" />
+      </div>
+
+      <div class="form-campo">
+        <label for="uf">UF:</label>
+        <input type="text" id="uf" maxlength="2" />
+      </div>
+    </div>
+
+    <!-------- LINHA 04 --------->
+    <div class="form-linha04"> 
+      <div class="form-campo">
+        <label for="cnpj_emitente">CNPJ Emitente:</label>
+        <input type="text" id="cnpj_emitente" />
+      </div>
+
+      <div class="form-campo">
+        <label for="razao_social_emitente">Razão Social Emitente:</label>
+        <input type="text" id="razao_social_emitente" />
+      </div>
+    </div>
+
+    <!-------- LINHA 05 --------->
+    <div class="form-linha05"> 
+      <div class="form-campo">
+        <label for="tipo_documento">Tipo de Documento:</label>
+        <input type="text" id="tipo_documento" />
+      </div>
+
+      <div class="form-campo">
+        <label for="chave_nfe">Chave da NFe:</label>
+        <input type="text" id="chave_nfe" />
+      </div>
+    </div>
+  
+  </div>
+
+  <div class="Cl_BotoesApoio">
+    <button type="button" class="Cl_BtnSalvar" id="btnSalvar" >Salvar</button>
+    <button type="button" class="Cl_BtnExcluir" id="btnExcluir">Excluir</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='reembolso/script/Sdesp_lancamentos_apoio_item.js') }}"></script>
+
+</body>
+</html>

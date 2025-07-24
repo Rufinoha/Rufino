@@ -4,15 +4,14 @@ console.log("🟢 Sconfiguracoes.js carregado...");
 if (typeof window.Configuracoes === "undefined") {
     window.Configuracoes = {
         cardsDisponiveis: [
-            { card_id: "usuarios", titulo: "Usuários", texto: "Gerencie contas e permissões do sistema.", pagina: "usuario" },
-            { card_id: "perfil", titulo: "Perfil de Usuário", texto: "Gerencie os menus de cada perfil de acesso.", pagina: "usuario_perfil" },
+
+            { card_id: "Cobrancas", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "cobranca" },
             { card_id: "novidades", titulo: "Novidades", texto: "Gerencie os cards exibidos na lateral do sistema.", pagina: "novidades" },
-            { card_id: "email", titulo: "Log de E-mail", texto: "Verifique aqui o status de todos os emails enviados pelo sistema.", pagina: "email_log" },
+            { card_id: "Menu", titulo: "Menu", texto: "Controle de conteudo dos Menus lateral e topo.", pagina: "menu" },
             { card_id: "geral", titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.", pagina: "config_geral" },
             { card_id: "ajuda", titulo: "Central de Ajuda", texto: "Cadastre dicas e explicações para os módulos.", pagina: "emcontrucao_config" },
-            { card_id: "banco", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "emcontrucao_config" },
-            { card_id: "Cobrancas", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "cobranca" },
-            { card_id: "Menu", titulo: "Menu", texto: "Controle de conteudo dos Menus lateral e topo.", pagina: "menu" }
+            { card_id: "Backup", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "emcontrucao_config" }
+
         ], 
 
         configurarEventos: async function () {
@@ -33,7 +32,7 @@ if (typeof window.Configuracoes === "undefined") {
                 }
             });
 
-            this.permitirArrastar();
+           
         },
 
         

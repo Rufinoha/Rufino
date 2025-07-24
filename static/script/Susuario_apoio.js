@@ -1,51 +1,37 @@
+console.log("suauario.apoio.js carregado...")
+
 // ----------------------------------------------------------------------
-// ✅ 1. Ao carregar a janela
+// ✅ 1. Ao carregar a janela: escuta dados do principal
 // ----------------------------------------------------------------------
-window.addEventListener("DOMContentLoaded", () => {
-    // Envia confirmação para janela principal
-    if (window.opener) {
-        window.opener.postMessage({ grupo: "apoioPronto" }, "*");
+GlobalUtils.receberDadosApoio((dados) => {
+    if (typeof dados === "object") {
+        console.log("📦 Dados recebidos via postMessage:", dados);
+        preencherCampos(dados);
+    } else {
+        // ID enviado — buscar via backend
+        fetch(`/usuario/apoio?id=${dados}`)
+            .then(res => res.json())
+            .then(json => {
+                if (json.status === "sucesso") {
+                    preencherCampos(json.dados);
+                } else {
+                    Swal.fire("Erro", json.mensagem, "error");
+                }
+            })
+            .catch(() => {
+                Swal.fire("Erro", "Falha ao carregar dados do usuário.", "error");
+            });
     }
-
-    // Escuta postMessage com os dados do usuário para edição
-    window.addEventListener("message", (event) => {
-        if (event.data && event.data.grupo === "dadosUsuario") {
-            const dados = event.data.payload;
-            console.log("📦 Dados recebidos:", dados);
-            preencherCampos(dados);
-        }
-    });
-
-    // Valor padrão para novos usuários
-    document.getElementById("ob_status").value = "Ativo";
-
-    // Carrega grupos no combobox
-    carregarCombobox();
 });
 
-// ----------------------------------------------------------------------
-// ✅ 2. Se vier com ID pela URL, busca os dados direto do backend
-// ----------------------------------------------------------------------
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+// Valor padrão para novos usuários
+document.getElementById("ob_status").value = "Ativo";
 
-if (id) {
-    fetch(`/usuario/apoio?id=${id}`)
-        .then(res => res.json())
-        .then(json => {
-            if (json.status === "sucesso") {
-                preencherCampos(json.dados);
-            } else {
-                Swal.fire("Erro", json.mensagem, "error");
-            }
-        })
-        .catch(() => {
-            Swal.fire("Erro", "Falha ao carregar dados do usuário.", "error");
-        });
-}
+// Carrega grupos no combobox
+carregarCombobox();
 
 // ----------------------------------------------------------------------
-// 🔁 3. Nome completo → maiúsculo e extrai primeiro nome
+// 🔁 2. Nome completo → maiúsculo e extrai primeiro nome
 // ----------------------------------------------------------------------
 document.getElementById("ob_nome_completo").addEventListener("blur", () => {
     let nomeCompleto = document.getElementById("ob_nome_completo").value.trim().toUpperCase();
@@ -56,7 +42,7 @@ document.getElementById("ob_nome_completo").addEventListener("blur", () => {
 });
 
 // ----------------------------------------------------------------------
-// 📱 4. Máscara para o campo WhatsApp
+// 📱 3. Máscara para o campo WhatsApp
 // ----------------------------------------------------------------------
 document.getElementById("ob_whatsapp").addEventListener("input", function () {
     let valor = this.value.replace(/\D/g, "");
@@ -76,10 +62,10 @@ document.getElementById("ob_whatsapp").addEventListener("input", function () {
 });
 
 // ----------------------------------------------------------------------
-// 🧠 5. Preencher campos na tela
+// 🧠 4. Preencher campos na tela
 // ----------------------------------------------------------------------
 function preencherCampos(dados) {
-    document.getElementById("ob_id").value = dados.id || "";
+    document.getElementById("ob_id").value = dados.id_usuario || dados.id || "";
     document.getElementById("ob_nome_completo").value = dados.nome_completo || "";
     document.getElementById("ob_nome").value = dados.nome || "";
     document.getElementById("ob_email").value = dados.email || "";
@@ -90,9 +76,8 @@ function preencherCampos(dados) {
 }
 
 // ----------------------------------------------------------------------
-// 💾 6. Evento do botão Salvar
+// 💾 5. Evento do botão Salvar
 // ----------------------------------------------------------------------
-// 💾 Botão Salvar
 document.getElementById("btnSalvar").addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -122,16 +107,16 @@ document.getElementById("btnSalvar").addEventListener("click", async (e) => {
     const payload = {
         id,
         id_empresa,
-        id_grupo,  // ✅ Já está nulo para administrador/desenvolvedor
+        id_grupo,
         nome_completo,
         nome,
         email,
         usuario: email.toLowerCase(),
-        grupo: grupo_nome,  // 👁️ Nome visível no sistema
+        grupo: grupo_nome,
         departamento,
         whatsapp,
         status,
-        senha: "123456", // 🔒 Senha padrão — será trocada depois
+        senha: "123456",
         imagem: "userpadrao.png"
     };
 
@@ -146,10 +131,16 @@ document.getElementById("btnSalvar").addEventListener("click", async (e) => {
 
         if (resposta.ok) {
             document.getElementById("ob_id").value = retorno.id;
-            if (window.opener?.Usuario?.carregarUsuarios) {
-                window.opener.Usuario.carregarUsuarios();
-            }
-            Swal.fire("Sucesso", "Usuário salvo com sucesso!", "success");
+
+            // ✅ Notifica o principal para recarregar a lista
+            window.parent.postMessage({ grupo: "recarregarUsuarios" }, "*");
+
+            // ✅ Exibe alerta e fecha modal após confirmação
+            Swal.fire("Sucesso", "Usuário salvo com sucesso!", "success").then(() => {
+                const modal = window.frameElement?.closest("#modalApoioOverlay");
+                if (modal) modal.remove(); // Fecha o modal de apoio
+            });
+
         } else {
             Swal.fire("Erro", retorno.mensagem || "Erro ao salvar usuário", "error");
         }
@@ -159,8 +150,9 @@ document.getElementById("btnSalvar").addEventListener("click", async (e) => {
     }
 });
 
+
 // ----------------------------------------------------------------------
-// 📋 7. Carregar opções de grupo na combo
+// 📋 6. Carregar opções de grupo na combo
 // ----------------------------------------------------------------------
 function carregarCombobox(idSelecionado = null) {
     fetch('/permissao/combobox')
@@ -172,7 +164,7 @@ function carregarCombobox(idSelecionado = null) {
 
                 data.dados.forEach(grupo => {
                     const option = document.createElement("option");
-                    option.value = grupo.id !== null ? grupo.id : "";  // se null, deixa vazio
+                    option.value = grupo.id !== null ? grupo.id : "";
                     option.textContent = grupo.nome;
 
                     if (String(grupo.id) === String(idSelecionado)) {
@@ -191,7 +183,7 @@ function carregarCombobox(idSelecionado = null) {
 }
 
 // ----------------------------------------------------------------------
-// ❌ 8. Evento do botão Excluir
+// ❌ 7. Evento do botão Excluir
 // ----------------------------------------------------------------------
 document.getElementById("btnExcluir").addEventListener("click", async () => {
     const id = document.getElementById("ob_id").value.trim();
@@ -223,10 +215,9 @@ document.getElementById("btnExcluir").addEventListener("click", async () => {
 
         if (resposta.ok && retorno.status === "sucesso") {
             Swal.fire("Excluído!", "Usuário excluído com sucesso.", "success").then(() => {
-                if (window.opener?.Usuario?.carregarUsuarios) {
-                    window.opener.Usuario.carregarUsuarios();
-                }
-                window.close();
+                window.parent.postMessage({ grupo: "recarregarUsuarios" }, "*");
+                const modal = window.frameElement?.closest("#modalApoioOverlay");
+                if (modal) modal.remove(); // Fecha o modal
             });
         } else {
             Swal.fire("Erro", retorno.mensagem || "Erro ao excluir o usuário.", "error");

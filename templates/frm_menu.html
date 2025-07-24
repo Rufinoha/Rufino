@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestão de Menus - Rufino</title>
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/Cmenu.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -17,10 +18,18 @@
   </div>
 
   <div class="Cl_ConfigContainer">
-    <h2>Gestão de Menus</h2>
+    <h2>Menus</h2>
     <div class="Cl_Filtros">
       <label class="Cl_labelfiltro" for="ob_filtroNome">Nome do Menu:</label>
       <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome">
+
+
+      <label class="Cl_labelfiltro" for="ob_filtroMenuPrincipal">Menu:</label>
+        <select class="Cl_CamposFiltros" id="ob_filtroMenuPrincipal">
+          <option value="">Todos</option>
+        </select>
+
+
 
       <label class="Cl_labelfiltro" for="ob_filtroLocal">Local:</label>
       <select class="Cl_CamposFiltros" id="ob_filtroLocal">
@@ -70,7 +79,7 @@
       <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
     </div>
   </div>
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
 
-  <!-- ✅ JS Dinâmico será carregado via fetch pelo Sindex.js -->
 </body>
 </html>

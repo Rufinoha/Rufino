@@ -10,12 +10,12 @@ from email.mime.text import MIMEText
 from flask import Blueprint, request, jsonify, make_response, session
 from datetime import datetime
 from weasyprint import HTML
-from extensoes import Var_ConectarBanco
 from global_utils import (
     remover_tags_html,
     formata_data_brasileira,
     formata_moeda,
-    valida_email
+    valida_email,
+    Var_ConectarBanco
 )
 
 # ────────────────────────────────────────────────

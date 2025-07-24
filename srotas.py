@@ -7,45 +7,32 @@ import secrets
 import bcrypt
 import requests
 import calendar
-import psycopg2
 import html
 import traceback
 from datetime import date, datetime, timedelta
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
-from pathlib import Path
 from werkzeug.utils import secure_filename
-from functools import wraps
-from urllib.parse import urlparse
 from flask import (
-    Blueprint, render_template, request, jsonify, session, redirect, url_for,
-    send_from_directory, make_response, current_app as app
+    Blueprint, 
+    render_template, 
+    request, 
+    jsonify, 
+    session, 
+    url_for, 
+    current_app as app
 )
 
-# Importar arquivos de rotas
 from srotas_api_efi import gerar_cobranca_efi
 from srotas_api_email_brevo import brevo_bp
-from modelos import (
-    TblAssinaturaCliente, TblChamado, TblChamadoMensagem, TblChamadoMensagemAnexo,
-    TblConfig, TblEmailEnvio, TblEmailDestinatario, TblEmailEvento, TblEmailLog,
-    TblEmpresa, TblFatura, TblFaturaAssinatura, TblMenu, TblNovidades,
-    TblUsuario, TblUsuarioGrupo, TblUsuarioPermissaoGrupo
-)
 from global_utils import (
-    remover_tags_html,
-    formata_data_brasileira,
-    formata_moeda,
-    valida_email,
+    configurar_tempo_sessao,
+    login_obrigatorio,
+    Var_ConectarBanco
 )
-from global_utils import Var_ConectarBanco #, login_obrigatorio, get_base_url, configurar_tempo_sessao
-
-
 
 # Carrega variáveis do .env
 load_dotenv()
-
-
-
 
 
 # ────────────────────────────────────────────────
@@ -62,65 +49,6 @@ auth_bp = Blueprint(
 def init_app(app):
     app.register_blueprint(auth_bp)
 # ────────────────────────────────────────────────
-
-# ────────────────────────────────────────────────
-# 6️⃣ OUTRAS FUNÇÕES ÚTEIS
-# ────────────────────────────────────────────────
-
-def remover_tags_html(texto):
-    return re.sub('<[^<]+?>', '', texto)
-
-def get_base_url():
-    return "https://rufino.tech" if os.getenv("MODO_PRODUCAO", "false").lower() == "true" else "http://127.0.0.1:5000"
-
-def login_obrigatorio(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if not session.get("id_usuario"):
-            return redirect(url_for("rotas.Var_Login"))  # ou o nome correto da sua rota de login
-        return func(*args, **kwargs)
-    return wrapper
-
-
-
-
-def configurar_tempo_sessao(id_empresa):
-    try:
-        conn = Var_ConectarBanco()
-        cur = conn.cursor()
-        cur.execute("""
-            SELECT valor 
-            FROM tbl_config 
-            WHERE chave = 'tempo_sessao_minutos' AND id_empresa = %s
-        """, (id_empresa,))
-        resultado = cur.fetchone()
-        conn.close()
-
-        if resultado:
-            return timedelta(minutes=int(resultado[0]))
-    except Exception as e:
-        print("⚠️ Erro ao configurar tempo de sessão:", str(e))
-    
-    return timedelta(minutes=30)  # Valor padrão
-
-
-# ────────────────────────────────────────────────
-# Rota para testar conexão com banco
-# ────────────────────────────────────────────────
-
-@auth_bp.route("/teste_banco")
-def teste_banco():
-    try:
-        conn = Var_ConectarBanco()
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM tbl_usuario")
-        qtd = cur.fetchone()[0]
-        conn.close()
-        return f"✅ Conectado ao banco! Existem {qtd} usuários cadastrados."
-    except Exception as e:
-        return f"❌ Erro de conexão: {e}"
-
-
 
 
 # ────────────────────────────────────────────────
@@ -175,7 +103,7 @@ def gerar_faturas_mensais():
 
             # 🧾 Inserir detalhe da fatura
             cursor.execute("""
-                INSERT INTO tbl_fatura_assinatura (id_fatura, id_modulo, periodo_inicio, periodo_fim, valor)
+                INSERT INTO tbl_assinatura_cliente (id_fatura, id_modulo, periodo_inicio, periodo_fim, valor)
                 VALUES (%s, %s, %s, %s, %s)
             """, (id_fatura, id_modulo, periodo_inicio.isoformat(), periodo_fim.isoformat(), valor_proporcional))
 
@@ -215,7 +143,7 @@ def enviar_email_fatura(id_fatura):
         # 📄 Detalhes da fatura
         cursor.execute("""
             SELECT M.nome_menu, D.periodo_inicio, D.periodo_fim, D.valor
-            FROM tbl_fatura_assinatura D
+            FROM tbl_assinatura_cliente D
             JOIN tbl_menu M ON D.id_modulo = M.id
             WHERE D.id_fatura = %s
         """, (id_fatura,))
@@ -272,7 +200,7 @@ def enviar_email_fatura(id_fatura):
 
 @auth_bp.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('login.html')
 
 @auth_bp.route('/index')
 def index():
@@ -283,16 +211,8 @@ def main():
     return render_template("index.html")
 
 
-# ────────────────────────────────────────────────
-# 4️⃣ ROTAS PARA CARREGAR DINAMICO O HTML NO INDEX
-# ────────────────────────────────────────────────
 
-@auth_bp.route("/<pagina>", methods=["GET"])
-def abrir_pagina(pagina):
-    try:
-        return render_template(f"frm_{pagina}.html")
-    except Exception as e:
-        return f"❌ Erro ao carregar página: {str(e)}", 404
+
 
 
 # ────────────────────────────────────────────────
@@ -533,41 +453,52 @@ def usuario_atualizar_senha():
     return jsonify({"sucesso": True, "mensagem": "Senha atualizada com sucesso!"})
 
 
-@auth_bp.route("/usuario/apoio")
+
+@auth_bp.route("/usuario/apoio", methods=["GET"])
 def usuario_apoio():
     try:
-        id_usuario = request.args.get("id")
-        if not id_usuario:
-            return jsonify({"status": "erro", "mensagem": "ID do usuário não informado."}), 400
+        id_usuario = request.args.get("id", type=int)
+        id_empresa = session.get("id_empresa")
+
+        if not id_usuario or not id_empresa:
+            return jsonify({"status": "erro", "mensagem": "Parâmetros ausentes ou inválidos."}), 400
 
         conn = Var_ConectarBanco()
-        cursor = conn.cursor()
+        cur = conn.cursor()
 
-        cursor.execute("""
-            SELECT u.id_usuario AS id,
-                   u.nome_completo,
-                   u.nome,
-                   u.email,
-                   u.whatsapp,
-                   u.departamento,
-                   u.status,
-                   g.nome_grupo AS grupo
+        sql = """
+            SELECT
+                u.id_usuario,
+                u.nome_completo,
+                u.nome,
+                u.email,
+                u.whatsapp,
+                u.departamento,
+                u.status,
+                u.id_grupo,
+                g.nome_grupo AS grupo
             FROM tbl_usuario u
-            LEFT JOIN tbl_usuario_grupo g ON u.id_grupo = g.id_grupo
-            WHERE u.id_usuario = %s
-        """, (id_usuario,))
-        
-        usuario = cursor.fetchone()
-        if not usuario:
+            LEFT JOIN tbl_usuario_grupo g ON u.id_grupo = g.id
+            WHERE u.id_usuario = %s AND u.id_empresa = %s
+        """
+        cur.execute(sql, (id_usuario, id_empresa))
+        row = cur.fetchone()
+
+        if not row:
             return jsonify({"status": "erro", "mensagem": "Usuário não encontrado."}), 404
 
-        colunas = [col[0] for col in cursor.description]
-        dados_usuario = dict(zip(colunas, usuario))
+        colunas = [desc[0] for desc in cur.description]
+        dados = dict(zip(colunas, row))
 
-        return jsonify({"status": "sucesso", "dados": dados_usuario})
-    
+        return jsonify({"status": "sucesso", "dados": dados})
+
     except Exception as e:
-        return jsonify({"status": "erro", "mensagem": f"Erro ao buscar usuário: {str(e)}"}), 500
+        print("❌ Erro interno:", e)
+        return jsonify({
+            "status": "erro",
+            "mensagem": f"Erro ao buscar usuário: {str(e)}"
+        }), 500
+
 
 
 
@@ -1258,7 +1189,7 @@ def menu_por_posicao(posicao):
                 SELECT m.id, m.nome_menu, m.descricao, m.rota, m.data_page, m.icone, m.link_detalhe,
                        m.tipo_abrir, m.ordem, m.parent_id
                 FROM tbl_menu m
-                LEFT JOIN tbl_fatura_assinatura f ON f.id_modulo = m.id AND f.id_empresa = %s AND f.status = 'Ativo'
+                LEFT JOIN tbl_assinatura_cliente f ON f.id_modulo = m.id AND f.id_empresa = %s AND f.status = 'Ativo'
                 WHERE m.ativo = TRUE
                   AND LOWER(m.local_menu) = LOWER(%s)
                   AND (
@@ -1284,7 +1215,7 @@ def menu_por_posicao(posicao):
                        m.tipo_abrir, m.ordem, m.parent_id
                 FROM tbl_usuario_permissao_grupo p
                 JOIN tbl_menu m ON m.id = p.id_menu
-                LEFT JOIN tbl_fatura_assinatura f ON f.id_modulo = m.id AND f.id_empresa = %s AND f.status = 'Ativo'
+                LEFT JOIN tbl_assinatura_cliente f ON f.id_modulo = m.id AND f.id_empresa = %s AND f.status = 'Ativo'
                 WHERE m.ativo = TRUE
                   AND LOWER(m.local_menu) = LOWER(%s)
                   AND p.id_empresa = %s
@@ -2386,7 +2317,10 @@ def salvar_usuario():
         usuario_existente = cursor.fetchone()
 
         if usuario_existente:
-            return jsonify({"status": "erro", "mensagem": "Já existe um usuário com esse e-mail."}), 400
+            usuario_existente_id = usuario_existente[0]
+            if not id_usuario or int(id_usuario) != usuario_existente_id:
+                return jsonify({"status": "erro", "mensagem": "Já existe um usuário com esse e-mail."}), 400
+
 
         if not id_usuario:
             senha_provisoria = "123456"
@@ -2409,12 +2343,14 @@ def salvar_usuario():
             conn.commit()
             print("✅ Usuário incluído com ID:", id_usuario)
 
-            # 🔗 Montar link
-            base_url = os.getenv("BASE_PROD") if os.getenv("MODO_PRODUCAO", "false").lower() == "true" else os.getenv("BASE_DEV")
-            link = f"{get_base_url()}/usuario/redefinir?token={token}"
+            # Montar link
+            base_url = os.getenv("BASE_PROD") if os.getenv("MODO_PRODUCAO", "false").lower() == "true" else os.getenv("BASE_HOM")
+
+            link = f"{base_url}/usuario/redefinir?token={token}"
             url_privacidade  = f"{base_url}/privacidade"
             url_logo         = f"{base_url}/static/imge/logorufino.png"
-            url_redefinicao = f"{base_url}/usuario/redefinir?token={token}"
+            url_redefinicao  = f"{base_url}/usuario/redefinir?token={token}"
+
             # 📧 Enviar e-mail via API
             assunto = "Acesso ao sistema Rufino"
             corpo_html = f"""<!DOCTYPE html>
@@ -2465,22 +2401,21 @@ def salvar_usuario():
             }
 
             try:
-                url = f"{get_base_url()}/email/enviar"
+                url = f"{base_url}/email/enviar"
                 print("🌐 URL do envio:", url)
                 print("📦 Payload:", payload)
                 resp = requests.post(url, json=payload)
-                print("📬 E-mail enviado:", resp.status_code, resp.text)
             except Exception as e:
                 print("⚠️ Falha ao enviar e-mail:", str(e))
 
         else:
             cursor.execute("""
                 UPDATE tbl_usuario SET
-                    id_grupo = %s, nome_completo = %s, nome = %s, email = %s, usuario = %s,
+                    id_grupo = %s, nome_completo = %s, nome = %s, email = %s,
                     departamento = %s, whatsapp = %s, status = %s, imagem = %s
                 WHERE id_usuario = %s
             """, (
-                id_grupo, nome_completo, nome, email, email,
+                id_grupo, nome_completo, nome, email,
                 departamento, whatsapp, status, imagem, id_usuario
             ))
             conn.commit()
@@ -3058,7 +2993,7 @@ def api_marketplace():
         for id_modulo, nome, desc, valor, obs in apps:
             # Verifica se já foi assinado por este cliente com status Ativo
             cursor.execute("""
-                SELECT 1 FROM tbl_fatura_assinatura
+                SELECT 1 FROM tbl_assinatura_cliente
                 WHERE id_empresa = %s AND id_modulo = %s AND status = 'Ativo'
             """, (id_empresa, id_modulo))
             assinado = cursor.fetchone() is not None
@@ -3105,7 +3040,7 @@ def assinar_app():
 
         # Verifica se já existe assinatura ativa
         cursor.execute("""
-            SELECT 1 FROM tbl_fatura_assinatura
+            SELECT 1 FROM tbl_assinatura_cliente
             WHERE id_empresa = %s AND id_modulo = %s AND status = 'Ativo'
         """, (id_empresa, id_modulo))
         if cursor.fetchone():
@@ -3120,9 +3055,9 @@ def assinar_app():
         nome_modulo, valor = app
         hoje = datetime.now().date().isoformat()
 
-        # Insere na tbl_fatura_assinatura
+        # Insere na tbl_assinatura_cliente
         cursor.execute("""
-            INSERT INTO tbl_fatura_assinatura (
+            INSERT INTO tbl_assinatura_cliente (
                 id_empresa, id_modulo, nome_modulo,
                 periodo_inicio, periodo_fim, valor, status
             ) VALUES (%s, %s, %s, %s, NULL, %s, 'Ativo')
@@ -3230,7 +3165,7 @@ def cobranca_pendentes():
         # 🔍 Seleciona assinaturas ativas na competência
         sql = """
             SELECT fa.id_empresa, fa.nome_modulo, fa.valor, fa.periodo_inicio, fa.periodo_fim, e.nome_empresa
-            FROM tbl_fatura_assinatura fa
+            FROM tbl_assinatura_cliente fa
             JOIN tbl_empresa e ON e.id = fa.id_empresa
             WHERE fa.periodo_inicio <= %s
               AND (fa.periodo_fim IS NULL OR fa.periodo_fim >= %s)
@@ -3390,7 +3325,7 @@ def cobranca_preparar():
 
         cursor.execute("""
             SELECT nome_modulo, valor, dt_inicio
-            FROM tbl_fatura_assinatura
+            FROM tbl_assinatura_cliente
             WHERE id_empresa = %s AND status = 'Ativo'
         """, (id_empresa,))
         modulos = cursor.fetchall()
@@ -3551,7 +3486,7 @@ def resumo_fatura():
         # 🔎 Buscar módulos ativos do cliente
         cursor.execute("""
             SELECT nome_modulo, valor, dt_inicio, dt_fim
-            FROM tbl_fatura_assinatura
+            FROM tbl_assinatura_cliente
             WHERE id_empresa = %s AND status = 'Ativo'
         """, (id_empresa,))
         modulos = cursor.fetchall()
@@ -3636,21 +3571,23 @@ def menu_dados():
     offset = (pagina - 1) * por_pagina
 
     nome_menu = request.args.get("nome_menu", "").strip()
-    local_menu = request.args.get("local_menu", "").strip()  # <-- usa exatamente 'horizontal' ou 'lateral'
-
-    print(f"🔍 Filtro recebido: nome_menu='{nome_menu}', local_menu='{local_menu}'")
+    local_menu = request.args.get("local_menu", "").strip()
+    id_menu_pai = request.args.get("menu_principal", "").strip()
 
     base_sql = "SELECT * FROM tbl_menu WHERE 1=1"
     valores = []
 
     if nome_menu:
         base_sql += " AND nome_menu ILIKE %s"
-        print(f"🔍 Filtro recebido2: nome_menu='{nome_menu}', local_menu='{local_menu}'")
         valores.append(f"%{nome_menu}%")
 
     if local_menu:
         base_sql += " AND local_menu = %s"
         valores.append(local_menu)
+
+    if id_menu_pai:
+        base_sql += " AND parent_id = %s"
+        valores.append(id_menu_pai)
 
     sql_total = f"SELECT COUNT(*) FROM ({base_sql}) AS sub"
     cursor.execute(sql_total, valores)
@@ -3669,6 +3606,7 @@ def menu_dados():
         "dados": registros,
         "total_paginas": total_paginas
     })
+
 
 
 @auth_bp.route("/menu/incluir")
@@ -3782,818 +3720,29 @@ def menu_delete():
         conn.close()
 
 
-# ────────────────────────────────────────────────
-# 📁 ROTAS: PLANO DE CONTAS (formato padrão funcional)
-# ────────────────────────────────────────────────
 
-@auth_bp.route("/plano_contas/dados")
+@auth_bp.route("/menu/combo/menu")
 @login_obrigatorio
-def plano_contas_dados():
+def menu_combo_menu():
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
-
-    tipo = request.args.get("tipo", "").strip()
-    id_empresa = session.get("id_empresa")
-
-    print(f"🔎 Plano de contas filtro: tipo={tipo}, empresa={id_empresa}")
 
     sql = """
-        SELECT codigo, descricao, status
-        FROM tbl_hub_plano_contas
-        WHERE id_empresa = %s
+        SELECT id, nome_menu 
+        FROM tbl_menu
+        WHERE parent_id IS NULL
+          AND ativo = TRUE
+        ORDER BY ordem;
     """
-    valores = [id_empresa]
+    cursor.execute(sql)
+    dados = cursor.fetchall()
 
-    if tipo:
-        sql += " AND plano = %s"
-        valores.append(tipo)
+    resultado = [{"id": row[0], "nome_menu": row[1]} for row in dados]
 
-    sql += " ORDER BY codigo"
-
-    cursor.execute(sql, valores)
-    colunas = [desc[0] for desc in cursor.description]
-    dados = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
     conn.close()
+    return jsonify(resultado)
 
-    return jsonify({ "dados": dados })
 
 
-@auth_bp.route("/plano_contas/editar", methods=["POST"])
-@login_obrigatorio
-def plano_contas_editar():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.get_json()
-    id_empresa = session.get("id_empresa")
 
-    try:
-        cursor.execute("""
-            UPDATE tbl_hub_plano_contas
-            SET descricao = %s
-            WHERE id_empresa = %s AND codigo = %s
-        """, (
-            dados.get("descricao"),
-            id_empresa,
-            dados.get("codigo")
-        ))
-        conn.commit()
-        return jsonify({"mensagem": "Atualizado com sucesso"})
 
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"erro": f"Erro ao atualizar: {str(e)}"}), 500
-
-    finally:
-        conn.close()
-
-
-@auth_bp.route("/plano_contas/incluir", methods=["POST"])
-@login_obrigatorio
-def plano_contas_incluir():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.get_json()
-    id_empresa = session.get("id_empresa")
-
-    try:
-        codigo_pai = dados.get("codigo_pai")
-        descricao = dados.get("descricao")
-        plano = dados.get("plano")
-
-        # Buscar último código filho
-        cursor.execute("""
-            SELECT codigo FROM tbl_hub_plano_contas
-            WHERE id_empresa = %s AND codigo LIKE %s
-            ORDER BY codigo DESC LIMIT 1
-        """, (id_empresa, f"{codigo_pai}.%"))
-
-        ultimo = cursor.fetchone()
-        if ultimo:
-            partes = ultimo[0].split(".")
-            partes[-1] = str(int(partes[-1]) + 1).zfill(2)
-            novo_codigo = ".".join(partes)
-        else:
-            novo_codigo = f"{codigo_pai}.01"
-
-        # Calcular o nível
-        nivel = novo_codigo.count(".") + 1
-
-        if nivel > 5:
-            return jsonify({"erro": "Limite máximo de níveis (5) atingido."}), 400
-
-        # Definir tipo com base no nível
-        tipo = "Sintética" if nivel <= 3 else "Analítica"
-
-        # Inserir novo plano
-        cursor.execute("""
-            INSERT INTO tbl_hub_plano_contas (id_empresa, codigo, descricao, tipo, nivel, status, plano)
-            VALUES (%s, %s, %s, %s, %s, true, %s)
-        """, (id_empresa, novo_codigo, descricao, tipo, nivel, plano))
-
-        conn.commit()
-        return jsonify({"codigo": novo_codigo, "descricao": descricao})
-
-    except Exception as e:
-        conn.rollback()
-        print("❌ Erro ao incluir plano de contas:", e)
-        return jsonify({"erro": str(e)}), 500
-
-    finally:
-        conn.close()
-
-
-
-@auth_bp.route("/plano_contas/ocultar", methods=["POST"])
-@login_obrigatorio
-def plano_contas_ocultar():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.get_json()
-    id_empresa = session.get("id_empresa")
-
-    try:
-        cursor.execute("""
-            UPDATE tbl_hub_plano_contas
-            SET status = NOT status
-            WHERE id_empresa = %s AND codigo = %s
-        """, (id_empresa, dados.get("codigo")))
-
-        conn.commit()
-        return jsonify({"mensagem": "Status alterado"})
-
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"erro": str(e)}), 500
-
-    finally:
-        conn.close()
-
-
-@auth_bp.route("/plano_contas/existe", methods=["GET"])
-@login_obrigatorio
-def plano_contas_existe():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    id_empresa = session.get("id_empresa")
-
-    cursor.execute("""
-        SELECT COUNT(*) FROM tbl_hub_plano_contas WHERE id_empresa = %s
-    """, (id_empresa,))
-    total = cursor.fetchone()[0]
-    return jsonify({"existe": total > 0})
-
-
-
-@auth_bp.route("/plano_contas/buscar")
-@login_obrigatorio
-def buscar_contas_contabeis():
-    termo = request.args.get("termo", "").strip()
-    tipo_plano = request.args.get("tipo", "").strip()
-    id_empresa = session.get("id_empresa")
-
-    if len(termo) < 3:
-        return jsonify([])
-
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-
-    try:
-        # Buscar apenas contas analíticas de nível 5 que atendam aos critérios
-        cursor.execute("""
-            SELECT id, codigo, descricao
-            FROM tbl_hub_plano_contas
-            WHERE nivel = 5
-              AND tipo = 'Analítica'
-              AND status = true
-              AND plano = %s
-              AND id_empresa = %s
-              AND descricao ILIKE %s
-        """, (tipo_plano, id_empresa, f"%{termo}%"))
-
-        contas = cursor.fetchall()
-        resultados = []
-
-        for id_final, cod_final, desc_final in contas:
-            hierarquia = []
-
-            # Separar o código em partes e ir subindo nos níveis
-            partes = cod_final.split('.')
-            for nivel in range(2, 6):  # níveis 2 a 5
-                codigo_nivel = '.'.join(partes[:nivel])
-                cursor.execute("""
-                    SELECT descricao FROM tbl_hub_plano_contas
-                    WHERE codigo = %s AND id_empresa = %s
-                """, (codigo_nivel, id_empresa))
-                resultado = cursor.fetchone()
-                if resultado:
-                    hierarquia.append({
-                        "nivel": nivel,
-                        "descricao": resultado[0]
-                    })
-
-            resultados.append({
-                "id": id_final,
-                "codigo": cod_final,
-                "descricao_final": desc_final,
-                "hierarquia": hierarquia
-            })
-
-        return jsonify(resultados)
-
-    except Exception as e:
-        print("❌ Erro ao buscar contas:", e)
-        return jsonify([]), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# ────────────────────────────────────────────────
-# Rotas para categoria em HUB
-# ────────────────────────────────────────────────
-@auth_bp.route("/categoria/dados")
-@login_obrigatorio
-def categoria_dados():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-
-    pagina = int(request.args.get("pagina", 1))
-    por_pagina = int(request.args.get("porPagina", 20))
-    offset = (pagina - 1) * por_pagina
-
-    id_empresa = session.get("id_empresa")
-    nome = request.args.get("nome_categoria", "").strip()
-    onde = request.args.get("onde_usa", "").strip()
-    status = request.args.get("status")
-
-    sql = """
-        SELECT c.*, pc.descricao AS desc_conta_contabil
-        FROM tbl_hub_categoria c
-        LEFT JOIN tbl_hub_plano_contas pc ON pc.id = c.id_conta_contabil
-        WHERE c.id_empresa = %s
-    """
-    valores = [id_empresa]
-
-    if nome:
-        sql += " AND c.nome_categoria ILIKE %s"
-        valores.append(f"%{nome}%")
-
-    if onde:
-        sql += " AND c.onde_usa ILIKE %s"
-        valores.append(f"%{onde}%")
-
-    if status != "":
-        sql += " AND c.status = %s"
-        valores.append(status == "true")
-
-    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
-    cursor.execute(sql_total, valores)
-    total_registros = cursor.fetchone()[0]
-    total_paginas = (total_registros + por_pagina - 1) // por_pagina
-
-    sql += " ORDER BY c.id LIMIT %s OFFSET %s"
-    valores.extend([por_pagina, offset])
-
-    cursor.execute(sql, valores)
-    colunas = [desc[0] for desc in cursor.description]
-    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
-    conn.close()
-
-    return jsonify({
-        "dados": registros,
-        "total_paginas": total_paginas
-    })
-
-
-@auth_bp.route("/categoria/incluir")
-@login_obrigatorio
-def categoria_incluir():
-    return render_template("frm_hub_categoria_apoio.html")
-
-
-@auth_bp.route("/categoria/editar")
-@login_obrigatorio
-def categoria_editar():
-    return render_template("frm_hub_categoria_apoio.html")
-
-
-@auth_bp.route("/categoria/salvar", methods=["POST"])
-@login_obrigatorio
-def categoria_salvar():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.json
-    id_empresa = session.get("id_empresa")
-
-    try:
-        if dados.get("id"):
-            cursor.execute("""
-                UPDATE tbl_hub_categoria
-                SET nome_categoria = %s, onde_usa = %s, status = %s, id_conta_contabil = %s
-                WHERE id = %s AND id_empresa = %s
-            """, (
-                dados["nome_categoria"], dados["onde_usa"], dados["status"],
-                dados["id_conta_contabil"], dados["id"], id_empresa
-            ))
-        else:
-            cursor.execute("""
-                INSERT INTO tbl_hub_categoria (id_empresa, nome_categoria, onde_usa, status, id_conta_contabil)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (
-                id_empresa, dados["nome_categoria"], dados["onde_usa"],
-                dados["status"], dados["id_conta_contabil"]
-            ))
-
-        conn.commit()
-        return jsonify({"mensagem": "Categoria salva com sucesso!"})
-
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"erro": f"Erro ao salvar a categoria: {str(e)}"}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@auth_bp.route("/categoria/apoio/<int:id>", methods=["GET"])
-@login_obrigatorio
-def apoio_categoria(id):
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            SELECT 
-                c.id,
-                c.nome_categoria,
-                c.onde_usa,
-                c.status,
-                c.id_conta_contabil,
-                c.tipo_plano,
-                p.descricao AS desc_conta_contabil,
-                p.codigo AS codigo_conta_contabil 
-            FROM tbl_hub_categoria c
-            LEFT JOIN tbl_hub_plano_contas p 
-            ON p.id = c.id_conta_contabil AND p.id_empresa = c.id_empresa
-            WHERE c.id = %s AND c.id_empresa = %s
-        """, (id, session.get("id_empresa")))
-        
-        dados = cursor.fetchone()
-        if not dados:
-            return jsonify({"erro": "Categoria não encontrada."}), 404
-        
-        colunas = [desc[0] for desc in cursor.description]
-        return jsonify(dict(zip(colunas, dados)))
-        
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-    finally:
-        conn.close()
-
-
-
-
-@auth_bp.route("/categoria/delete", methods=["POST"])
-@login_obrigatorio
-def categoria_delete():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.json
-    try:
-        cursor.execute("DELETE FROM tbl_hub_categoria WHERE id = %s AND id_empresa = %s", (dados["id"], session.get("id_empresa")))
-        conn.commit()
-        return jsonify({"status": "sucesso", "mensagem": "Categoria excluída com sucesso."})
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-    finally:
-        conn.close()
-
-
-
-# ────────────────────────────────────────────────
-# Rotas para FAVORECIDOS em HUB
-# ────────────────────────────────────────────────
-@auth_bp.route("/favorecido/dados")
-@login_obrigatorio
-def favorecido_dados():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-
-    pagina = int(request.args.get("pagina", 1))
-    por_pagina = int(request.args.get("porPagina", 200))
-    offset = (pagina - 1) * por_pagina
-
-    id_empresa = session.get("id_empresa")
-    documento = request.args.get("documento", "").strip()
-    id_categoria = request.args.get("id_categoria", "").strip()
-    razao_social = request.args.get("razao_social", "").strip()
-    status = request.args.get("status")
-
-    sql = """
-        SELECT f.id, f.documento, f.razao_social, f.cidade, f.uf,
-               cat.nome_categoria AS categoria_nome,
-               f.status
-        FROM tbl_hub_favorecido f
-        LEFT JOIN tbl_hub_categoria cat ON cat.id = f.id_categoria AND cat.id_empresa = f.id_empresa
-        WHERE f.id_empresa = %s
-    """
-    valores = [id_empresa]
-
-    if documento:
-        sql += " AND f.documento ILIKE %s"
-        valores.append(f"%{documento}%")
-
-    if id_categoria:
-        sql += " AND f.id_categoria::text = %s"
-        valores.append(id_categoria)
-
-    if razao_social:
-        sql += " AND f.razao_social ILIKE %s"
-        valores.append(f"%{razao_social}%")
-
-    if status != "":
-        sql += " AND f.status = %s"
-        valores.append(status == "true")
-
-    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
-    cursor.execute(sql_total, valores)
-    total_registros = cursor.fetchone()[0]
-    total_paginas = (total_registros + por_pagina - 1) // por_pagina
-
-    sql += " ORDER BY f.razao_social ASC LIMIT %s OFFSET %s"
-    valores.extend([por_pagina, offset])
-
-    cursor.execute(sql, valores)
-    colunas = [desc[0] for desc in cursor.description]
-    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
-    conn.close()
-
-    return jsonify({
-        "dados": registros,
-        "total_paginas": total_paginas
-    })
-
-
-@auth_bp.route("/favorecido/incluir")
-@login_obrigatorio
-def favorecido_incluir():
-    return render_template("frm_hub_favorecido_apoio.html")
-
-
-@auth_bp.route("/favorecido/editar")
-@login_obrigatorio
-def favorecido_editar():
-    return render_template("frm_hub_favorecido_apoio.html")
-
-
-
-@auth_bp.route("/favorecido/salvar", methods=["POST"])
-@login_obrigatorio
-def salvar_favorecido():
-    def tratar_data(valor):
-        return valor if valor else None
-
-    def tratar_valor(valor):
-        return valor if valor not in ("", None) else None
-
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.json
-    id_empresa = session.get("id_empresa")
-
-    try:
-        print("📦 Dados recebidos para salvar favorecido:", dados)
-
-        if dados.get("id"):  # UPDATE
-            cursor.execute("""
-                UPDATE tbl_hub_favorecido
-                SET tipo = %s, documento = %s, razao_social = %s, nome = %s, email = %s, telefone = %s,
-                    inscricao_estadual = %s, inscricao_municipal = %s, cep = %s, logradouro = %s,
-                    numero = %s, complemento = %s, bairro = %s, cidade = %s, uf = %s,
-                    data_abertura = %s, natureza_juridica = %s, cnae_principal = %s, cnaes_secundarios = %s,
-                    situacao_cadastral = %s, data_situacao = %s, observacoes = %s, id_categoria = %s, status = %s
-                WHERE id = %s AND id_empresa = %s
-            """, (
-                dados.get("tipo"),
-                dados.get("documento"),
-                dados.get("razao_social"),
-                dados.get("nome"),
-                dados.get("email"),
-                dados.get("telefone"),
-                dados.get("inscricao_estadual"),
-                dados.get("inscricao_municipal"),
-                dados.get("cep"),
-                dados.get("logradouro"),
-                dados.get("numero"),
-                dados.get("complemento"),
-                dados.get("bairro"),
-                dados.get("cidade"),
-                dados.get("uf"),
-                tratar_data(dados.get("data_abertura")),
-                dados.get("natureza_juridica"),
-                dados.get("cnae_principal"),
-                dados.get("cnaes_secundarios"),
-                dados.get("situacao_cadastral"),
-                tratar_data(dados.get("data_situacao")),
-                dados.get("observacoes"),
-                tratar_valor(dados.get("id_categoria")),
-                tratar_valor(dados.get("status")),
-                dados.get("id"),
-                id_empresa
-            ))
-
-        else:  # INSERT
-            cursor.execute("""
-                INSERT INTO tbl_hub_favorecido (
-                    id_empresa, tipo, documento, razao_social, nome, email, telefone,
-                    inscricao_estadual, inscricao_municipal, cep, logradouro, numero, complemento,
-                    bairro, cidade, uf, data_abertura, natureza_juridica, cnae_principal,
-                    cnaes_secundarios, situacao_cadastral, data_situacao, observacoes, id_categoria, status
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                id_empresa,
-                dados.get("tipo"),
-                dados.get("documento"),
-                dados.get("razao_social"),
-                dados.get("nome"),
-                dados.get("email"),
-                dados.get("telefone"),
-                dados.get("inscricao_estadual"),
-                dados.get("inscricao_municipal"),
-                dados.get("cep"),
-                dados.get("logradouro"),
-                dados.get("numero"),
-                dados.get("complemento"),
-                dados.get("bairro"),
-                dados.get("cidade"),
-                dados.get("uf"),
-                tratar_data(dados.get("data_abertura")),
-                dados.get("natureza_juridica"),
-                dados.get("cnae_principal"),
-                dados.get("cnaes_secundarios"),
-                dados.get("situacao_cadastral"),
-                tratar_data(dados.get("data_situacao")),
-                dados.get("observacoes"),
-                tratar_valor(dados.get("id_categoria")),
-                tratar_valor(dados.get("status"))
-            ))
-
-
-        conn.commit()
-        return jsonify({"sucesso": True, "mensagem": "Favorecido salvo com sucesso!"})
-
-    except Exception as e:
-        conn.rollback()
-        print("❌ Erro ao salvar favorecido:", str(e))
-        return jsonify({"sucesso": False, "mensagem": f"Erro ao salvar favorecido: {str(e)}"}), 500
-
-    finally:
-        cursor.close()
-        conn.close()
-
-
-
-
-@auth_bp.route("/favorecido/delete", methods=["POST"])
-@login_obrigatorio
-def favorecido_delete():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.json
-
-    try:
-        cursor.execute("""
-            DELETE FROM tbl_hub_favorecido
-            WHERE id = %s AND id_empresa = %s
-        """, (dados["id"], session.get("id_empresa")))
-        conn.commit()
-        return jsonify({"status": "sucesso", "mensagem": "Favorecido excluído com sucesso."})
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"erro": str(e)}), 500
-    finally:
-        conn.close()
-
-
-@auth_bp.route("/favorecido/apoio/<int:id>", methods=["GET"])
-@login_obrigatorio
-def apoio_favorecido(id):
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            SELECT 
-                f.id,
-                f.tipo,
-                f.nome,
-                f.razao_social,
-                f.documento,
-                f.inscricao_estadual,
-                f.inscricao_municipal,
-                f.email,
-                f.telefone,
-                f.cep,
-                f.logradouro,
-                f.numero,
-                f.complemento,
-                f.bairro,
-                f.cidade,
-                f.uf,
-                f.data_abertura,
-                f.natureza_juridica,
-                f.cnae_principal,
-                f.cnaes_secundarios,
-                f.situacao_cadastral,
-                f.data_situacao,
-                f.observacoes,
-                f.id_empresa,
-                f.status,
-                f.id_categoria,
-                cat.nome_categoria -- ✅ sem vírgula aqui!
-            FROM tbl_hub_favorecido f
-            LEFT JOIN tbl_hub_categoria cat ON cat.id = f.id_categoria AND cat.id_empresa = f.id_empresa
-            WHERE f.id = %s AND f.id_empresa = %s
-        """, (id, session.get("id_empresa")))
-
-        dados = cursor.fetchone()
-        if not dados:
-            return jsonify({"erro": "Favorecido não encontrado."}), 404
-
-        colunas = [desc[0] for desc in cursor.description]
-        return jsonify(dict(zip(colunas, dados)))
-
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-    finally:
-        conn.close()
-
-
-
-
-# ────────────────────────────────────────────────
-# Rotas para Livro Diário em HUB
-# ────────────────────────────────────────────────
-@auth_bp.route("/livro_diario/dados")
-@login_obrigatorio
-def livro_diario_dados():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-
-    pagina = int(request.args.get("pagina", 1))
-    por_pagina = int(request.args.get("porPagina", 20))
-    offset = (pagina - 1) * por_pagina
-
-    id_empresa = session.get("id_empresa")
-    nome = request.args.get("nome", "").strip()
-    tipo = request.args.get("tipo_conta", "").strip()
-    status = request.args.get("status")
-
-    sql = """
-        SELECT ld.*, pc.descricao AS desc_conta_contabil
-        FROM tbl_hub_livro_diario ld
-        LEFT JOIN tbl_hub_plano_contas pc ON pc.id = ld.id_conta_contabil
-        WHERE ld.id_empresa = %s
-    """
-    valores = [id_empresa]
-
-    if nome:
-        sql += " AND ld.nome_exibicao ILIKE %s"
-        valores.append(f"%{nome}%")
-
-    if tipo:
-        sql += " AND ld.tipo_conta = %s"
-        valores.append(tipo)
-
-    if status != "":
-        sql += " AND ld.status = %s"
-        valores.append(status == "true")
-
-    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
-    cursor.execute(sql_total, valores)
-    total_registros = cursor.fetchone()[0]
-    total_paginas = (total_registros + por_pagina - 1) // por_pagina
-
-    sql += " ORDER BY ld.id LIMIT %s OFFSET %s"
-    valores.extend([por_pagina, offset])
-
-    cursor.execute(sql, valores)
-    colunas = [desc[0] for desc in cursor.description]
-    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
-    conn.close()
-
-    return jsonify({
-        "dados": registros,
-        "total_paginas": total_paginas
-    })
-
-
-@auth_bp.route("/livro_diario/incluir")
-@login_obrigatorio
-def livro_diario_incluir():
-    return render_template("frm_hub_livro_diario_apoio.html")
-
-
-@auth_bp.route("/livro_diario/editar")
-@login_obrigatorio
-def livro_diario_editar():
-    return render_template("frm_hub_livro_diario_apoio.html")
-
-
-@auth_bp.route("/livro_diario/salvar", methods=["POST"])
-@login_obrigatorio
-def livro_diario_salvar():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.json
-    id_empresa = session.get("id_empresa")
-
-    try:
-        if dados.get("id"):
-            cursor.execute("""
-                UPDATE tbl_hub_livro_diario SET
-                    nome_exibicao = %s, tipo_conta = %s, status = %s, id_conta_contabil = %s,
-                    banco_codigo = %s, agencia_numero = %s, agencia_dv = %s,
-                    conta_numero = %s, conta_dv = %s,
-                    tipo_plano = %s, bandeira_cartao = %s,
-                    possui_integracao = %s, token_integracao = %s, webhook_url = %s
-                WHERE id = %s AND id_empresa = %s
-            """, (
-                dados["nome_exibicao"], dados["tipo_conta"], dados["status"], dados["id_conta_contabil"],
-                dados["banco_codigo"], dados["agencia_numero"], dados["agencia_dv"],
-                dados["conta_numero"], dados["conta_dv"],
-                dados["tipo_plano"], dados["bandeira_cartao"],
-                dados["possui_integracao"], dados["token_integracao"], dados["webhook_url"],
-                dados["id"], id_empresa
-            ))
-        else:
-            cursor.execute("""
-                INSERT INTO tbl_hub_livro_diario (
-                    id_empresa, nome_exibicao, tipo_conta, status, id_conta_contabil,
-                    banco_codigo, agencia_numero, agencia_dv,
-                    conta_numero, conta_dv,
-                    tipo_plano, bandeira_cartao,
-                    possui_integracao, token_integracao, webhook_url
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                id_empresa, dados["nome_exibicao"], dados["tipo_conta"], dados["status"], dados["id_conta_contabil"],
-                dados["banco_codigo"], dados["agencia_numero"], dados["agencia_dv"],
-                dados["conta_numero"], dados["conta_dv"],
-                dados["tipo_plano"], dados["bandeira_cartao"],
-                dados["possui_integracao"], dados["token_integracao"], dados["webhook_url"]
-            ))
-
-        conn.commit()
-        return jsonify({"mensagem": "Conta salva com sucesso!"})
-
-    except Exception as e:
-        conn.rollback()
-        return jsonify({"erro": str(e)}), 500
-
-    finally:
-        conn.close()
-
-
-
-@auth_bp.route("/livro_diario/apoio/<int:id>")
-@login_obrigatorio
-def apoio_livro_diario(id):
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            SELECT ld.*, pc.descricao AS desc_conta_contabil, pc.codigo AS codigo_conta_contabil
-            FROM tbl_hub_livro_diario ld
-            LEFT JOIN tbl_hub_plano_contas pc ON pc.id = ld.id_conta_contabil AND pc.id_empresa = ld.id_empresa
-            WHERE ld.id = %s AND ld.id_empresa = %s
-        """, (id, session.get("id_empresa")))
-
-        dados = cursor.fetchone()
-        if not dados:
-            return jsonify({"erro": "Conta não encontrada."}), 404
-
-        colunas = [desc[0] for desc in cursor.description]
-        return jsonify(dict(zip(colunas, dados)))
-
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-    finally:
-        conn.close()
-
-
-@auth_bp.route("/livro_diario/delete", methods=["POST"])
-@login_obrigatorio
-def livro_diario_delete():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-    dados = request.json
-    try:
-        cursor.execute("DELETE FROM tbl_hub_livro_diario WHERE id = %s AND id_empresa = %s", (dados["id"], session.get("id_empresa")))
-        conn.commit()
-        return jsonify({"status": "sucesso", "mensagem": "Conta excluída com sucesso."})
-    except Exception as e:
-        return jsonify({"erro": str(e)}), 500
-    finally:
-        conn.close()

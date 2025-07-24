@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Permissões de Módulo</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_modulo_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Permissões de Acesso</h1>
+    </div>
+    <div class="Cl_MenuID">
+      <label>ID Grupo:</label>
+      <input type="text" id="id_usuario_grupo" disabled>
+    </div>
+  </div>
+
+  <div class="Cl_ContainerApoio">
+    <div id="infoGrupo"></div>
+    <form id="formPermissoes" class="form-grade">
+      <div id="listaPermissoes">
+        <!-- Lista de menus/submenus com checkbox -->
+      </div>
+    </form>
+  </div>
+
+  <div class="Cl_BotoesApoio">
+    <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+    <button id="ob_btnFechar" class="Cl_BtnFechar" onclick="GlobalUtils.fecharJanelaApoio(window.__nivelModal__)">Fechar</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='script/Susuario_modulo_apoio.js') }}"></script>
+</body>
+</html>

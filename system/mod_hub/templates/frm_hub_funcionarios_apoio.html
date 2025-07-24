@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro de Funcionário</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_funcionarios_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="Cl_Header">
+  <div class="Cl_Logo">
+    <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+  </div>
+  <div class="Cl_Titulo">
+    <h1>Funcionário</h1>
+  </div>
+  <div class="Cl_MenuID">
+    <label for="id">ID:</label>
+    <input type="text" id="id" disabled>
+  </div>
+</div>
+
+<div class="Cl_ContainerApoio">
+  <form id="formFuncionario" class="form-grade">
+
+    <!-- Linha 1 -->
+    <div class="form-linha01">
+      <div class="form-campo">
+        <label for="documento">CPF:</label>
+        <input type="text" id="documento" required />
+      </div>
+
+      <div class="form-campo">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" required />
+      </div>
+    
+      <div class="form-campo">
+        <label for="status">Status:</label>
+        <label class="switch">
+          <input type="checkbox" id="status">
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Linha 2 -->
+    <div class="form-linha02">
+      <div class="form-campo">
+        <label for="departamento">Departamento:</label>
+        <select id="departamento">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+
+
+      <div class="form-campo">
+        <label for="funcao">Função:</label>
+        <input type="text" id="funcao" />
+      </div>
+    </div>
+
+    <!-- Linha 3 -->
+    <div class="form-linha03">
+      <div class="form-campo">
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" />
+      </div>
+
+      <div class="form-campo">
+        <label for="telefone">WhatsApp:</label>
+        <input type="text" id="telefone" />
+      </div>
+    </div>
+
+    <!-- Linha 4 -->
+    <div class="form-linha04">
+      <div class="form-campo">
+        <label for="data_abertura">Data de Nascimento:</label>
+        <input type="date" id="data_abertura" />
+      </div>
+
+      <div class="form-campo">
+        <label for="data_situacao">Data de Admissão:</label>
+        <input type="date" id="data_situacao" />
+      </div>
+
+      <div class="form-campo">
+        <label for="cep">CEP:</label>
+        <input type="text" id="cep" />
+      </div>
+
+      <div class="form-campo">
+        <label>&nbsp;</label>
+        <button type="button" id="btnBuscarCEP">Buscar CEP</button>
+      </div>
+    </div>
+
+    <!-- Linha 6 -->
+    <div class="form-linha05">
+      <div class="form-campo">
+        <label for="logradouro">Logradouro:</label>
+        <input type="text" id="logradouro" />
+      </div>
+
+      <div class="form-campo">
+        <label for="numero">Número:</label>
+        <input type="text" id="numero" />
+      </div>
+    </div>
+
+    <div class="form-linha06">
+      <div class="form-campo">
+        <label for="complemento">Complemento:</label>
+        <input type="text" id="complemento" />
+      </div>
+
+      <div class="form-campo">
+        <label for="bairro">Bairro:</label>
+        <input type="text" id="bairro" />
+      </div>
+    </div>
+    
+      <!-- Linha 7 -->
+    <div class="form-linha07">
+      <div class="form-campo">
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" />
+      </div>
+
+      <div class="form-campo">
+        <label for="uf">UF:</label>
+        <input type="text" id="uf" maxlength="2" />
+      </div>
+    </div>
+
+    <!-- Linha 8 -->
+    <div class="form-linha08">
+      <div class="form-campo">
+        <label for="observacoes">Observações:</label>
+        <textarea id="observacoes" rows="3"></textarea>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<div class="Cl_BotoesGeral">
+  <div class="Cl_BotoesApoio">
+    <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+    <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="GlobalUtils.fecharJanelaApoio()">Cancelar</button>
+    <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+<script src="{{ url_for('mod_hub.static', filename='script/Shub_funcionarios_apoio.js') }}"></script>
+</body>
+</html>

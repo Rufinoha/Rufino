@@ -1,0 +1,58 @@
+<!-- frm_reembolso_dash.html -->
+<link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Creembolso_dash.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+<div class="container-reembolso">
+  <h2>Reembolso</h2>
+
+
+  <div class="cards-resumo">
+  <div class="card card-resumo">
+    <div class="icone">
+      <i class="fas fa-wallet"></i>
+    </div>
+    <div class="texto">
+      <p class="titulo">Total no mês</p>
+      <p class="valor resumo-total">R$ 42.400,00</p>
+    </div>
+  </div>
+  <div class="card card-resumo">
+    <div class="icone">
+      <i class="fas fa-exclamation-circle"></i>
+    </div>
+    <div class="texto">
+      <p class="titulo">Pendentes</p>
+      <p class="valor resumo-pendentes">5 retornadas</p>
+    </div>
+  </div>
+  <div class="card card-resumo">
+    <div class="icone">
+      <i class="fas fa-cash-register"></i>
+    </div>
+    <div class="texto">
+      <p class="titulo">Caixinha</p>
+      <p class="valor resumo-caixinha">R$ 800,00</p>
+    </div>
+  </div>
+</div>
+
+
+<div class="grafico-area">
+  <h3>Distribuição por categoria</h3>
+  <canvas id="grafico-reembolso" width="400" height="180"></canvas>
+</div>
+
+
+
+<div class="atalhos">
+  <div class="card-atalho" data-link data-page="mod_reembolso/reem_lancamentos">Lançamentos</div>
+  <div class="card-atalho" data-link data-page="mod_reembolso/reem_aprovacoes">Aprovações</div>
+  <div class="card-atalho" data-link data-page="mod_reembolso/reem_adiantamentos">Adiantamentos</div>
+  <div class="card-atalho" data-link data-page="mod_reembolso/reem_caixinha">Caixinha</div>
+  <div class="card-atalho" data-link data-page="mod_reembolso/reem_auditoria">Auditoria</div>
+  <div class="card-atalho" data-link data-page="mod_reembolso/reem_relatorios">Relatórios</div>
+</div>
+
+
+
+

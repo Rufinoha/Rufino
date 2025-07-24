@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Plano de Contas</title>
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_plano_contas.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+</head>
+<body>
+  <main>
+    <div class="container">
+        <section class="filtro">
+          <label for="tipoConta">Tipo de Conta:</label>
+          <select id="tipoConta">
+              <option value="Ativo" selected>Ativo</option>
+              <option value="Passivo">Passivo</option>
+              <option value="Resultado">Resultado</option>
+          </select>
+          <button id="btnBuscar">Buscar</button>
+          <button id="btnCriarPlanoPadrao" style="display: none;">Criar Plano Padrão</button>
+          
+          
+          <div class="titulo-container" onclick="GlobalUtils.carregarPagina('mod_hub/hub')" title="Voltar ao HUB">
+            <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">
+          </div>
+
+        </section>
+
+
+        <section id="arvorePlanoContas" class="arvore"> </section>
+    </div>
+  </main>
+</body>
+</html>

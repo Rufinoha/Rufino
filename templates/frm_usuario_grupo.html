@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grupos de Acesso</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_grupo.css') }}">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+  <div class="titulo-container">
+    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('configuracoes')">
+      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para Configurações
+    </button>
+  </div>
+
+  <div class="Cl_ConfigContainer">
+    <h2>Grupos de Acesso</h2>
+
+    <div class="Cl_Filtros">
+      <label class="Cl_labelfiltro" for="ob_filtroNome">Nome do Grupo:</label>
+      <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome">
+
+      <label class="Cl_labelfiltro" for="ob_filtroAprovador">Aprovador?</label>
+      <select class="Cl_CamposFiltros" id="ob_filtroAprovador">
+        <option value="">Todos</option>
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+      </select>
+
+      <div>
+        <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+        <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar</button>
+      </div>
+    </div>
+
+    <div class="Cl_botaoIncluir">
+      <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Grupo</button>
+    </div>
+
+    <div class="Cl_TabelaMenu" id="content-area-Grupos">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Aprovador</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="ob_listaGrupos">
+          <tr class="Cl_Carregando">
+            <td colspan="5">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="Cl_Paginacao">
+      <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+      <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+      <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+      <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+      <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='script/Susuario_grupo.js') }}"></script>
+</body>
+
+</html>

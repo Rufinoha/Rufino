@@ -51,6 +51,7 @@ body {
 
 .Cl_usuarioID {
     font-weight: bold;
+    text-align: right;
 }
 
 .Cl_Formulario {
@@ -91,7 +92,10 @@ body {
     flex: 1;
 }
 
-
+.Cl_id {
+    width: 50%;
+    text-align: center;
+}
 /* ========================== BOTÕES ========================== */
 .Cl_Botoes {
     display: flex;

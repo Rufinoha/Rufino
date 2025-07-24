@@ -1,0 +1,239 @@
+/* ========================================================================= */
+/* CSS: GRUPOS DE ACESSO                                                    */
+/* ========================================================================= */
+
+/* ========================== FONTES PERSONALIZADAS ========================= */
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ========================== BASE DO SISTEMA ========================== */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arboria', 'Segoe UI', sans-serif;
+  background-color: #FFFCFB;
+}
+
+/* ========================== CONTAINER PRINCIPAL ========================== */
+.Cl_ConfigContainer {
+  margin: 0 auto;
+  padding: 10px;
+  max-width: 1200px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  margin: 0;
+  color: #000;
+  text-align: right;
+}
+
+/* ========================== FILTROS ========================== */
+.Cl_Filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+}
+
+.Cl_labelfiltro {
+  font-weight: bold;
+}
+
+.Cl_CamposFiltros {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 160px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+/* ========================== BOTÕES PADRÃO ========================== */
+.Cl_botaoFiltro,
+.Cl_BtnIncluir {
+  background-color: #85C300;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.Cl_botaoFiltro:hover,
+.Cl_BtnIncluir:hover {
+  background-color: #6FA700;
+  transform: scale(1.05);
+}
+
+.Cl_BtnIncluir{
+  margin-bottom: 10px;
+}
+
+/* ========================== TABELA ========================== */
+.Cl_TabelaMenu table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 90%;
+}
+
+.Cl_TabelaMenu th,
+.Cl_TabelaMenu td {
+  padding: 6px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.Cl_TabelaMenu th {
+  background-color: #85C300;
+  color: #fff;
+  font-weight: bold;
+}
+
+.Cl_TabelaMenu tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.Cl_TabelaMenu tbody tr:hover {
+  background-color: #efffe0;
+}
+
+/* ========================== LARGURAS DAS COLUNAS ========================== */
+#content-area-Grupos table td:nth-child(1),
+#content-area-Grupos table th:nth-child(1) {
+  width: 30px;
+  text-align: center;
+}
+
+#content-area-Grupos table td:nth-child(2),
+#content-area-Grupos table th:nth-child(2) {
+  width: 200px;
+  text-align: left;
+}
+
+#content-area-Grupos table td:nth-child(4),
+#content-area-Grupos table th:nth-child(4) {
+  width: 100px;
+  text-align: center;
+}
+
+#content-area-Grupos table td:nth-child(5),
+#content-area-Grupos table th:nth-child(5) {
+  width: 100px;
+  text-align: center;
+}
+
+/* ========================== AÇÕES NA TABELA ========================== */
+
+
+#content-area-Grupos table td:nth-child(5) {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.Cl_BtnAcao {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.Cl_BtnAcao i, .Cl_BtnAcao svg {
+  pointer-events: none; 
+
+}
+
+
+
+.Cl_BtnAcao:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+/* ========================== PAGINAÇÃO ========================== */
+.Cl_Paginacao {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.Cl_direcao {
+  background-color: #85C300;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.Cl_direcao:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* ========================== BOTÃO VOLTAR ========================== */
+.titulo-container {
+  margin: 0 auto;
+  padding: 0;
+  max-width: 1200px;
+  text-align: right;
+}
+
+.btn-voltar {
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease-in-out;
+  height: 40px;
+}
+
+.btn-voltar:hover {
+  background-color: #333;
+}
+
+.icon-voltar {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}

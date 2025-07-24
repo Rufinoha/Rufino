@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lançamento de Reembolso - Apoio</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Creem_lancamentos_apoio.css') }}">
+  <link rel="stylesheet" href="/static/style/global_style.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</head>
+<body>
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Lançamento de Reembolso</h1>
+    </div>
+    <div class="Cl_MenuID">
+      <label for="id">ID:</label>
+      <input type="text" id="id" disabled>
+    </div>
+  </div>
+
+  <div class="Cl_ContainerApoio">
+    <form id="formreembolso" class="form-grade">
+      <input type="hidden" id="id_empresa">
+      <input type="hidden" id="criado_por">
+      <input type="hidden" id="criado_em">
+
+      <div class="form-linha01">
+        <div class="form-campo">
+          <label for="descricao">Descrição:</label>
+          <input type="text" id="descricao" required />
+        </div>
+        <div class="form-campo">
+          <label for="data">Data:</label>
+          <input type="date" id="data" />
+        </div>
+
+        <div class="form-campo">
+          <label>Status:</label>
+          <span id="statusBadge" class="status-badge">-</span>
+        </div>
+
+      </div>
+
+      <div class="form-linha02">
+
+        <div class="form-campo">
+          <label for="id_adiantamento">Adiantamento:</label>
+          <select id="id_adiantamento">
+            <option value="">(Opcional)</option>
+          </select>
+        </div>
+        
+        <div class="form-campo">
+          <label for="obs">Observações:</label>
+          <textarea id="obs"></textarea>
+        </div>
+
+      </div>
+      
+    </form>
+    <div class="form-linha04">
+        <h3>notas do Reembolso</h3>
+      <div class="Cl_BotoesItens">
+        <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+        <button id="btnNovoNotas" class="Cl_BtnSalvar">Incluir Notas</button>
+        <button id="ob_btnImprimir" class="Cl_BtnSalvar">Imprimir</button>
+        <button id="ob_btnExcluir" class="Cl_BtnExcluir">Excluir</button>
+      </div>
+    </div>
+    <div class="Cl_TabelaItens contente-area-acao">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Razão Social</th>
+            <th>Forma Pgto</th>
+            <th>Valor</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="listaItens">
+          <tr><td colspan="8">Nenhum item incluído.</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="Cl_Totalreembolso">
+        <strong>Total:</strong> R$ <span id="valor_total">0,00</span>
+      </div>
+
+
+      <div class="form-linha03">
+
+      </div>
+
+
+
+    </div>
+  </div>
+
+
+
+  <div style="text-align:right; margin: 10px 40px; font-style: italic; font-size: 13px; color: #555;" id="rodapeAuditoria"></div>
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+  <script src="{{ url_for('static', filename='reembolso/script/Sreem_lancamentos_apoio.js') }}"></script>
+
+
+</body>
+</html>

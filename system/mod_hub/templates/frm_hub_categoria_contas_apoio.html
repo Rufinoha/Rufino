@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contas Vinculadas</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_categoria_contas_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="Cl_Header">
+  <div class="Cl_Logo">
+    <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+  </div>
+  <div class="Cl_Titulo">
+    <h1>Contas Vinculadas</h1>
+  </div>
+  <div class="Cl_MenuID">
+    <label for="id_categoria">ID Categoria:</label>
+    <input type="text" id="id_categoria" disabled>
+  </div>
+</div>
+
+<div class="Cl_ContainerApoio">
+  <form id="formConta" class="form-grade">
+
+    <div class="form-linha01">
+      <div class="form-campo">
+        <label for="onde_usa">Onde Usa:</label>
+        <select id="onde_usa">
+          <option value="" disabled selected>Selecione</option>
+          <option value="Financeiro">Financeiro</option>
+          <option value="Reembolso">Reembolso</option>
+        </select>
+      </div>
+
+      <div class="form-campo">
+        <label for="tipo_plano">Tipo Conta Contábil:</label>
+        <select id="tipo_plano">
+          <option value="Ativo">Ativo</option>
+          <option value="Passivo">Passivo</option>
+          <option value="Resultado">Resultado</option>
+        </select>
+      </div>
+
+      <div class="form-campo">
+        <label class="switch-label">
+          <span>Status:</span>
+          <label class="switch-toggle">
+            <input type="checkbox" id="status" checked />
+            <span class="slider"></span>
+          </label>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-linha02">
+      <div class="form-campo" style="flex: 1 1 100%;">
+        <label>Conta Contábil:</label>
+        <div class="combo-busca" id="combo_conta">
+          <input type="text" id="combo_display" placeholder="Selecione" readonly>
+          <span class="seta"></span>
+        </div>
+        <div class="combo-area" id="combo_area" style="display: none;">
+          <input type="text" id="conta_contabil_input" placeholder="Digite 3 ou mais caracteres" autocomplete="off">
+          <ul id="sugestoes_contas" class="autocomplete-lista"></ul>
+        </div>
+        <input type="hidden" id="id_conta_contabil">
+        <input type="hidden" id="id_conta_categoria">
+      </div>
+    </div>
+
+  </form>
+
+  <div class="Cl_BotoesApoio">
+    <button id="ob_btnSalvar" class="Cl_BtnSalvar">Incluir</button>
+    <button id="ob_btnLimpar" class="Cl_BtnCancelar">Limpar</button>
+  </div>
+
+  <div class="Cl_TabelaMenu" id="content-area-Categoria">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Onde Usa</th>
+          <th>Tipo Plano</th>
+          <th>Conta Contábil</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="ob_listaContas">
+        <tr><td colspan="6">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+<script src="{{ url_for('mod_hub.static', filename='script/Shub_categoria_contas_apoio.js') }}"></script>
+</body>
+</html>

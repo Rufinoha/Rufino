@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro de Conta Financeira</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_livro_diario_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Livro Diário</h1>
+    </div>
+    <div class="Cl_MenuID">
+      <label for="id">ID:</label>
+      <input type="text" id="id" disabled>
+    </div>
+  </div>
+
+  <div class="Cl_ContainerApoio">
+    <form id="formLivroDiario" class="form-grade">
+      <div class="form-linha01">
+        <div class="form-campo">
+          <label for="tipo_conta">Tipo de Conta:</label>
+          <select id="tipo_conta"></select>
+        </div>
+
+        <div class="form-campo">
+          <label for="nome_exibicao">Nome de Exibição:</label>
+          <input type="text" id="nome_exibicao" required />
+        </div>
+
+
+
+        <div class="form-campo">
+          <label for="status">Status:</label>
+          <select id="status">
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+        </div>
+      </div>
+
+      
+      <div class="form-linha03">
+        <div class="form-campo">
+          <label for="banco_codigo">Código Banco:</label>
+          <input type="text" id="banco_codigo" />
+        </div>
+
+        <!-- Agência -->
+        <div class="form-campo">
+          <label for="agencia_numero">Agência:</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="agencia_numero" placeholder="Número" />
+            <input type="text" id="agencia_dv" placeholder="Dígito" style="width: 60px;" />
+          </div>
+        </div>
+
+        <!-- Conta -->
+        <div class="form-campo">
+          <label for="conta_numero">Conta:</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="conta_numero" placeholder="Número" />
+            <input type="text" id="conta_dv" placeholder="Dígito" style="width: 60px;" />
+          </div>
+        </div>
+
+      </div>
+
+      <div class="form-linha02">
+
+        <div class="form-campo">
+          <label for="bandeira_cartao">Bandeira do Cartão:</label>
+          <select id="bandeira_cartao">
+            <option value="">Selecione</option>
+            <option value="Visa">Visa</option>
+            <option value="MasterCard">MasterCard</option>
+            <option value="Elo">Elo</option>
+            <option value="American Express">American Express</option>
+            <option value="Hipercard">Hipercard</option>
+            <option value="Cabal">Cabal</option>
+            <option value="Hiper">Hiper</option>
+            <option value="Sorocred">Sorocred</option>
+          </select>
+        </div>
+
+
+        <div class="form-campo">
+          <label for="tipo_plano">Tipo Conta Contábil:</label>
+          <select id="tipo_plano">
+            <option value="Ativo" selected>Ativo</option>
+            <option value="Passivo">Passivo</option>
+            <option value="Resultado">Resultado</option>
+          </select>
+        </div>
+
+        <div class="form-campo">
+          <label>Conta Contábil:</label>
+          <div class="combo-busca" id="combo_conta">
+            <input type="text" id="combo_display" placeholder="Selecione" readonly>
+            <span class="seta"></span>
+          </div>
+          <div class="combo-area" id="combo_area" style="display: none;">
+            <input type="text" id="conta_contabil_input" placeholder="Digite 3 ou mais caracteres" autocomplete="off">
+            <ul id="sugestoes_contas" class="autocomplete-lista"></ul>
+          </div>
+          <input type="hidden" id="id_conta_contabil">
+        </div>
+      </div>
+
+
+      
+
+      <div class="form-linha05">
+
+        <div class="form-campo">
+          <label for="possui_integracao">Possui Integração?</label>
+          <select id="possui_integracao">
+            <option value="false">Não</option>
+            <option value="true">Sim</option>
+          </select>
+        </div>
+
+        <div class="form-campo campos_integracao">
+          <label for="token_integracao">Token Integração:</label>
+          <input type="text" id="token_integracao" />
+        </div>
+
+        <div class="form-campo campos_integracao">
+          <label for="webhook_url">Webhook URL:</label>
+          <input type="text" id="webhook_url" />
+        </div>
+
+      </div>
+
+    </form>
+  </div>
+
+  <div class="Cl_BotoesApoio">
+    <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+    <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="window.close()">Cancelar</button>
+    <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+  <script src="{{ url_for('mod_hub.static', filename='script/Shub_livro_diario_apoio.js') }}"></script>
+</body>
+</html>

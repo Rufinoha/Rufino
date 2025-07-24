@@ -21,7 +21,7 @@
 </head>
 
 <body>
-  <!-- ✅ Menu Superior -->
+  <!--Menu Superior -->
   <header class="menu-superior">
     <div class="logo">
       <img src="/static/imge/logorufino.png" alt="Logo Rufino" />
@@ -51,7 +51,7 @@
     </div>
   </header>
 
-  <!-- ✅ Menu Lateral -->
+  <!-- Menu Lateral -->
   <aside id="menuLateral" class="retraido">
     <button id="btnPinMenu">
       <img id="iconePin" src="{{ url_for('static', filename='imge/pin_solto.png') }}" alt="PIN" />
@@ -64,29 +64,31 @@
   </aside>
 
 
-  <!-- ✅ Conteúdo Principal -->
+  <!-- Conteúdo Principal -->
   <main id="content-area" data-page="">
     <!-- Aqui será carregado dinamicamente via JS -->
   </main>
 
-  <!-- ✅ Painel de Novidades -->
+  <!-- Painel de Novidades -->
   <section id="painelNovidades" class="painel-flutuante">
     <div class="cabecalho-novidades">
-      <span>🆕 Novidades</span>
+      <span>Novidades</span>
       <button onclick="fecharPainelNovidades()">✖️</button>
     </div>
 
-    <div class="abas-novidades">
-      <button class="aba-novidades ativa" onclick="trocarAbaNovidades('novas')" id="aba-novas">Novas</button>
-      <button class="aba-novidades" onclick="trocarAbaNovidades('lidas')" id="aba-lidas">Lidas</button>
-    </div>
+    <div id="painelNovidadesConteudo">
+      <div id="btnMarcarComoLido" style="display:none; text-align:right; margin:10px 15px; text-decoration: underline;">
+        <a href="#" onclick="marcarTodasComoLidas()">Marcar todas como lidas</a>
+      </div>
 
-    <div id="listaNovidadesNovas" class="corpo-novidades"></div>
-    <div id="listaNovidadesLidas" class="corpo-novidades" style="display: none;"></div>
+
+      <div id="listaTodasNovidades" class="corpo-novidades"></div>
+    </div>
   </section>
 
 
-  <!-- ✅ Rodapé -->
+
+  <!-- Rodapé -->
   <footer class="rodape">
     © 2025 <strong>Rufino Tech</strong> – Todos os direitos reservados.
   </footer>
@@ -99,6 +101,15 @@
       if (window.lucide) lucide.createIcons();
     });
   </script>
+  <div id="backdrop-modal" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 9998;
+    display: none;
+  "></div>
 
 </body>
 </html>

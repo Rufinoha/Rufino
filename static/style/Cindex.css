@@ -330,6 +330,17 @@ button {
   text-decoration: underline;
 }
 
+.card-novidade.nao-lida {
+  font-weight: bold;
+  background-color: #f9fff3;
+  border-left: 4px solid #85C300;
+}
+
+.card-novidade .descricao {
+  margin: 5px 0;
+}
+
+
 /* ------------------------------------------------------------ */
 /* ✅ RODAPÉ                                                    */
 /* ------------------------------------------------------------ */

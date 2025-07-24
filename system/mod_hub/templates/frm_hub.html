@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>HUB - Central Contábil</title>
+    <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div class="hub-dashboard">
+    <h1>HUB - Central Contábil</h1>
+
+    <!-- Indicadores principais -->
+    <div class="hub-kpis">
+        <div class="kpi-card">
+            <span class="kpi-label">Contas Contábeis</span>
+            <strong class="kpi-value">154</strong>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Categorias</span>
+            <strong class="kpi-value">23</strong>
+        </div>
+        <div class="kpi-card">
+            <span class="kpi-label">Favorecidos</span>
+            <strong class="kpi-value">12</strong>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="hub-grafico-grid">
+        <div class="grafico-box">
+            <canvas id="graficoPizza"></canvas>
+        </div>
+        <div class="grafico-box">
+            <canvas id="graficoLinha"></canvas>
+        </div>
+        <div class="grafico-box">
+            <canvas id="graficoBarra"></canvas>
+        </div>
+    </div>
+
+    <!-- Acessos principais -->
+    <div class="hub-cards">
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_plano_contas')">
+            <span class="icon"><i data-lucide="file-text" class="icon-tech"></i></span>
+            Plano de Contas
+        </div>
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_categoria')">
+            <span class="icon"><i data-lucide="list" class="icon-tech"></i></span>
+            Categorias
+        </div>
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_favorecido')">
+            <span class="icon"><i data-lucide="users" class="icon-tech"></i></span>
+            Favorecidos
+        </div>
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_livro_diario')">
+            <span class="icon"><i data-lucide="banknote" class="icon-tech"></i></span>
+            Livro Diário
+        </div>
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_funcionarios')">
+            <span class="icon"><i data-lucide="user" class="icon-tech"></i></span>
+            Funcionários
+        </div>
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_projetos')">
+            <span class="icon"><i data-lucide="layout-dashboard" class="icon-tech"></i></span>
+            Projetos
+        </div>
+        <div class="hub-card" onclick="GlobalUtils.carregarPagina('mod_hub/hub_departamentos')">
+            <span class="icon"><i data-lucide="building" class="icon-tech"></i></span>
+            Departamentos
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+</body>
+</html>

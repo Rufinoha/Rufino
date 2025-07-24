@@ -1,0 +1,205 @@
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+}
+
+.Cl_ConfigContainer {
+    margin: 0px auto;
+    padding: 10px;
+    max-width: 1200px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    margin: 0;
+    color: #000;
+    text-align: right;
+}
+
+.Cl_Filtros {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+}
+
+.Cl_labelfiltro {
+    font-weight: bold;
+}
+
+.Cl_CamposFiltros {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 160px;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.Cl_botaoFiltro, .Cl_BtnIncluir {
+    background-color: #85C300;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.Cl_botaoFiltro:hover, .Cl_BtnIncluir:hover {
+    background-color: #6FA700;
+    transform: scale(1.05);
+}
+
+.Cl_botaoIncluir {
+    margin-bottom: 10px;
+}
+
+.Cl_TabelaMenu table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 90%;
+}
+
+.Cl_TabelaMenu th, .Cl_TabelaMenu td {
+    padding: 6px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.Cl_TabelaMenu th {
+    background-color: #85C300;
+    color: #fff;
+    font-weight: bold;
+}
+
+.Cl_TabelaMenu tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.Cl_TabelaMenu tbody tr:hover {
+    background-color: #efffe0;
+}
+
+#ob_listaFuncionarios td:nth-child(1),
+#ob_listaFuncionarios th:nth-child(1) { width: 50px; text-align: center; }
+
+
+#ob_listaFuncionarios td:nth-child(9),
+#ob_listaFuncionarios th:nth-child(9) { width: 70px; text-align: center; }
+
+
+
+.Cl_BtnAcao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 3px;
+    padding: 8px; /* aumentei a área de clique */
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.Cl_BtnAcao:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.Cl_Paginacao {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.Cl_direcao {
+    background-color: #85C300;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.Cl_direcao:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* ========================== BOTAO VOLTAR ========================== */
+.btn-voltar {
+  margin-bottom: 20px;
+  padding: 6px 14px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-voltar:hover {
+  background-color: #333;
+}
+
+.titulo-container {
+  margin: 0px auto;
+  padding: 0px;
+  max-width: 1200px;
+  background-color: transparent;
+  border-radius: 8px;
+  text-align: right;
+}
+
+
+.btn-voltar {
+  height: 40px;
+  padding: 10;
+
+}
+
+.icon-voltar {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+}

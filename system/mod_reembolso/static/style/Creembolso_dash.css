@@ -1,0 +1,188 @@
+/* ========================== FONTES PERSONALIZADAS ========================== */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+/* ========================== CONFIGURAÇÕES GERAIS ========================== */
+body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+}
+
+.container-reembolso {
+  padding: 24px;
+  font-family: 'Segoe UI', sans-serif;
+  background: #FFFCFB;
+  color: #333333;
+}
+
+.submenu-reembolso {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #6FA700;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+/* === Cards do topo === */
+.cards-resumo {
+  display: flex;
+  gap: 20px;
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1 1 280px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  min-height: 100px;
+}
+
+.card .titulo {
+  font-size: 14px;
+  color: #999;
+}
+
+.card .valor {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 8px;
+  color: #333;
+}
+
+/* === Bloco de gestão === */
+.gestao-bloco {
+  margin-top: 32px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+/* === Gráfico placeholder === */
+.grafico-placeholder {
+  margin: 32px 0;
+  height: 200px;
+  background: #f4f4f4;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+/* === Botões como cards === */
+
+
+.atalhos {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.card-atalho {
+  background: #fff;
+  color: #333;
+  border-radius: 12px;
+  padding: 24px 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+}
+
+.card-atalho:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  border-color: #85C300;
+}
+
+
+.card-resumo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: 0.3s ease;
+}
+
+.card-resumo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.card-resumo .icone {
+  font-size: 28px;
+  color: #85C300;
+  min-width: 32px;
+}
+
+.card-resumo .texto {
+  flex: 1;
+}
+
+.card-resumo .titulo {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.card-resumo .valor {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+
+.grafico-area {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  margin-top: 32px;
+}
+
+.grafico-area h3 {
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: #333;
+}
+
+#grafico-reembolso {
+  max-width: 100%;
+  height: 200px !important;
+}

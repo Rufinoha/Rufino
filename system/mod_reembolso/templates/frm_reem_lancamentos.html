@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lançamentos de Reembolso</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Creem_lancamentos.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="titulo-container">
+    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('reembolso_inicio')">
+      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para HUB
+    </button>
+  </div>
+  <div class="Cl_ConfigContainer">
+    <h2>Reembolso Lançados</h2>
+
+    <div class="Cl_Filtros">
+      <label class="Cl_labelfiltro" for="filtroDescricao">Descrição:</label>
+      <input class="Cl_CamposFiltros" type="text" id="filtroDescricao" placeholder="Filtrar por descrição">
+
+      <label class="Cl_labelfiltro" for="filtroData">Data:</label>
+      <input class="Cl_CamposFiltros" type="date" id="filtroData">
+
+      <label class="Cl_labelfiltro" for="filtroStatus">Status:</label>
+      <!-- Campo original oculto -->
+      <select id="filtroStatus" multiple style="display:none">
+        <option value="Aberto" selected>Aberto</option>
+        <option value="Retornado" selected>Retornado</option>
+        <option value="Rejeitado">Rejeitado</option>
+        <option value="Aprovado">Aprovado</option>
+        <option value="Finalizado">Finalizado</option>
+      </select>
+
+
+      <!-- Novo componente visual -->
+      <div class="combo-custom" id="statusWrapper">
+        <input type="text" id="comboStatusDisplay" placeholder="Status" readonly />
+        <div id="statusDropdown" class="dropdown-options" style="display:none">
+          <label><input type="checkbox" value="Aberto" checked> <span>Aberto</span></label>
+          <label><input type="checkbox" value="Retornado" checked> <span>Retornado</span></label>
+          <label><input type="checkbox" value="Rejeitado"> <span>Rejeitado</span></label>
+          <label><input type="checkbox" value="Aprovado"> <span>Aprovado</span></label>
+          <label><input type="checkbox" value="Finalizado"> <span>Finalizado</span></label>
+
+          <hr>
+          <button type="button" id="btnStatusOK">OK</button>
+          <button type="button" id="btnStatusnoOK">Cancelar</button>
+        </div>
+
+      </div>
+
+      <div id="filtroMinhasreembolsoArea" style="display: none">
+        <label class="Cl_labelfiltro" for="filtroMinhasreembolso">
+          <input type="checkbox" id="filtroMinhasreembolso" checked>
+          Mostrar somente minhas reembolso
+        </label>
+      </div>
+
+      <div>
+        <button class="Cl_botaoFiltro" id="btnFiltrar">Filtrar</button>
+        <button class="Cl_botaoFiltro" id="btnLimparFiltro">Limpar</button>
+      </div>
+    </div>
+    
+    <div class="Cl_botaoIncluir">
+      <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Reembolso</button>
+    </div>
+
+    <div class="Cl_TabelaMenu" id="content-area-reembolso">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Valor Total</th>
+            <th>Status</th>
+            <th>Notas</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="listareembolso">
+          <tr class="Cl_Carregando">
+            <td colspan="7">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="Cl_Paginacao">
+      <button class="Cl_direcao" id="btnPrimeiro" disabled>Primeiro</button>
+      <button class="Cl_direcao" id="btnAnterior" disabled>Anterior</button>
+      <span>Página <span id="paginaAtual">1</span> de <span id="totalPaginas">1</span></span>
+      <button class="Cl_direcao" id="btnProximo" disabled>Próximo</button>
+      <button class="Cl_direcao" id="btnUltimo" disabled>Último</button>
+    </div>
+  </div>
+</body>
+
+</html>

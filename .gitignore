@@ -1,41 +1,61 @@
+# ==========================================
+# 📦 ARQUIVOS A SEREM IGNORADOS NO PROJETO
+# ==========================================
+
 # 🔒 Segurança: nunca subir variáveis sensíveis
 .env
-+*.env         
+*.env         
 
 # 🧠 Python: arquivos compilados e cache
 __pycache__/
-__doc/
 *.py[cod]
 *.pyo
 
-# 📦 Pacotes Python (se usados)
+# 📁 Documentação e arquivos locais
+__doc/
+__doc/**
+
+# 📦 Pacotes Python e builds
 *.egg-info/
 dist/
 build/
 
-
-# 🧪 Testes temporários
+# 🧪 Testes temporários e logs
 *.log
 *.bak
 *.tmp
-+logs/         
+logs/
 
-# 🔄 Arquivos do VS Code e outros IDEs
+# 💾 Bancos locais
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+
+# 🛠️ IDEs e configurações locais
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
 
-# 📂 Arquivos do sistema
+# 📂 Arquivos do sistema operacional
 .DS_Store
 Thumbs.db
 
-# 🔐 Sessões Flask
+# 🔐 Sessões e pastas geradas em runtime
 flask_session/
 
-# 📝 Arquivos de documentação (se quiser ignorar)
-*.md
-+# *.md          
+# 📝 Arquivos Markdown (descomente se quiser ignorar .md)
+# *.md
 
-# diretorios que não podem ser sobescritos no VPS
-/static/imge/imguser/
+# 📁 Uploads e imagens que não devem ser versionados
+static/imge/imguser/
+
+# 🔍 Ignora qualquer pasta chamada uploadnf, em qualquer lugar do projeto
+**/uploadnf/**
+
+# 🗺️ Arquivos de mapa de front-end (caso use bundlers futuramente)
+*.map
+
+# 👷 Manter pastas vazias com .gitkeep se necessário
+!.gitkeep

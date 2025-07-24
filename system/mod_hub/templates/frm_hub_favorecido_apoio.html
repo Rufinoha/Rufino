@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro de Favorecido</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_favorecido_apoio.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="Cl_Header">
+    <div class="Cl_Logo">
+      <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
+    </div>
+    <div class="Cl_Titulo">
+      <h1>Cadastro de Favorecido</h1>
+    </div>
+    <div class="Cl_MenuID">
+        <label for="id">ID:</label>
+        <input type="text" id="id" disabled>
+    </div>
+  </div>
+
+  <div class="Cl_ContainerApoio">
+    <form id="formFavorecido" class="form-grade">
+
+      <input type="hidden" id="id_empresa" />
+
+
+
+       <!-- Linha 01 -->
+      <div class="form-linha01">
+        
+        <div class="form-campo">
+          <label for="tipo">Tipo:</label>
+          <select id="tipo">
+            <option value="J">Pessoa Jurídica</option>
+            <option value="F">Pessoa Física</option>
+          </select>
+        </div>
+
+        <div class="form-campo">
+          <label for="documento">Documento (CPF/CNPJ):</label>
+          <input type="text" id="documento" required />
+        </div>
+        
+        <div class="form-campo">
+          <label>&nbsp;</label>
+          <button type="button" id="btnBuscarCNPJ">Buscar CNPJ</button>
+        </div>
+      </div>
+      
+
+      <!-- Linha 02 -->
+      <div class="form-linha02">
+      
+        <div class="form-campo">
+          <label for="razao_social">Razão Social:</label>
+          <input type="text" id="razao_social" />
+        </div>  
+        <div class="form-campo">
+          <label for="nome">Nome amigavel:</label>
+          <input type="text" id="nome" required />
+        </div>
+
+      </div>
+
+
+
+      <!-- Linha 03 -->
+      <div class="form-linha03">
+        <div class="form-campo">
+          <label for="email">E-mail:</label>
+          <input type="email" id="email" />
+        </div>
+        <div class="form-campo">
+          <label for="telefone">Telefone:</label>
+          <input type="text" id="telefone" />
+        </div>
+        <div class="form-campo" data-tipo="pj">
+          <label for="inscricao_estadual">Inscrição Estadual:</label>
+          <input type="text" id="inscricao_estadual" />
+        </div>
+        <div class="form-campo" data-tipo="pj">
+          <label for="inscricao_municipal">Inscrição Municipal:</label>
+          <input type="text" id="inscricao_municipal" />
+        </div>
+
+      </div>
+
+
+      <!-- Linha 04 -->
+      <div class="form-linha04">
+        <div class="form-campo">
+          <label for="id_categoria">Categoria:</label>
+          <select id="id_categoria">
+            <option value="">Selecione</option>
+          </select>
+        </div>
+
+       
+        <div class="form-campo">
+          <label for="status">Status:</label>
+          <select id="status">
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+        </div>
+      </div>
+
+
+      <!-- Linha 05 -->
+      <div class="form-linha05">
+        <div class="form-campo">
+          <label for="cep">CEP:</label>
+          <input type="text" id="cep" />
+        </div>
+        <div class="form-campo">
+          <label>&nbsp;</label>
+          <button type="button" id="btnBuscarCEP">Buscar CEP</button>
+        </div>
+      </div>
+
+
+      <!-- Linha 06 -->
+      <div class="form-linha06">
+        <div class="form-campo">
+          <label for="logradouro">Logradouro:</label>
+          <input type="text" id="logradouro" />
+        </div>
+        <div class="form-campo">
+          <label for="numero">Número:</label>
+          <input type="text" id="numero" />
+        </div>
+      </div>
+
+      <!-- Linha 07 -->
+      <div class="form-linha07">
+        <div class="form-campo">
+          <label for="complemento">Complemento:</label>
+          <input type="text" id="complemento" />
+        </div>
+        <div class="form-campo">
+          <label for="bairro">Bairro:</label>
+          <input type="text" id="bairro" />
+        </div>
+        <div class="form-campo">
+          <label for="cidade">Cidade:</label>
+          <input type="text" id="cidade" />
+        </div>
+        <div class="form-campo">
+          <label for="uf">UF:</label>
+          <input type="text" id="uf" maxlength="2" />
+        </div>
+      </div>
+
+
+      <!-- Linha 08 -->
+      <div class="form-linha08">
+        <div class="form-campo" data-tipo="pj">
+          <label for="data_abertura">Data de Abertura:</label>
+          <input type="date" id="data_abertura" />
+        </div>
+        <div class="form-campo" data-tipo="pj">
+          <label for="natureza_juridica">Natureza Jurídica:</label>
+          <input type="text" id="natureza_juridica" />
+        </div>
+        <div class="form-campo" data-tipo="pj">
+          <label for="cnae_principal">CNAE Principal:</label>
+          <input type="text" id="cnae_principal" />
+        </div>
+        <div class="form-campo" data-tipo="pj">
+          <label for="cnaes_secundarios">CNAEs Secundários:</label>
+          <input type="text" id="cnaes_secundarios" />
+        </div>
+      </div>
+
+
+      <!-- Linha 09 -->
+      <div class="form-linha09">
+        <div class="form-campo" data-tipo="pj">
+          <label for="situacao_cadastral">Situação Cadastral:</label>
+          <input type="text" id="situacao_cadastral" />
+        </div>
+        <div class="form-campo" data-tipo="pj">
+          <label for="data_situacao">Data da Situação:</label>
+          <input type="date" id="data_situacao" />
+        </div>
+        <div class="form-campo">
+          <label for="observacoes">Observações:</label>
+          <input type="text" id="observacoes" />
+        </div>
+      </div>
+
+      
+
+    </form>
+  </div>
+
+  <div class="Cl_BotoesGeral">
+    <div class="Cl_BotoesApoio">
+      <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
+      <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="window.close()">Cancelar</button>
+      <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+  <script src="{{ url_for('mod_hub.static', filename='script/Shub_favorecido_apoio.js') }}"></script>
+</body>
+</html>

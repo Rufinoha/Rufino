@@ -1,0 +1,235 @@
+/* Estilo baseado em categoria_apoio com ajustes para livro diário */
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+  font-weight: 700;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arboria', 'Segoe UI', sans-serif;
+  background-color: #FFFCFB;
+}
+
+.Cl_Header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  background-color: #333;
+  color: white;
+  padding: 0 50px;
+  justify-content: space-between;
+  width: calc(100% - 100px);
+}
+
+.Cl_Logo img {
+  height: 50px;
+}
+
+.Cl_Titulo {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.Cl_MenuID input {
+  background-color: #555;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  width: 60px;
+  text-align: center;
+}
+
+.Cl_ContainerApoio {
+  width: calc(100% - 100px);
+  margin: 10px auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.form-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.form-campo label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #333;
+}
+
+.form-campo input,
+.form-campo select {
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-linha01,
+.form-linha02,
+.form-linha03,
+.form-linha04,
+.form-linha05 {
+  display: grid;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-linha01 { grid-template-columns: 30% 50% 15%; }
+.form-linha02 { grid-template-columns: 20% 20% 55%; }
+.form-linha03 { grid-template-columns: 35% 30% 30%; }
+.form-linha04 { grid-template-columns: 45% 50%; }
+.form-linha05 { grid-template-columns: 20% 35% 40%; }
+
+
+
+.Cl_BotoesApoio {
+  display: flex;
+  justify-content: right;
+  margin-top: 20px;
+  margin-right: 40px;
+  gap: 10px;
+}
+
+.Cl_BtnSalvar,
+.Cl_BtnCancelar {
+  background-color: #85C300;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.Cl_BtnSalvar:hover,
+.Cl_BtnCancelar:hover {
+  background-color: #6FA700;
+}
+
+.Cl_BtnExcluir {
+  background-color: #E53935;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.Cl_BtnExcluir:hover {
+  background-color: #C62828;
+}
+
+.combo-busca {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0;
+  background-color: #fff;
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.combo-busca input {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  padding-right: 20px;
+  color: #333;
+}
+
+.combo-busca .seta {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 8px;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23333' stroke-width='2'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.combo-area {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.autocomplete-lista {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.autocomplete-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.autocomplete-item:hover {
+  background-color: #f0f0f0;
+}
+
+.autocomplete-item div {
+  padding: 2px 0;
+}
+
+.autocomplete-item strong {
+  font-weight: 700;
+  display: block;
+  padding-top: 4px;
+}

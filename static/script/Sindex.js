@@ -20,30 +20,12 @@
   }
 })();
  
-async function verificarSessaoTempo() {
-  try {
-    const resp = await fetch("/config/tempo_sessao", {
-      method: "GET",
-      credentials: "same-origin"  // ✅ Garante que o cookie de sessão seja enviado
-    });
+(function iniciarControleSessao() {
+  setInterval(() => {
+    window.GlobalUtils.verificarSessaoExpirada();
+  }, 30000);
+})();
 
-    const data = await resp.json();
-    const tempoMax = parseInt(data.valor || "30");
-
-    const horaLogin = new Date(localStorage.getItem("horaLogin"));
-    const agora = new Date();
-    const minutos = (agora - horaLogin) / 1000 / 60;
-
-    if (minutos >= tempoMax) {
-      Swal.fire("⏱ Sessão expirada", "Você será redirecionado.", "info").then(() => {
-        localStorage.removeItem("usuarioLogado");
-        window.location.href = "/login.html";
-      });
-    }
-  } catch (err) {
-    console.warn("⚠️ Não foi possível verificar tempo de sessão:", err);
-  }
-}
 
 
 // ---------------------------------------------------------------
@@ -410,57 +392,58 @@ async function abrirPainelNovidades() {
     const resp = await fetch("/menu/novidades");
     const novidades = await resp.json();
 
-    const divNovas = document.getElementById("listaNovidadesNovas");
-    const divLidas = document.getElementById("listaNovidadesLidas");
-    divNovas.innerHTML = "";
-    divLidas.innerHTML = "";
+    const divLista = document.getElementById("listaTodasNovidades");
+    divLista.innerHTML = "";
 
     const visualizado = parseInt(localStorage.getItem("ultima_novidade_visualizada")) || 0;
     let maiorID = visualizado;
+    let existeNaoLida = false;
 
     novidades.forEach(n => {
+      const ehNaoLida = n.id > visualizado;
       const div = document.createElement("div");
-      div.className = "card-novidade tipo-" + (n.tipo || "padrao");
+      div.className = "card-novidade tipo-" + (n.tipo || "padrao") + (ehNaoLida ? " nao-lida" : "");
       div.innerHTML = `
         <div class="cabecalho">📅 ${window.Util.formatarDataPtBr(n.emissao)} | ${n.modulo}</div>
         <div class="descricao">${n.descricao}</div>
         ${n.link ? `<a href="${n.link}" class="link" target="_blank">Saber mais</a>` : ""}
       `;
+      divLista.appendChild(div);
 
-      if (n.id > visualizado) {
-        divNovas.appendChild(div);
+      if (ehNaoLida) {
+        existeNaoLida = true;
         if (n.id > maiorID) maiorID = n.id;
-      } else {
-        divLidas.appendChild(div);
       }
     });
 
-    const sentinel = document.createElement("div");
-    sentinel.id = "sentinelaFinalNovidades";
-    divNovas.appendChild(sentinel);
-
-    if (observerFimNovidades) observerFimNovidades.disconnect();
-    observerFimNovidades = new IntersectionObserver(async (entries) => {
-      if (entries[0].isIntersecting && maiorID > visualizado && tempoPainelAberto) {
-        const tempoVisivel = (Date.now() - tempoPainelAberto) / 1000;
-        if (tempoVisivel >= 2) {
-          await fetch("/menu/novidades/atualizar", { method: "POST" });
-          localStorage.setItem("ultima_novidade_visualizada", maiorID);
-          const badge = document.getElementById("badgeNovidades");
-          if (badge) badge.remove();
-        }
-      }
-    });
-    observerFimNovidades.observe(sentinel);
+    // Exibir botão "Marcar como lida" se houver não lidas
+    document.getElementById("btnMarcarComoLido").style.display = existeNaoLida ? "block" : "none";
 
     document.getElementById("painelNovidades").classList.add("ativo");
     tempoPainelAberto = Date.now();
-    trocarAbaNovidades("novas");
 
   } catch (err) {
     Swal.fire("Erro", "Falha ao carregar novidades", "error");
   }
 }
+
+async function marcarTodasComoLidas() {
+  try {
+    const resp = await fetch("/menu/novidades");
+    const novidades = await resp.json();
+    const ultimoID = Math.max(...novidades.map(n => n.id));
+
+    await fetch("/menu/novidades/atualizar", { method: "POST" });
+    localStorage.setItem("ultima_novidade_visualizada", ultimoID);
+
+    abrirPainelNovidades(); // Recarrega sem o destaque
+    const badge = document.getElementById("badgeNovidades");
+    if (badge) badge.remove();
+  } catch (e) {
+    Swal.fire("Erro", "Falha ao marcar como lidas", "error");
+  }
+}
+
 
 function configurarNovidades() {
   document.getElementById("btnnovidades").addEventListener("click", togglePainelNovidades);
@@ -526,7 +509,7 @@ async function verificarNovidadesBadge() {
       const inativo = Date.now() - parseInt(localStorage.getItem("lastActive") || 0);
       if (inativo >= LIMITE) {
         console.warn("⏳ Sessão encerrada por inatividade");
-        localStorage.clear();
+        GlobalUtils.limparStorageUsuario();;
         window.location.href = "/login";
       }
     }, 30000); // Verifica a cada 30s

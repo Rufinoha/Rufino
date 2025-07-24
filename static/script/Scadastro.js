@@ -14,7 +14,6 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
   const bairro        = document.getElementById("bairro").value.trim();
   const cidade        = document.getElementById("cidade").value.trim();
   const uf            = document.getElementById("uf").value.trim().toUpperCase();
-
  // Validação obrigatória
   if (
     !nome_completo || !email || !cnpj || !empresa || !cep ||
@@ -31,7 +30,6 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
       buttonsStyling: false
     });
   }
-
 
   // Validação de e-mail
   const regexEmail = /^[\w\.-]+@[\w\.-]+\.\w{2,}$/;

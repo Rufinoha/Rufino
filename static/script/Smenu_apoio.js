@@ -2,7 +2,79 @@ console.log("📘 Smenu_apoio.js carregado");
 
 window.addEventListener("DOMContentLoaded", () => {
   console.log("📘 DOM pronto, enviando apoioPronto...");
-  window.opener?.postMessage({ grupo: "apoioPronto" }, "*");
+  window.parent.postMessage({ grupo: "apoioPronto" }, "*");
+
+  // ✅ Incluído corretamente o padrão modal TECH para receber ID
+  GlobalUtils.receberDadosApoio(async function(id) {
+    if (!id) {
+      console.log("🟢 Apoio aberto para inclusão (sem ID)");
+      return;
+    }
+
+    console.log(`📥 ID recebido via apoio: ${id}`);
+
+    try {
+      const resposta = await fetch(`/menu/apoio/${id}`);
+      const menu = await resposta.json();
+
+      if (!resposta.ok || menu.erro) throw new Error(menu.erro || "Erro ao buscar dados.");
+
+      document.getElementById("id").value = menu.id || "";
+      document.getElementById("nome_menu").value = menu.nome_menu || "";
+      document.getElementById("descricao").value = menu.descricao || "";
+      document.getElementById("rota").value = menu.rota || "";
+      document.getElementById("data_page").value = menu.data_page || "";
+      document.getElementById("icone").value = menu.icone || "";
+      document.getElementById("link_detalhe").value = menu.link_detalhe || "";
+      document.getElementById("tipo_abrir").value = menu.tipo_abrir || "";
+      document.getElementById("ordem").value = menu.ordem || 0;
+      document.getElementById("parent_id").value = menu.parent_id || "";
+      document.getElementById("ativo").value = String(menu.ativo);
+      document.getElementById("local_menu").value = menu.local_menu || "";
+      document.getElementById("valor").value = menu.valor || 0;
+      document.getElementById("obs").value = menu.obs || "";
+      document.getElementById("assinatura_app").value = String(menu.assinatura_app);
+
+    } catch (erro) {
+      console.error("❌ Erro ao carregar menu:", erro);
+      Swal.fire("Erro", "Falha ao carregar dados do menu.", "error");
+    }
+  });
+
+  // Mantido seu postMessage adicional (pode continuar)
+  window.addEventListener("message", async (event) => {
+    if (event.data?.grupo === "carregarMenu") {
+      const id = event.data.id;
+      console.log(`📥 ID recebido pelo listener antigo: ${id}`);
+
+      try {
+        const resposta = await fetch(`/menu/apoio/${id}`);
+        const menu = await resposta.json();
+
+        if (!resposta.ok || menu.erro) throw new Error(menu.erro || "Erro ao buscar dados.");
+
+        document.getElementById("id").value = menu.id || "";
+        document.getElementById("nome_menu").value = menu.nome_menu || "";
+        document.getElementById("descricao").value = menu.descricao || "";
+        document.getElementById("rota").value = menu.rota || "";
+        document.getElementById("data_page").value = menu.data_page || "";
+        document.getElementById("icone").value = menu.icone || "";
+        document.getElementById("link_detalhe").value = menu.link_detalhe || "";
+        document.getElementById("tipo_abrir").value = menu.tipo_abrir || "";
+        document.getElementById("ordem").value = menu.ordem || 0;
+        document.getElementById("parent_id").value = menu.parent_id || "";
+        document.getElementById("ativo").value = String(menu.ativo);
+        document.getElementById("local_menu").value = menu.local_menu || "";
+        document.getElementById("valor").value = menu.valor || 0;
+        document.getElementById("obs").value = menu.obs || "";
+        document.getElementById("assinatura_app").value = String(menu.assinatura_app);
+
+      } catch (erro) {
+        console.error("❌ Erro ao carregar menu:", erro);
+        Swal.fire("Erro", "Falha ao carregar dados do menu.", "error");
+      }
+    }
+  });
 
   // Botão Salvar
   document.getElementById("ob_btnSalvar").addEventListener("click", async () => {
@@ -35,19 +107,19 @@ window.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados)
       });
-
       const resultado = await resposta.json();
+
       if (resposta.ok && resultado.status === "sucesso") {
         Swal.fire("Sucesso", resultado.mensagem, "success").then(() => {
-          window.opener?.Menu?.carregarMenus?.();
-          window.close();
+          window.parent.postMessage({ grupo: "recarregar-tela-principal" }, "*");
+          GlobalUtils.fecharJanelaApoio();
         });
       } else {
         Swal.fire("Erro", resultado.erro || "Erro ao salvar menu.", "error");
       }
     } catch (erro) {
       console.error("❌ Erro ao salvar:", erro);
-      Swal.fire("Erro", "Erro inesperado ao salvar.", "error");
+      Swal.fire("Erro inesperado ao salvar.", "error");
     }
   });
 
@@ -76,54 +148,19 @@ window.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: id })
       });
-
       const dados = await resp.json();
+
       if (resp.ok && dados.status === "sucesso") {
         Swal.fire("Sucesso", dados.mensagem, "success").then(() => {
-          window.opener?.Menu?.carregarMenus?.();
-          window.close();
+          window.parent.postMessage({ grupo: "recarregar-tela-principal" }, "*");
+          GlobalUtils.fecharJanelaApoio();
         });
       } else {
         Swal.fire("Erro", dados.erro || "Erro ao excluir menu.", "error");
       }
     } catch (erro) {
       console.error("❌ Erro ao excluir:", erro);
-      Swal.fire("Erro inesperado", "Falha ao excluir menu.", "error");
+      Swal.fire("Erro inesperado ao excluir.", "error");
     }
   });
-});
-
-// Carregar dados ao editar
-window.addEventListener("message", async (event) => {
-  if (event.data && event.data.grupo === "carregarMenu") {
-    const id = event.data.id;
-    try {
-      const resposta = await fetch(`/menu/apoio/${id}`);
-      const menu = await resposta.json();
-
-      if (!resposta.ok || menu.erro) {
-        throw new Error(menu.erro || "Erro ao buscar dados.");
-      }
-
-      document.getElementById("id").value = menu.id || "";
-      document.getElementById("nome_menu").value = menu.nome_menu || "";
-      document.getElementById("descricao").value = menu.descricao || "";
-      document.getElementById("rota").value = menu.rota || "";
-      document.getElementById("data_page").value = menu.data_page || "";
-      document.getElementById("icone").value = menu.icone || "";
-      document.getElementById("link_detalhe").value = menu.link_detalhe || "";
-      document.getElementById("tipo_abrir").value = menu.tipo_abrir || "";
-      document.getElementById("ordem").value = menu.ordem || 0;
-      document.getElementById("parent_id").value = menu.parent_id || "";
-      document.getElementById("ativo").value = String(menu.ativo);
-      document.getElementById("local_menu").value = menu.local_menu || "";
-      document.getElementById("valor").value = menu.valor || 0;
-      document.getElementById("obs").value = menu.obs || "";
-      document.getElementById("assinatura_app").value = String(menu.assinatura_app);
-
-    } catch (erro) {
-      console.error("❌ Erro ao carregar menu:", erro);
-      Swal.fire("Erro", "Falha ao carregar dados do menu.", "error");
-    }
-  }
 });

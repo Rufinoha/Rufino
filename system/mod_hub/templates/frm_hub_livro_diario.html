@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Livro Diário - Contas Financeiras</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_livro_diario.css') }}">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="titulo-container">
+    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('mod_hub/hub')">
+      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para HUB
+    </button>
+  </div>
+  <div class="Cl_ConfigContainer">
+    <h2>Livro Diário</h2>
+    <div class="Cl_Filtros">
+      <label class="Cl_labelfiltro" for="ob_filtroNome">Nome:</label>
+      <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome">
+
+      <label class="Cl_labelfiltro" for="ob_filtroTipoConta">Tipo de Conta:</label>
+      <select class="Cl_CamposFiltros" id="ob_filtroTipoConta">
+        <option value="">Todos</option>
+      </select>
+
+      <label class="Cl_labelfiltro" for="ob_filtroStatus">Status:</label>
+      <select class="Cl_CamposFiltros" id="ob_filtroStatus">
+        <option value="">Todos</option>
+        <option value="true" selected>Ativo</option>
+        <option value="false">Inativo</option>
+      </select>
+
+      <div>
+        <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+        <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar</button>
+      </div>
+    </div>
+
+    <div class="Cl_botaoIncluir">
+      <button class="Cl_BtnIncluir" id="ob_btnIncluir">Nova Conta</button>
+    </div>
+
+    <div class="Cl_TabelaMenu" id="content-area-LivroDiario">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Tipo de Conta</th>
+            <th>Conta Contábil</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="ob_listaLivroDiario">
+          <tr class="Cl_Carregando">
+            <td colspan="6">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="Cl_Paginacao">
+      <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+      <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+      <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+      <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+      <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+    </div>
+  </div>
+</body>
+</html>

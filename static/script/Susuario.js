@@ -10,14 +10,14 @@ if (typeof window.Usuario === "undefined") {
         configurarEventos: function () {
             // Botão "Novo Usuário"
             document.querySelector("#ob_btnIncluir").addEventListener("click", () => {
-                let largura = 600;
-                let altura = 500;
-                let esquerda = (window.screen.width - largura) / 2;
-                let topo = (window.screen.height - altura) / 2;
-            
-                window.open('/usuario/incluir', 'IncluirUsuario', 
-                    `width=${largura},height=${altura},top=${topo},left=${esquerda},resizable=no`);
+                GlobalUtils.abrirJanelaApoioModal({
+                    rota: "/usuario/incluir",
+                    titulo: "Incluir Usuário",
+                    largura: 600,
+                    altura: 570
+                });
             });
+
             
             
 
@@ -129,16 +129,21 @@ if (typeof window.Usuario === "undefined") {
                     <td class="td_ultimo_login">${window.Util.formatarData(usuario.ultimo_login)}</td> <!-- atualizado -->
                     <td class="td_status">${usuario.status}</td>
                     <td>
-                        <button class="Cl_BtnAcao btnEditar" data-id="${usuario.id}">✏️</button>
-                        <button class="Cl_BtnAcao btnAcesso" data-id="${usuario.id}" data-nome="${usuario.nome_completo}">🛡️</button>
-                        <button class="Cl_BtnAcao btnExcluir" data-id="${usuario.id}">🗑️</button>
+                        <button class="btn-icon Cl_BtnAcao btnEditar" data-id="${usuario.id}" title="Editar">
+                            ${Util.gerarIconeTech('editar')}
+                        </button>
+                        <button class="btn-icon Cl_BtnAcao btnAcesso" data-id="${usuario.id}" data-nome="${usuario.nome_completo}" title="Nível de Acesso">
+                            ${Util.gerarIconeTech('nivel_acesso')}
+                        </button>
+                        <button class="btn-icon Cl_BtnAcao btnExcluir" data-id="${usuario.id}" title="Excluir">
+                            ${Util.gerarIconeTech('excluir')}
+                        </button>
                     </td>
                 `;
 
                 tabela.appendChild(linha);
             });
-            
-
+            lucide.createIcons();
             this.atualizarPaginacao();
         },
 
@@ -176,7 +181,7 @@ if (typeof window.Usuario === "undefined") {
             document.querySelector("#ob_listaUsuarios").addEventListener("click", function(event) {
                 if (event.target.classList.contains("btnEditar")) {
                     let linha = event.target.closest("tr");
-            
+
                     if (linha) {
                         const usuarioDados = {
                             id: event.target.getAttribute("data-id"),
@@ -188,30 +193,36 @@ if (typeof window.Usuario === "undefined") {
                             ultimo_login: linha.querySelector(".td_ultimo_login")?.textContent.trim() || "",
                             status: linha.querySelector(".td_status")?.textContent.trim() || ""
                         };
+                        const id = event.target.getAttribute("data-id");
 
-            
-                        const largura = 600;
-                        const altura = 500;
-                        const esquerda = (window.screen.width - largura) / 2;
-                        const topo = (window.screen.height - altura) / 2;
-            
-                        const janelaEdicao = window.open('/usuario/editar', 'EditarUsuario',
-                            `width=${largura},height=${altura},top=${topo},left=${esquerda},resizable=yes`);
-            
-                        // ✅ Espera a confirmação de que a janela está pronta
+                        // Abre o modal de apoio
+                        GlobalUtils.abrirJanelaApoioModal({
+                            rota: "/usuario/editar",
+                            id: id,
+                            titulo: "Editar Usuário",
+                            largura: 600,
+                            altura:570
+                        });
+
+
+                        // Aguarda o iframe carregar para enviar os dados via postMessage
                         window.addEventListener("message", function listener(event) {
                             if (event.data && event.data.grupo === "apoioPronto") {
-                                janelaEdicao.postMessage({
-                                    grupo: "dadosUsuario",
-                                    payload: usuarioDados
-                                }, "*");
-            
-                                // Remove o listener após enviar
-                                window.removeEventListener("message", listener);
+                                // Localiza o iframe do modal
+                                const iframe = document.querySelector("iframe[data-apoio]");
+                                if (iframe) {
+                                    iframe.contentWindow.postMessage({
+                                        grupo: "dadosUsuario",
+                                        payload: usuarioDados
+                                    }, "*");
+
+                                    window.removeEventListener("message", listener); // Remove após uso
+                                }
                             }
                         });
                     }
                 }
+
             });
             
             // botão para entrar na tela de Nivel de Acesso
@@ -331,3 +342,9 @@ if (document.getElementById("ob_btnVoltar")) {
     
 }
 
+window.addEventListener("message", (event) => {
+    if (event.data?.grupo === "recarregarUsuarios") {
+        console.log("🔄 Recarregando usuários após salvar...");
+        Usuario.carregarUsuarios();  // ou o nome da sua função de listagem
+    }
+});
