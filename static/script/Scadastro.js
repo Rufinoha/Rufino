@@ -46,25 +46,31 @@ document.getElementById("btnCadastrar").addEventListener("click", async () => {
     endereco, numero, bairro, cidade, uf
   };
 
-  try {
+  try { 
     const resp = await fetch("/cadastro/novo", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Bypass-Login": "1"       // << ignora o login_obrigatorio nessa rota
+      },
       body: JSON.stringify(dados)
     });
+
     const resultado = await resp.json();
 
     if (resp.ok) {
-      return Swal.fire({
+      // Sucesso no cadastro
+      return Swal.fire({ 
         title: "Sucesso!",
         text: resultado.mensagem,
         icon: "success",
         confirmButtonText: "OK",
-        customClass: {
-          confirmButton: 'swal-confirm'
-        },
+        customClass: { confirmButton: 'swal-confirm' },
         buttonsStyling: false
-      }).then(() => window.close());
+      }).then(() => {
+        GlobalUtils.fecharJanelaApoio(1);
+      });
+
     }
 
 

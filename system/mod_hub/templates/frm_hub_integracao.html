@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <title>Integrações • TECH</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_integracao.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+  <main class="page">
+    <header class="page-header">
+      <div class="title-wrap">
+        <i class="ti ti-plug-connected header-icon" aria-hidden="true"></i>
+        <h1 class="page-title">Integrações</h1>
+      </div>
+      <p class="page-subtitle">Conecte o TECH aos seus bancos, ERPs/TMS e sistemas contábeis & fiscais.</p>
+    </header>
+
+    <!-- Bancos -->
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Bancos</h2>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="grid">
+        <button class="integration-card" data-name="Bradesco" aria-label="Bradesco">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-building-bank card-icon" aria-hidden="true"></i>
+            <span class="card-title">Bradesco</span>
+            <span class="card-tag">Open Finance / CNAB</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Santander" aria-label="Santander">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-building-bank card-icon" aria-hidden="true"></i>
+            <span class="card-title">Santander</span>
+            <span class="card-tag">Open Finance / CNAB</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="EFI (Gerencianet)" aria-label="EFI (Gerencianet)">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-qrcode card-icon" aria-hidden="true"></i>
+            <span class="card-title">EFI</span>
+            <span class="card-tag">Pix, Boleto, Cartão</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Outros Bancos" aria-label="Outros Bancos">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-plus card-icon" aria-hidden="true"></i>
+            <span class="card-title">Outros…</span>
+            <span class="card-tag">Em breve</span>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- ERP / TMS -->
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">ERP / TMS</h2>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="grid">
+        <button class="integration-card" data-name="Oracle ERP" aria-label="Oracle ERP">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-circuit-resistor card-icon" aria-hidden="true"></i>
+            <span class="card-title">Oracle</span>
+            <span class="card-tag">ERP</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Esl Sistemas" aria-label="Esl Sistemas">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-truck-delivery card-icon" aria-hidden="true"></i>
+            <span class="card-title">Esl Sistemas</span>
+            <span class="card-tag">TMS</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Outros ERPs/TMS" aria-label="Outros ERPs/TMS">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-dots card-icon" aria-hidden="true"></i>
+            <span class="card-title">Outros…</span>
+            <span class="card-tag">APIs & Conectores</span>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- Contábil & Fiscal -->
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Contábil & Fiscal</h2>
+        <span class="section-line"></span>
+      </div>
+
+      <div class="grid">
+        <button class="integration-card" data-name="Domínio Sistemas" aria-label="Domínio Sistemas">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-abacus card-icon" aria-hidden="true"></i>
+            <span class="card-title">Domínio</span>
+            <span class="card-tag">Contábil</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Protheus (TOTVS)" aria-label="Protheus (TOTVS)">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-components card-icon" aria-hidden="true"></i>
+            <span class="card-title">Protheus</span>
+            <span class="card-tag">ERP</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Omie" aria-label="Omie">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-cloud card-icon" aria-hidden="true"></i>
+            <span class="card-title">Omie</span>
+            <span class="card-tag">ERP</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Conta Azul" aria-label="Conta Azul">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-chart-pie card-icon" aria-hidden="true"></i>
+            <span class="card-title">Conta Azul</span>
+            <span class="card-tag">Financeiro</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Fortes" aria-label="Fortes">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-file-invoice card-icon" aria-hidden="true"></i>
+            <span class="card-title">Fortes</span>
+            <span class="card-tag">Contábil/Fiscal</span>
+          </div>
+        </button>
+
+        <button class="integration-card" data-name="Outros Contábeis & Fiscais" aria-label="Outros Contábeis & Fiscais">
+          <span class="card-left-border"></span>
+          <div class="card-body">
+            <i class="ti ti-dots card-icon" aria-hidden="true"></i>
+            <span class="card-title">Outros…</span>
+            <span class="card-tag">Integrações</span>
+          </div>
+        </button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

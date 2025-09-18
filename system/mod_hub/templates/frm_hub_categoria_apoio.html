@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Categoria</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
   <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_categoria_apoio.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -53,7 +54,6 @@
 
 <div class="Cl_BotoesApoio">
   <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
-  <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="GlobalUtils.fecharJanelaApoio(); return false;">Cancelar</button>
   <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
 </div>
 

@@ -147,6 +147,7 @@ document.getElementById('btnAlterarSenha').addEventListener('click', async () =>
       const empresaInfo = dados.empresa;
         document.getElementById("nome_empresa").value = empresaInfo.empresa;
         document.getElementById("cnpj").value = empresaInfo.cnpj;
+        document.getElementById("nome_amigavel").value = empresaInfo.nome_amigavel;
         document.getElementById("endereco").value = empresaInfo.endereco;
         document.getElementById("numero").value = empresaInfo.numero;
         document.getElementById("bairro").value = empresaInfo.bairro;
@@ -245,6 +246,7 @@ document.getElementById("btnZap").addEventListener("click", function () {
 // -------------------------------------------------------------
 document.getElementById("btnsalvar").addEventListener("click", async () => {
   const empresa = {
+    nome_amigavel: document.getElementById('nome_amigavel').value,
     endereco: document.getElementById('endereco').value,
     numero: document.getElementById('numero').value,
     bairro: document.getElementById('bairro').value,

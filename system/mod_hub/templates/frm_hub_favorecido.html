@@ -10,37 +10,49 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-  <div class="titulo-container">
-    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('mod_hub/hub')">
-      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para HUB
-    </button>
-  </div>
   <div class="Cl_ConfigContainer">
     <h2>Cadastro de Favorecidos</h2>
     <div class="Cl_Filtros">
-      <label class="Cl_labelfiltro" for="ob_filtroDocumento">Documento:</label>
-      <input class="Cl_CamposFiltros" type="text" id="ob_filtroDocumento" placeholder="Filtrar por CPF/CNPJ">
+      <!-- COLUNA ESQUERDA: DUAS LINHAS -->
+      <div class="Cl_FiltrosEsquerda">
+        <div class="linha1">
+          <div class="Cl_FiltroItem">
+            <label for="ob_filtroDocumento" class="Cl_labelfiltro">Documento:</label>
+            <input id="ob_filtroDocumento" class="Cl_CamposFiltros" type="text" placeholder="Filtrar por CPF/CNPJ">
+          </div>
 
-      <label class="Cl_labelfiltro" for="ob_filtroCategoria">Categoria:</label>
-      <select class="Cl_CamposFiltros" id="ob_filtroCategoria">
-        <option value="">Todos</option>
-      </select>
+          <div class="Cl_FiltroItem">
+            <label for="ob_filtroFavorecido" class="Cl_labelfiltro">Favorecido:</label>
+            <input id="ob_filtroFavorecido" class="Cl_CamposFiltros" type="text" placeholder="Filtrar por nome">
+          </div>
+        </div>
 
-      <label class="Cl_labelfiltro" for="ob_filtroRazao">Favorecido:</label>
-      <input class="Cl_CamposFiltros" type="text" id="ob_filtroRazao" placeholder="Filtrar por nome">
+        <div class="linha2">
+          <div class="Cl_FiltroItem">
+            <label for="ob_filtroCategoria" class="Cl_labelfiltro">Categoria:</label>
+            <select id="ob_filtroCategoria" class="Cl_CamposFiltros">
+              <option value="">Todos</option>
+            </select>
+          </div>
 
-      <label class="Cl_labelfiltro" for="ob_filtroStatus">Status:</label>
-      <select class="Cl_CamposFiltros" id="ob_filtroStatus">
-        <option value="">Todos</option>
-        <option value="true" selected>Ativo</option>
-        <option value="false">Inativo</option>
-      </select>
+          <div class="Cl_FiltroItem">
+            <label for="ob_filtroStatus" class="Cl_labelfiltro">Status:</label>
+            <select id="ob_filtroStatus" class="Cl_CamposFiltros">
+              <option value="A">Ativo</option>
+              <option value="I">Inativo</option>
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-      <div>
-        <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
-        <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar</button>
+      <!-- COLUNA DIREITA: BOTÕES (OCUPA 40% DO BLOCO) -->
+      <div class="Cl_AcoesFiltro">
+        <button id="ob_btnFiltrar" class="Cl_botaoFiltro">Filtrar</button>
+        <button id="ob_btnlimpar"  class="Cl_botaoFiltro">Limpar Filtro</button>
       </div>
     </div>
+
 
     <div class="Cl_botaoIncluir">
       <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Favorecido</button>

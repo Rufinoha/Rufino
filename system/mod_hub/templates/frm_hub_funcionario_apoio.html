@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cadastro de Funcionário</title>
   <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_funcionarios_apoio.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_funcionario_apoio.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -151,12 +152,11 @@
 <div class="Cl_BotoesGeral">
   <div class="Cl_BotoesApoio">
     <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
-    <button id="ob_btncancelar" class="Cl_BtnCancelar" onclick="GlobalUtils.fecharJanelaApoio()">Cancelar</button>
     <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
   </div>
 </div>
 
 <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
-<script src="{{ url_for('mod_hub.static', filename='script/Shub_funcionarios_apoio.js') }}"></script>
+<script src="{{ url_for('mod_hub.static', filename='script/Shub_funcionario_apoio.js') }}"></script>
 </body>
 </html>

@@ -84,92 +84,138 @@ def resumo_dashboard():
 # =====================================================================
 # ==================== ROTA DE DADOS PARA LISTAGEM ====================
 # =====================================================================
-@mod_reembolso.route("/reembolso/dados")
+@mod_reembolso.route("/reembolso/lanc/dados", methods=["GET"])
+@login_obrigatorio()
+def reem_lanc_dados():
+    import traceback
+    conn = cur = None
+    try:
+        conn = Var_ConectarBanco()
+        cur  = conn.cursor()
+
+        id_empresa = session.get("id_empresa")
+        id_usuario = session.get("id_usuario")
+
+        def _get_int(name, default):
+            v = request.args.get(name)
+            try: return int(v) if v is not None else default
+            except: return default
+
+        pagina = _get_int("pagina", 1)
+        qtd    = _get_int("qtd", 20)
+        if qtd <= 0 or qtd > 200: qtd = 20
+        if pagina < 1: pagina = 1
+        offset = (pagina - 1) * qtd
+
+        descricao = (request.args.get("descricao") or "").strip()
+        data_s    = (request.args.get("data") or "").strip()      # yyyy-mm-dd
+        status_s  = (request.args.get("status") or "")
+        status    = [s.strip().upper() for s in status_s.split(",") if s.strip()]
+        somente_minhas = (request.args.get("somente_minhas", "true").lower() == "true")  # ⬅️ vem do switch
+
+        sql_base = """
+            SELECT
+                d.id_reembolso,
+                d.data,
+                d.descricao,
+                d.valor_total,
+                d.status,
+                (
+                    SELECT COUNT(*)
+                      FROM tbl_reem_lancamento_nota n
+                     WHERE n.id_reembolso = d.id_reembolso
+                       AND n.id_empresa   = d.id_empresa
+                ) AS qtd_notas
+            FROM tbl_reem_lancamento d
+            WHERE d.id_empresa = %s
+        """
+        vals = [id_empresa]
+
+        if descricao:
+            sql_base += " AND d.descricao ILIKE %s"
+            vals.append(f"%{descricao}%")
+
+        if data_s:
+            sql_base += " AND d.data = %s::date"
+            vals.append(data_s)
+
+        if status:
+            sql_base += " AND UPPER(d.status) = ANY(%s::text[])"
+            vals.append(status)
+
+        if somente_minhas:
+            sql_base += " AND d.criado_por = %s"
+            vals.append(id_usuario)
+
+        # total
+        cur.execute(f"SELECT COUNT(*) FROM ({sql_base}) x", vals)
+        total_registros = cur.fetchone()[0] or 0
+        total_paginas   = (total_registros + qtd - 1)//qtd if qtd else 1
+
+        # paginação
+        cur.execute(sql_base + " ORDER BY d.data DESC, d.id_reembolso DESC LIMIT %s OFFSET %s",
+                    vals + [qtd, offset])
+        rows = cur.fetchall() or []
+
+        def _fmt_brl(v):
+            try:
+                return f"R$ {float(v):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            except:
+                return "R$ 0,00"
+
+        itens = []
+        for (id_reembolso, dt, desc, valor, st, qtd_notas) in rows:
+            itens.append({
+                "id": id_reembolso,
+                "data": dt.strftime("%d/%m/%Y") if dt else "",
+                "descricao": desc or "",
+                "valor_total": float(valor or 0),
+                "valor_total_fmt": _fmt_brl(valor or 0),
+                "status": (st or "").upper(),
+                "notas_qtde": int(qtd_notas or 0)
+            })
+
+        return jsonify({
+            "pagina": pagina,
+            "total_paginas": total_paginas or 1,
+            "itens": itens
+        })
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"erro": f"Erro interno ao tentar acessar a página. {str(e)}"}), 500
+    finally:
+        try:
+            if cur: cur.close()
+        except: ...
+        try:
+            if conn: conn.close()
+        except: ...
+
+
+
+
+
+
+
+@mod_reembolso.route("/reembolso/lanc/incluir")
 @login_obrigatorio
-def reembolso_dados():
-    conn = Var_ConectarBanco()
-    cursor = conn.cursor()
-
-    id_empresa = session.get("id_empresa")
-    id_usuario = session.get("id_usuario")
-    grupo = session.get("grupo", "user").lower()
-
-    pagina = int(request.args.get("pagina", 1))
-    por_pagina = int(request.args.get("porPagina", 20))
-    offset = (pagina - 1) * por_pagina
-
-    descricao = request.args.get("descricao", "").strip()
-    data = request.args.get("data")
-    status = request.args.get("status", "").split(",")
-    somente_minhas = request.args.get("somente_minhas", "true") == "true"
-
-    # SQL base
-    sql = """
-        SELECT d.id_reembolso, d.data, d.descricao, d.valor_total, d.status,
-            (SELECT COUNT(*) FROM tbl_reem_lancamento_item i WHERE i.id_reembolso = d.id_reembolso) as qtd_itens
-        FROM tbl_reem_lancamento d
-        WHERE d.id_empresa = %s
-    """
-    valores = [id_empresa]
-
-    # Filtros dinâmicos
-    if descricao:
-        sql += " AND d.descricao ILIKE %s"
-        valores.append(f"%{descricao}%")
-
-    if data:
-        sql += " AND d.data = %s"
-        valores.append(data)
-
-    if status and status != ['']:
-        sql += " AND d.status = ANY(%s)"
-        valores.append(status)
-
-    if somente_minhas or grupo != "admin":
-        sql += " AND d.criado_por = %s"
-        valores.append(id_usuario)
-
-    # Total de registros com filtros aplicados
-    sql_total = f"SELECT COUNT(*) FROM ({sql}) AS sub"
-    cursor.execute(sql_total, valores)
-    total_registros = cursor.fetchone()[0]
-    total_paginas = (total_registros + por_pagina - 1) // por_pagina
-
-    # Adiciona paginação
-    sql += " ORDER BY d.data DESC LIMIT %s OFFSET %s"
-    valores.extend([por_pagina, offset])
-
-    cursor.execute(sql, valores)
-    colunas = [desc[0] for desc in cursor.description]
-    registros = [dict(zip(colunas, linha)) for linha in cursor.fetchall()]
-
-    cursor.close()
-    conn.close()
-
-    return jsonify({
-        "dados": registros,
-        "total_paginas": total_paginas
-    })
-
-
-@mod_reembolso.route("/reembolso/incluir")
-@login_obrigatorio
-def reembolso_incluir():
+def reem_lanc_incluir():
     return render_template("frm_reem_lancamentos_apoio.html")
 
 
 
 
-@mod_reembolso.route("/reembolso/editar")
+@mod_reembolso.route("/reembolso/lanc/editar")
 @login_obrigatorio
-def reembolso_editar():
+def reem_lanc_editar():
     return render_template("frm_reem_lancamentos_apoio.html")
 
 
 
-@mod_reembolso.route("/reembolso/salvar", methods=["POST"])
+@mod_reembolso.route("/reembolso/lanc/salvar", methods=["POST"])
 @login_obrigatorio
-def reembolso_salvar():
+def reem_lanc_salvar():
     dados = request.json
     id_empresa = session.get("id_empresa")
     id_usuario = session.get("id_usuario")
@@ -199,7 +245,7 @@ def reembolso_salvar():
             cursor.execute("""
                 INSERT INTO tbl_reem_lancamento
                 (id_empresa, descricao, data, id_adiantamento, obs, status, criado_por, valor_total)
-                VALUES (%s, %s, %s, %s, %s, 'Pendente', %s, %s)
+                VALUES (%s, %s, %s, %s, %s, 'Aberto', %s, %s)
                 RETURNING id_reembolso
             """, (
                 id_empresa,
@@ -214,7 +260,8 @@ def reembolso_salvar():
 
 
         conn.commit()
-        return jsonify({"mensagem": "reembolso salva com sucesso!", "id": dados["id"]})
+        return jsonify({"mensagem": "reembolso salvo com sucesso!", "id": dados["id"], "status": "Aberto"})
+
 
     except Exception as e:
         conn.rollback()
@@ -224,9 +271,9 @@ def reembolso_salvar():
         conn.close()
 
 
-@mod_reembolso.route("/reembolso/apoio/<int:id>")
+@mod_reembolso.route("/reembolso/lanc/apoio/<int:id>")
 @login_obrigatorio
-def apoio_reembolso(id):
+def reem_lanc_apoio(id):
     """Carrega os dados do reembolso para edição no apoio"""
     id_empresa = session.get("id_empresa")
     conn = Var_ConectarBanco()
@@ -269,9 +316,9 @@ def apoio_reembolso(id):
 
 
 
-@mod_reembolso.route("/reembolso/delete", methods=["POST"])
+@mod_reembolso.route("/reembolso/lanc/delete", methods=["POST"])
 @login_obrigatorio
-def reembolso_delete():
+def reem_lanc_delete():
     dados = request.json
     id_empresa = session.get("id_empresa")
     try:
@@ -284,54 +331,111 @@ def reembolso_delete():
         return jsonify({"erro": str(e)}), 500
 
 
+@mod_reembolso.route("/reembolso/lanc/flags", methods=["GET"])
+@login_obrigatorio
+def reembolso_lanc_flags():
+    conn = cur = None
+    try:
+        id_usuario = session.get("id_usuario")
+        id_empresa = session.get("id_empresa")
+
+        conn = Var_ConectarBanco()
+        cur  = conn.cursor()
+        cur.execute("""
+            SELECT COALESCE(is_developer,false) AS is_developer,
+                   COALESCE(is_administrator,false) AS is_administrator
+              FROM tbl_usuario
+             WHERE id_usuario = %s AND id_empresa = %s
+        """, (id_usuario, id_empresa))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"erro":"Usuário não encontrado"}), 404
+
+        return jsonify({"is_developer": row[0], "is_administrator": row[1]})
+    finally:
+        try:
+            if cur: cur.close()
+        except: ...
+        try:
+            if conn: conn.close()
+        except: ...
+
+
+
 
 # --------------------------------------------------
 # reembolso itens
 # --------------------------------------------------
-@mod_reembolso.route("/reembolso/item/dados")
-def dados_itens():
-    id_reembolso = request.args.get("id_reembolso")
-    id_empresa = session.get("id_empresa")
-
-    conn = Var_ConectarBanco()
-    cur = conn.cursor()
-
-    cur.execute("""
-        SELECT 
-            i.id, i.data, i.descricao, i.valor, i.documento,
-            ld.nome_exibicao AS forma_pgto, 
-            i.razao_social_emitente,
-            (SELECT nome_categoria FROM tbl_hub_categoria WHERE id = i.id_categoria) AS categoria
-        FROM tbl_reem_lancamento_item i
-        LEFT JOIN tbl_hub_livro_diario ld 
-            ON ld.id = i.forma_pagamento::INTEGER AND ld.id_empresa = i.id_empresa
-        WHERE i.id_reembolso = %s AND i.id_empresa = %s
-        ORDER BY i.data DESC
-    """, (id_reembolso, id_empresa))
-
-    colunas = [desc[0] for desc in cur.description]
-    dados = [dict(zip(colunas, row)) for row in cur.fetchall()]
-
-    conn.close()
-    return jsonify(dados)
-
-
-
-@mod_reembolso.route("/reembolso/item/incluir")
+@mod_reembolso.route("/reembolso/nota/dados", methods=["GET"])
 @login_obrigatorio
-def incluir_item():
-    return render_template("/frm_reem_lancamentos_apoio_item.html")
+def reembolso_nota_dados():
+    import traceback
+    conn = cur = None
+    try:
+        id_empresa   = session.get("id_empresa")
+        id_reembolso = int(request.args.get("id_reembolso") or 0)
+        if not id_reembolso:
+            return jsonify([])
+
+        conn = Var_ConectarBanco()
+        cur  = conn.cursor()
+        cur.execute("""
+            SELECT
+                i.id,
+                i.data,
+                i.descricao,
+                COALESCE(i.valor, 0)                                        AS valor,
+                i.anexo_nota,                                               -- coluna existe
+                i.documento,                                                -- nº do doc (varchar(20))
+                COALESCE(ld.nome_exibicao, NULLIF(i.forma_pagamento, ''))   AS forma_pgto,
+                i.razao_social_emitente,
+                (SELECT nome_categoria
+                   FROM tbl_hub_categoria c
+                  WHERE c.id = i.id_categoria)                              AS nome_categoria
+            FROM tbl_reem_lancamento_nota i
+            LEFT JOIN tbl_hub_livro_diario ld
+              ON ld.id = CASE
+                           WHEN i.forma_pagamento ~ '^[0-9]+$' THEN i.forma_pagamento::int
+                           ELSE NULL
+                         END
+             AND ld.id_empresa = i.id_empresa
+            WHERE i.id_reembolso = %s
+              AND i.id_empresa   = %s
+            ORDER BY i.data DESC
+        """, (id_reembolso, id_empresa))
+
+        cols  = [d[0] for d in cur.description]
+        dados = [dict(zip(cols, r)) for r in cur.fetchall()]
+        return jsonify(dados)
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"erro": f"{e}"}), 500
+    finally:
+        try: cur and cur.close()
+        except: ...
+        try: conn and conn.close()
+        except: ...
 
 
-@mod_reembolso.route("/reembolso/item/editar")
+
+
+
+@mod_reembolso.route("/reembolso/nota/incluir")
 @login_obrigatorio
-def editar_item():
-    return render_template("/frm_reem_lancamentos_apoio_item.html")
+def incluir_nota():
+    return render_template("/frm_reem_lancamentos_apoio_nota.html")
+
+
+@mod_reembolso.route("/reembolso/nota/editar")
+@login_obrigatorio
+def editar_nota():
+    return render_template("/frm_reem_lancamentos_apoio_nota.html")
 
 
 
-@mod_reembolso.route("/reembolso/item/salvar", methods=["POST"])
-def salvar_item():
+@mod_reembolso.route("/reembolso/nota/salvar", methods=["POST"])
+def salvar_nota():
     id_empresa = session.get("id_empresa")
 
     if "anexo" in request.files:
@@ -364,7 +468,7 @@ def salvar_item():
 
         # Campos do formulário
         form = request.form
-        id_item = form.get("id_item") or None
+        id_nota = form.get("id_nota") or None
 
         dados = {
             "data": form.get("data"),
@@ -398,9 +502,9 @@ def salvar_item():
         conn = Var_ConectarBanco()
         cur = conn.cursor()
 
-        if id_item:
+        if id_nota:
             cur.execute("""
-                UPDATE tbl_reem_lancamento_item
+                UPDATE tbl_reem_lancamento_nota
                    SET data = %(data)s,
                        descricao = %(descricao)s,
                        valor = %(valor)s,
@@ -415,11 +519,11 @@ def salvar_item():
                        anexo_nota = %(anexo_nota)s,
                        documento = %(documento)s
 
-                 WHERE id = %(id_item)s AND id_empresa = %(id_empresa)s
-            """, {**dados, "id_item": id_item, "id_empresa": id_empresa})
+                 WHERE id = %(id_nota)s AND id_empresa = %(id_empresa)s
+            """, {**dados, "id_nota": id_nota, "id_empresa": id_empresa})
         else:
             cur.execute("""
-                INSERT INTO tbl_reem_lancamento_item
+                INSERT INTO tbl_reem_lancamento_nota
                     (id_reembolso, id_empresa, data, descricao, valor, id_categoria,
                     forma_pagamento, cidade, uf, cnpj_emitente, razao_social_emitente,
                     tipo_documento, chave_nfe, anexo_nota, documento)
@@ -436,15 +540,15 @@ def salvar_item():
 
         conn.commit()
         conn.close()
-        return jsonify({"sucesso": True, "mensagem": "Item salvo com sucesso"})
+        return jsonify({"sucesso": True, "mensagem": "nota salvo com sucesso"})
 
     return jsonify({"erro": "Anexo não encontrado"}), 400
 
 
 
-@mod_reembolso.route("/reembolso/item/apoio/<int:id>")
+@mod_reembolso.route("/reembolso/nota/apoio/<int:id>")
 @login_obrigatorio
-def apoio_item_reembolso(id):
+def apoio_nota_reembolso(id):
     id_empresa = session.get("id_empresa")
     conn = Var_ConectarBanco()
     cursor = conn.cursor()
@@ -466,19 +570,19 @@ def apoio_item_reembolso(id):
                 chave_nfe,
                 anexo_nota,
                 documento
-            FROM tbl_reem_lancamento_item
+            FROM tbl_reem_lancamento_nota
             WHERE id = %s AND id_empresa = %s
         """, (id, id_empresa))
 
         dados = cursor.fetchone()
         if not dados:
-            return jsonify({"erro": "Item não encontrado"}), 404
+            return jsonify({"erro": "nota não encontrado"}), 404
 
         colunas = [desc[0] for desc in cursor.description]
         return jsonify(dict(zip(colunas, dados)))
 
     except Exception as e:
-        print("❌ ERRO AO CARREGAR ITEM:", str(e))
+        print("❌ ERRO AO CARREGAR nota:", str(e))
         return jsonify({"erro": str(e)}), 500
 
     finally:
@@ -487,26 +591,87 @@ def apoio_item_reembolso(id):
 
 
 
-@mod_reembolso.route("/reembolso/item/delete", methods=["POST"])
-def excluir_item():
+@mod_reembolso.route("/reembolso/nota/delete", methods=["POST"])
+def excluir_nota():
     id = request.json.get("id")
     id_empresa = session.get("id_empresa")
 
     conn = Var_ConectarBanco()
     cur = conn.cursor()
-    cur.execute("DELETE FROM FROM tbl_reem_lancamento_item WHERE id = %s AND id_empresa = %s", (id, id_empresa))
+    cur.execute("DELETE FROM FROM tbl_reem_lancamento_nota WHERE id = %s AND id_empresa = %s", (id, id_empresa))
     conn.commit()
     conn.close()
 
-    return jsonify({"sucesso": True, "mensagem": "Item excluído com sucesso"})
+    return jsonify({"sucesso": True, "mensagem": "nota excluído com sucesso"})
 
 
+
+
+# exemplo dentro do seu blueprint de reembolso
+@mod_reembolso.route("/reembolso/nota/categorias", methods=["GET"])
+@login_obrigatorio()
+def reem_nota_listar_categorias():
+    try:
+        id_empresa = request.args.get("id_empresa", type=int)
+        if not id_empresa:
+            return jsonify({"erro": "id_empresa obrigatório"}), 400
+
+        conn = Var_ConectarBanco()
+        cur = conn.cursor()
+
+        # ajuste o nome da tabela/colunas conforme o seu modelo
+        cur.execute("""
+            SELECT id, nome_categoria
+              FROM tbl_hub_categoria
+             WHERE id_empresa = %s
+               AND (status = 'Ativo' OR status IS NULL)
+             ORDER BY nome_categoria
+        """, (id_empresa,))
+        rows = cur.fetchall()
+        conn.close()
+
+        categorias = [{"id": r[0], "nome_categoria": r[1]} for r in rows]
+        return jsonify(categorias), 200
+
+    except Exception as e:
+        # logue o erro real no server
+        return jsonify({"erro": f"Falha ao listar categorias: {str(e)}"}), 500
+
+
+@mod_reembolso.route("/reembolso/nota/formas_pagamento", methods=["GET"])
+@login_obrigatorio()
+def reem_nota_listar_formas_pagamento():
+    try:
+        id_empresa = request.args.get("id_empresa", type=int)
+        if not id_empresa:
+            return jsonify({"erro": "id_empresa obrigatório"}), 400
+
+        conn = Var_ConectarBanco()
+        cur = conn.cursor()
+
+        # Fonte: tbl_hub_livro_diario (só exemplos; ajuste conforme seu dicionário)
+        # ideia: listar "formas" distintas cadastradas para a empresa
+        cur.execute("""
+            SELECT DISTINCT forma_pagamento
+              FROM tbl_hub_livro_diario
+             WHERE id_empresa = %s
+               AND (forma_pagamento IS NOT NULL AND trim(forma_pagamento) <> '')
+             ORDER BY forma_pagamento
+        """, (id_empresa,))
+        rows = cur.fetchall()
+        conn.close()
+
+        formas = [{"codigo": r[0], "descricao": r[0]} for r in rows]  # codigo = descricao aqui
+        return jsonify(formas), 200
+
+    except Exception as e:
+        return jsonify({"erro": f"Falha ao listar formas de pagamento: {str(e)}"}), 500
 
 # -------------------------------------
 # Ler nota via AI GPT
 # -------------------------------------
-@mod_reembolso.route("/reembolso/item/lernota", methods=["POST"])
-def ler_nota_item():
+@mod_reembolso.route("/reembolso/nota/lernota", methods=["POST"])
+def ler_nota_nota():
     try:
         id_empresa = session.get("id_empresa")
         arquivo = request.files.get("arquivo")

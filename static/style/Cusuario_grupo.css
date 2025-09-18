@@ -51,6 +51,7 @@ h2 {
 
 /* ========================== FILTROS ========================== */
 .Cl_Filtros {
+  position: relative; /* NOVO: para permitir posicionamento absoluto interno */
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -130,8 +131,7 @@ h2 {
 /* ========================== LARGURAS DAS COLUNAS ========================== */
 #content-area-Grupos table td:nth-child(1),
 #content-area-Grupos table th:nth-child(1) {
-  width: 30px;
-  text-align: center;
+  display: none;
 }
 
 #content-area-Grupos table td:nth-child(2),
@@ -209,31 +209,25 @@ h2 {
 
 /* ========================== BOTÃO VOLTAR ========================== */
 .titulo-container {
-  margin: 0 auto;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  margin: 0;
   padding: 0;
-  max-width: 1200px;
-  text-align: right;
 }
 
 .btn-voltar {
-  margin-bottom: 20px;
-  padding: 6px 14px;
-  background-color: #555;
-  color: white;
+  background: transparent;
   border: none;
-  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease-in-out;
-  height: 40px;
-}
-
-.btn-voltar:hover {
-  background-color: #333;
+  padding: 4px;
 }
 
 .icon-voltar {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+  width: 22px;
+  height: 22px;
+}
+
+.btn-voltar:hover {
+  transform: scale(1.1);
 }

@@ -26,7 +26,7 @@ body {
   font-family: 'Arboria', 'Segoe UI', sans-serif;
   background-color: #FFFCFB;
 }
-
+ 
 /* ========================== CABEÇALHO ========================== */
 .Cl_Header {
   height: 50px;
@@ -59,7 +59,7 @@ body {
 }
 
 /* ========================== CONTAINER FORM ========================== */
-.apoio-item-container {
+.apoio-nota-container {
   width: calc(100% - 100px);
   margin: 20px auto;
   background-color: #fff;

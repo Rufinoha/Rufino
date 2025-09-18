@@ -1,0 +1,77 @@
+#config-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);  /* 4 colunas fixas */
+    gap: 40px 20px; /* Espaço entre todos os cards */
+    padding: 0px;
+    max-width: 1400px;
+    margin: 80px auto;
+}
+
+.Cl_configContainer {
+    margin: 0 10px;
+    padding: 0 20px;
+    
+}
+
+.Cl_titulo {
+    text-align: left;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    margin-bottom: 30px;
+}
+
+
+.slot.vazio-destino {
+    border: 2px dashed #85C300;
+}
+
+.card {
+    width: 300px;
+    min-height: 100px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.28);
+    cursor: grab;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-left: 5px solid #85C300;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease-in-out;
+}
+
+
+.card span {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #85C300;
+}
+
+
+.card h4 {
+    font-size: 28px;
+    color: #85C300;
+}
+
+.card p {
+    font-size: 18px;
+    color: #333333;
+}
+
+
+
+.card.carregando {
+    opacity: 0.6;
+    transform: scale(0.80);
+    box-shadow: 0 0 10px #6FA700;
+    transition: all 0.3s ease-in-out;
+}

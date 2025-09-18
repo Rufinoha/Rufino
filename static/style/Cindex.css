@@ -1,80 +1,92 @@
-/* ========================== FONTES PERSONALIZADAS ========================== */
+/* =======================================================================
+   0) FONTES
+   ======================================================================= */
 @font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
-    font-weight: 300; /* Light */
-    font-style: normal;
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Arboria';
+  src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+       url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
 }
 
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
-    font-weight: 400; /* Regular */
-    font-style: normal;
+/* =======================================================================
+   0.1) VARIÁVEIS DE TEMA (cores principais)
+   ======================================================================= */
+:root {
+  /* Base (mantive neutros que você já usa) */
+  --bg-page: #f4f4f4;
+  --text-900: #333333;
+  --border-200: #ddd;
+  --border-300: #eee;
+  --white: #ffffff;
+
+  /* Verde da marca (no lugar do azul no menu lateral) */
+  --accent: #85C300;           /* principal */
+  --accent-hover: #6EA100;     /* para hover/borda ativa */
+  --accent-soft: #F0F8E6;      /* fundos suaves/ativo */
+  --accent-shadow: 0 0 0 3px rgba(133, 195, 0, 0.18);
 }
 
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
-    font-weight: 700; /* Bold */
-    font-style: normal;
+/* =======================================================================
+   1) RESET / BASE
+   ======================================================================= */
+* {
+  box-sizing: border-box;
 }
-
-/* ========================== CONFIGURAÇÕES GERAIS ========================== */
 body {
-    padding: 0;
-    margin: 0;
-    font-family: 'Arboria', 'Segoe UI', sans-serif;
-    background-color: #f4f4f4;
-    box-sizing: border-box;
-    font-size: large;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arboria','Segoe UI',sans-serif;
+  background: var(--bg-page);
+  font-size: large;
 }
-
-
-/* ------------------------------------------------------------ */
-/* ✅ RESET GERAL                                               */
-/* ------------------------------------------------------------ */
-
-/* remove marcadores*/
 ul {
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
- 
-/* herda a cor do elemento pai*/
 a {
   color: inherit;
   text-decoration: none;
 }
-
-/* remove a cor do fundo e borda do botão e transforma o cursor numa mãozinha*/
 button {
   background: none;
   border: none;
   cursor: pointer;
 }
 
-/* ------------------------------------------------------------ */
-/* ✅ MENU SUPERIOR                                             */
-/* ------------------------------------------------------------ */
-
+/* =======================================================================
+   2) MENU SUPERIOR (TOPBAR) — DARK
+   ======================================================================= */
 .menu-superior {
   display: flex;
   justify-content: space-between;
   align-items: center;
   height: 60px;
-  background-color: white;
   padding: 0 20px;
-  border-bottom: 1px solid #ccc;
+  background: #2f2f2f;
+  color: #f1f1f1;
+  border-bottom: 1px solid rgba(255,255,255,.08);
   position: relative;
   z-index: 10;
 }
-
-.logo img {
-  height: 100%;         /* ← adapta à altura da barra */
-  max-height: 60px;     /* segurança */
+.menu-superior .logo img {
+  height: 100%;
+  max-height: 60px;
   margin-left: 50px;
 }
 .menu-direito {
@@ -84,7 +96,15 @@ button {
 }
 #btnnovidades {
   font-size: 22px;
+  color: #f1f1f1;
 }
+#btnnovidades:hover {
+  color: #fff;
+}
+
+/* =======================================================================
+   3) BLOCO DO USUÁRIO (avatar + nome + empresa)
+   ======================================================================= */
 .menu-usuario {
   display: flex;
   align-items: center;
@@ -92,94 +112,136 @@ button {
   margin-right: 50px;
 }
 .menu-usuario img {
-  height: 35px;
-  width: 35px;
+  height: 34px;
+  width: 34px;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 10px;
+  outline: 2px solid rgba(255,255,255,.15);
 }
 .info-usuario {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  font-size: 0.85rem;
+  font-size: .9rem;
+}
+.info-usuario #usuarioNome {
+  font-weight: 700;
+  line-height: 1.05;
+}
+.info-usuario #usuarioEmpresa {
+  color: #cfcfcf;
+  font-size: .8rem;
 }
 .btn-triangulo {
   margin-left: 8px;
-  font-size: 30px;
-  transition: transform 0.3s;
+  font-size: 26px;
+  color: #f1f1f1;
+  transition: transform .25s;
 }
 .menu-usuario.active .btn-triangulo {
   transform: rotate(180deg);
 }
+
+/* =======================================================================
+   4) SUBMENU "MEU PERFIL" — DARK
+   ======================================================================= */
 .submenu-usuario {
   position: absolute;
-  top: 32px;
+  top: 46px;
   right: 0;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 10px;
+  width: 260px;
+  padding: 10px 6px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.2);
   display: none;
-  width: 250px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  z-index: 5;
+  z-index: 15;
 }
 .menu-usuario.active .submenu-usuario {
   display: block;
 }
-.submenu-usuario li {
-  padding: 6px 10px;
-  font-size: 0.9rem;
+.submenu-horizontal-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #f5f5f5;
+  font-size: .95rem;
+  transition: background .15s, transform .02s;
 }
-.submenu-usuario li:hover {
-  background-color: #f0f0f0;
+.submenu-horizontal-item:hover {
+  background: #3a3a3a;
+  cursor: pointer;
+}
+.submenu-horizontal-item:active {
+  transform: scale(.99);
+}
+.submenu-horizontal-item .mi-ico {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+.submenu-horizontal-item .mi-ico svg {
+  width: 20px;
+  height: 20px;
+}
+.submenu-horizontal-item .mi-txt {
+  line-height: 1;
+}
+.submenu-divider {
+  border-top: 1px solid rgba(255,255,255,.12);
+  margin: 6px 6px 8px;
+}
+.submenu-usuario .submenu-horizontal-item[data-tipo="sair"] {
+  color: #ffdede;
+}
+.icon-tech {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  stroke-width: 1.6;
+  vertical-align: middle;
+}
+.submenu-horizontal-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #f5f5f5;
+  font-size: .95rem;
 }
 
-/* ------------------------------------------------------------ */
-/* ✅ MENU LATERAL                                              */
-/* ------------------------------------------------------------ */
-
-/* Container do menu lateral */
+/* =======================================================================
+   5) MENU LATERAL — ESTRUTURA
+   ======================================================================= */
 #menuLateral {
   width: 60px;
-  background-color: #ffffff;
+  background: var(--white);
   border-right: 1px solid #ccc;
   height: calc(100vh - 60px);
   position: absolute;
   top: 60px;
   left: 0;
-  transition: width 0.3s;
+  transition: width .3s;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 5;
 }
-
 #menuLateral.expandido {
   width: 240px;
 }
 
-/* Botão PIN */
-#btnPinMenu {
-  width: 100%;
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-}
-#menuLateral.expandido #btnPinMenu {
-  justify-content: flex-end;
-}
-#iconePin {
-  width: 20px;
-  height: 20px;
-}
-
-/* Menu principal */
+/* Lista e cabeçalhos */
 #listaMenus .menu-item {
   display: flex;
   flex-direction: column;
   cursor: pointer;
   padding: 10px;
 }
-
 .menu-principal {
   display: flex;
   align-items: center;
@@ -188,13 +250,9 @@ button {
 .menu-principal span {
   white-space: nowrap;
 }
-
-/* Texto do menu lateral */
 #menuLateral.retraido .menu-principal span {
   display: none;
 }
-
-/* Ícone sempre visível */
 .menu-principal i,
 .menu-principal .emoji {
   width: 24px;
@@ -203,92 +261,73 @@ button {
   flex-shrink: 0;
 }
 
-/* Submenu (aberto ou fechado) */
+/* Submenus (accordion) */
 .submenu {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height .3s ease;
   display: flex;
   flex-direction: column;
   padding-left: 30px;
 }
-
-/* Submenu aberto */
 .submenu.aberto {
   max-height: 500px;
+  display: flex;
 }
-
-/* Submenu item */
 .submenu-item {
   padding: 6px 8px;
-  font-size: 0.85rem;
+  font-size: .9rem;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  border-radius: 6px;
+  transition: transform .12s ease, background .15s ease;
 }
 .submenu-item:hover {
-  background-color: #e0f0e0;
+  background: var(--accent-soft);
+  transform: translateX(2px);
 }
-
-/* Alinhamento quando retraído */
+.submenu-item.ativo {
+  background: var(--accent-soft) !important;
+  color: var(--text-900);
+  font-weight: 700;
+  border-left: 4px solid var(--accent);
+}
 #menuLateral.retraido .menu-principal {
   justify-content: center;
 }
-
 #menuLateral.retraido .submenu {
   display: none !important;
 }
 
-.submenu-horizontal-item {
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-
-.submenu-item.ativo {
-  background-color: #85C300 !important;
-  color: white;
-  font-weight: bold;
-}
-
-
-.submenu.aberto {
-  max-height: 500px;
-  display: flex; /* garante que apareça mesmo sem JS */
-}
-
-/* ------------------------------------------------------------ */
-/* ✅ CONTEÚDO PRINCIPAL                                        */
-/* ------------------------------------------------------------ */
-
+/* =======================================================================
+   6) CONTEÚDO PRINCIPAL
+   ======================================================================= */
 #content-area {
   margin-left: 60px;
-  margin-top: 0px;
   height: calc(100vh - 90px);
   padding: 20px;
   overflow-y: auto;
-  transition: margin-left 0.3s;
+  transition: margin-left .3s;
 }
 #menuLateral.expandido ~ #content-area {
   margin-left: 240px;
 }
 
-/* ------------------------------------------------------------ */
-/* ✅ PAINEL DE NOVIDADES                                       */
-/* ------------------------------------------------------------ */
-
+/* =======================================================================
+   7) PAINEL DE NOVIDADES (mantido)
+   ======================================================================= */
 #painelNovidades {
   position: fixed;
   top: 60px;
   right: -400px;
   width: 360px;
   height: calc(100vh - 60px);
-  background-color: rgba(255, 255, 255, 0.95);
+  background: rgba(255,255,255,.96);
   backdrop-filter: blur(4px);
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s ease-in-out;
+  box-shadow: -2px 0 8px rgba(0,0,0,.2);
+  transition: right .3s ease-in-out;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -301,7 +340,7 @@ button {
   justify-content: space-between;
   align-items: center;
   background: #85C300;
-  color: white;
+  color: #fff;
   padding: 10px;
   font-weight: bold;
 }
@@ -310,70 +349,36 @@ button {
   overflow-y: auto;
 }
 .card-novidade {
-  background-color: #fff;
+  background: #fff;
   border-left: 4px solid #85C300;
   padding: 10px;
   margin-bottom: 10px;
-  box-shadow: 0 0 4px rgba(0,0,0,0.1);
+  box-shadow: 0 0 4px rgba(0,0,0,.1);
+  border-radius: 8px;
 }
 .card-novidade .cabecalho {
-  font-size: 0.8rem;
+  font-size: .8rem;
   color: #666;
 }
 .card-novidade .descricao {
-  font-size: 0.9rem;
+  font-size: .9rem;
   margin: 5px 0;
 }
 .card-novidade .link {
-  font-size: 0.85rem;
-  color: #0066cc;
+  font-size: .85rem;
+  color: #0066cc; /* se quiser, posso trocar por o verde da marca */
   text-decoration: underline;
 }
-
 .card-novidade.nao-lida {
-  font-weight: bold;
-  background-color: #f9fff3;
-  border-left: 4px solid #85C300;
+  font-weight: 700;
+  background: #f9fff3;
 }
-
-.card-novidade .descricao {
-  margin: 5px 0;
-}
-
-
-/* ------------------------------------------------------------ */
-/* ✅ RODAPÉ                                                    */
-/* ------------------------------------------------------------ */
-
-.rodape {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  padding: 6px 20px;
-  font-size: 0.75rem;
-  color: #999;
-}
-
-
-.emoji-icone {
-  width: 20px;
-  display: inline-block;
-  text-align: center;
-}
-
-
-
-
-
-/* CSS - Estilos para painel de novidades com abas, badge e categorias */
-
 .abas-novidades {
   display: flex;
   gap: 8px;
   padding: 8px 12px 0;
   border-bottom: 1px solid #ccc;
 }
-
 .aba-novidades {
   background: #ccc;
   border: none;
@@ -381,45 +386,15 @@ button {
   border-radius: 6px 6px 0 0;
   cursor: pointer;
   font-weight: bold;
-  color: #333333;
-}
-
-.aba-novidades.ativa {
-  background: #85C300;
-  color: white;
-}
-
-.card-novidade {
-  background: white;
-  border: 1px solid #ddd;
-  margin: 10px;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.card-novidade .cabecalho {
-  font-size: 12px;
-  color: #777;
-  margin-bottom: 6px;
-}
-
-.card-novidade .descricao {
-  font-size: 14px;
   color: #333;
 }
-
-.card-novidade .link {
-  display: block;
-  margin-top: 8px;
-  color: #0066cc;
-  font-weight: bold;
-  text-decoration: none;
+.aba-novidades.ativa {
+  background: #85C300;
+  color: #fff;
 }
-
 .badge-notificacao {
   background: #E53935;
-  color: white;
+  color: #fff;
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 50%;
@@ -428,24 +403,330 @@ button {
   right: -4px;
   font-weight: bold;
 }
-
 #btnnovidades {
   position: relative;
 }
-
-/* Estilos por categoria */
 .tipo-aviso {
-  border-left: 4px solid #E53935;
+  border-left-color: #E53935;
 }
-
 .tipo-atualizacao {
-  border-left: 4px solid #3498db;
+  border-left-color: #3498db; /* se quiser tirar azul aqui também, me avise */
 }
-
 .tipo-recurso {
-  border-left: 4px solid #85C300;
+  border-left-color: #85C300;
+}
+.tipo-padrao {
+  border-left-color: #ccc;
 }
 
-.tipo-padrao {
-  border-left: 4px solid #ccc;
+/* =======================================================================
+   8) RODAPÉ GLOBAL
+   ======================================================================= */
+.rodape {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  padding: 6px 20px;
+  font-size: .75rem;
+  color: #999;
 }
+.emoji-icone {
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* =======================================================================
+   9) MENU LATERAL — BUSCA (TOPO)
+   ======================================================================= */
+.Cl_MenuSearchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-300);
+  position: sticky;
+  top: 0;
+  background: var(--white);
+  z-index: 2;
+}
+.Cl_MenuSearchIcon {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.8;
+}
+#menuSearchInput {
+  flex: 1;
+  height: 32px;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid var(--border-200);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+#menuSearchInput:focus {
+  border-color: var(--accent);
+  box-shadow: var(--accent-shadow);
+}
+.Cl_MenuSearchClear {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  color: #999;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.Cl_MenuSearchClear:hover {
+  background: #f1f1f1;
+}
+#menuLateral.retraido .Cl_MenuSearchBox {
+  justify-content: center;
+}
+#menuLateral.retraido #menuSearchInput,
+#menuLateral.retraido .Cl_MenuSearchClear {
+  display: none;
+}
+
+/* =======================================================================
+   10) MENU LATERAL — ESTADOS VISUAIS (TROCADO PARA VERDE)
+   ======================================================================= */
+.menu-item,
+.menu-principal,
+.submenu-item {
+  transition: background .15s ease, transform .02s ease;
+}
+.menu-item[data-ativo="true"] > .menu-principal,
+.submenu-item.ativo {
+  background: var(--accent-soft) !important;
+  border-left: 4px solid var(--accent);
+  color: var(--text-900);
+}
+.menu-principal:hover,
+.submenu-item:hover {
+  background: var(--accent-soft);
+}
+
+/* Ícones TECH (menu) */
+.menu-principal .icon-tech,
+.submenu-item .icon-tech {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  stroke-width: 1.8;
+}
+
+/* =======================================================================
+   11) TOOLTIP SIMPLES (RETRAÍDO)
+   ======================================================================= */
+#menuLateral.retraido .menu-item,
+#menuLateral.retraido .menu-principal,
+#menuLateral.retraido .submenu-item {
+  position: relative;
+}
+#menuLateral.retraido .menu-item:hover::after,
+#menuLateral.retraido .submenu-item:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* =======================================================================
+   12) CONTROLES DO RODAPÉ DO MENU (Chevron + Pin)
+   ======================================================================= */
+.Cl_MenuFooter {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--white);
+  border-top: 1px solid var(--border-300);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 2;
+}
+.Cl_SidebarBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-200);
+  border-radius: 10px;
+  background: var(--white);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .02s;
+}
+.Cl_SidebarBtn:hover {
+  background: #f7faff;
+  border-color: #cfe3ff; /* se quiser, posso ajustar para um leve verde */
+}
+.Cl_SidebarBtn:active {
+  transform: scale(.98);
+}
+.Cl_SidebarBtn i {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.8;
+}
+#menuLateral.retraido #btnToggleSidebar svg {
+  transform: rotate(180deg);
+  transition: transform .2s ease;
+}
+.Cl_SidebarBtn.is-pinned {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* =======================================================================
+   13) BOTÕES "EXPANDIR / RECOLHER" (BULK)
+   ======================================================================= */
+.Cl_SideBulk {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+  gap: 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-300);
+  background: var(--white);
+  position: sticky;
+  top: 0px;
+  z-index: 2;
+}
+.Cl_SideBulkBtn {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-200);
+  border-radius: 8px;
+  background: var(--white);
+  transition: background .15s, border-color .15s;
+  cursor: pointer;
+}
+.Cl_SideBulkBtn:hover {
+  background: #f7faff;
+  border-color: #cfe3ff; /* se quiser, troco por verde */
+}
+#menuLateral.retraido .Cl_SideBulk {
+  display: none;
+}
+
+/* =======================================================================
+   14) CATEGORIAS (PAIS) — ESTILO
+   ======================================================================= */
+.menu-item.com-submenu .menu-principal {
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.menu-item.com-submenu .menu-principal span {
+  flex: 1;
+}
+.Cl_Chevron {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  transition: transform .18s ease;
+  flex-shrink: 0;
+}
+.menu-principal[aria-expanded="true"] .Cl_Chevron {
+  transform: rotate(180deg);
+}
+.menu-item.com-submenu .menu-principal:hover {
+  background: var(--accent-soft);
+}
+.menu-principal[aria-expanded="true"] {
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+}
+#menuLateral.retraido .menu-item.com-submenu .menu-principal span,
+#menuLateral.retraido .menu-item.com-submenu .menu-principal .Cl_Chevron {
+  display: none;
+}
+.menu-item.com-submenu .menu-principal:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* =======================================================================
+   15) ÍCONES LUCIDE — TAMANHO CONSISTENTE
+   ======================================================================= */
+#menuLateral .menu-principal .icon-tech,
+#menuLateral .menu-principal svg[data-lucide],
+#menuLateral .submenu-item .icon-tech,
+#menuLateral .submenu-item svg[data-lucide] {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  stroke-width: 1.8;
+}
+#menuLateral.retraido .menu-principal {
+  justify-content: center;
+  gap: 0;
+}
+#menuLateral.retraido .menu-principal:hover .icon-tech,
+#menuLateral.retraido .menu-principal:hover svg[data-lucide] {
+  transform: none;
+}
+
+/* =======================================================================
+   16) AJUSTES DO FOOTER NO MODO RETRAÍDO
+   ======================================================================= */
+#menuLateral.retraido .Cl_MenuFooter .Cl_SidebarBtn:nth-child(2) {
+  display: none;
+}
+#menuLateral.retraido .Cl_MenuFooter {
+  justify-content: center;
+  padding: 8px 8px;
+  gap: 0;
+}
+#menuLateral.retraido .Cl_SidebarBtn {
+  width: 36px;
+  height: 36px;
+}
+
+
+
+
+
+    /* 🔒 Cadeado: nada de submenu pintar o menu lateral */
+    aside#menuLateral .menu-lateral [data-lucide],
+    aside#menuLateral .menu-lateral svg,
+    aside#menuLateral .menu-lateral svg *,
+    aside#menuLateral .menu-lateral .submenu-item i,
+    aside#menuLateral .menu-lateral .menu-principal i {
+        color: #333333 !important;     /* trava cor base do ícone */
+        stroke: #333333 !important;    /* trava contorno */
+        fill: none !important;         /* evita qualquer preenchimento */
+    }
+
+    /* Opcional: mantém hover só no texto/fundo, não no ícone */
+    aside#menuLateral .menu-lateral .submenu-item:hover [data-lucide],
+    aside#menuLateral .menu-lateral .menu-principal:hover [data-lucide] {
+        color: #333333 !important;
+        stroke: #333333 !important;
+    }
+
+    /* Se tiver estado ativo/selecionado, o ícone continua cinza escuro */
+    aside#menuLateral .menu-lateral .submenu-item.ativo [data-lucide],
+    aside#menuLateral .menu-lateral [aria-current="page"] [data-lucide] {
+        color: #333333 !important;
+        stroke: #333333 !important;
+    }
+

@@ -28,261 +28,250 @@ body {
     padding: 0;
     margin: 0;
     font-family: 'Arboria', 'Segoe UI', sans-serif;
-    background-color: #FFFCFB;
+    background-color: #f4f4f4;
+    box-sizing: border-box;
 }
+
 
 /* ========================== CONTAINER PRINCIPAL ========================== */
-.Cl_ConfigContainer {
-    margin: 0px auto;
-    padding: 8px;
-    max-width: 1200px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.Cl_ConfigContainer{
+    margin:20px auto;
+    padding:20px;
+    max-width:1200px;
+    background-color:#fff;
+    border-radius:8px;
+    box-shadow:0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* ========================== TÍTULOS ========================== */
-h2 {
-    margin: 0;
-    color: #000;
-    text-align: right;
+/* ========================== TÍTULO ========================== */
+h2{
+    margin:0;
+    color:#333;
+    font-size:24px;
 }
 
 /* ========================== FILTROS ========================== */
-.Cl_Filtros {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
+.Cl_Filtros{
+    display: grid;
+    grid-template-columns: 20% 25% 25% 10% 10%;
+    gap: 12px 16px;
+    align-items: end;
     border: 1px solid #ccc;
     border-radius: 8px;
-    padding: 8px;
+    padding: 10px 20px;
     margin-bottom: 20px;
     background-color: #f9f9f9;
-    width: 98%;
-    gap: 10px;
 }
 
-.Cl_Filtros label {
+.Cl_Filtros > div{
+    display: flex;
+    flex-direction: column;
+    min-width: 0;              
+}
+
+.Cl_labelfiltro{
     font-weight: bold;
+    margin-bottom: 4px;
+    color: #333333;
 }
 
-.Cl_Filtros input,
-.Cl_Filtros select {
+.Cl_CamposFiltros{
+    width: 90%;
+    padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 150px;
-    padding: 10px;
+    border-radius: 6px;
     font-size: 14px;
+    background: #FFFCFB;
 }
 
 /* ========================== BOTÕES ========================== */
-.Cl_BtnIncluir, .Cl_botaoFiltro {
-    background-color: #85C300;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    margin-bottom: 10px;
-    width: 150px;
+.Cl_FiltroBtnFiltrar,
+.Cl_FiltroBtnLimpar{
+    display: flex;
+    align-items: end;
 }
 
-.Cl_BtnIncluir:hover, .Cl_botaoFiltro:hover {
-    background-color: #6FA700;
+.Cl_BtnIncluir,
+.Cl_botaoFiltro{
+    width: 100%;
+    height: 38px;
+    background: #007bff;
+    color: #fff;
+    border: 1px solid #007bff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color .3s, transform .2s;
+}
+
+.Cl_BtnIncluir{
+    width: 150px;
+    font-size: 16px;
+    justify-content: center;
+    margin-bottom: 10px;
+
+}
+
+.Cl_BtnIncluir:hover,
+.Cl_botaoFiltro:hover{
+    background: #0056b3;
     transform: scale(1.05);
 }
 
+
 /* ========================== TABELA ========================== */
-
-/* ========================== TABELA DE MENUS ========================== */
-
-.Cl_TabelaMenu table {
-    width: 100%;
-    border-collapse: collapse;
+.Cl_TabelaMenu{
+    overflow-x:auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+}
+.Cl_TabelaMenu table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
     table-layout: fixed;
-    font-size: 90%;
+}
+.Cl_TabelaMenu th{
+    padding:6px 10px;
+    border:1px solid #ddd;
+    text-align:left;
+    background-color:#e0f4ff;
+    color:#333333;
+    font-weight:bold;
+}
+.Cl_TabelaMenu td{
+    padding:0 10px;
+    border:1px solid #ddd;
+    text-align:left;
+}
+.Cl_TabelaMenu tbody tr:nth-child(even){
+    background-color:#f9f9f9;
+}
+.Cl_TabelaMenu tbody tr:hover{
+    background-color:#e0f7ff;
 }
 
-.Cl_TabelaMenu th,
-.Cl_TabelaMenu td {
-    padding: 6px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
 
-.Cl_TabelaMenu th {
-    background-color: #85C300;
-    color: #fff;
-    font-weight: bold;
-}
-
-.Cl_TabelaMenu tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.Cl_TabelaMenu tbody tr:hover {
-    background-color: #efffe0;
-}
-
-/* Coluna 1: Nome */
 #content-area-Menu table td:nth-child(1),
 #content-area-Menu table th:nth-child(1) {
-    width: 30px;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    display: none;
 }
 
-/* Coluna 2: Rota */
 #content-area-Menu table td:nth-child(2),
 #content-area-Menu table th:nth-child(2) {
-    width: 250px;
+    width: 120px;
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* Coluna 3: Ícone */
+
 #content-area-Menu table td:nth-child(3),
 #content-area-Menu table th:nth-child(3) {
-    width: 100px;
-    text-align: center;
+    width: auto;
+    text-align: left;
+    white-space: nowrap;       
+    overflow: hidden;         
+    text-overflow: ellipsis;   
 }
 
-/* Coluna 4: Local */
 #content-area-Menu table td:nth-child(4),
 #content-area-Menu table th:nth-child(4) {
-    width: 100px;
-    text-align: center;
+    width: 120px;
+    text-align: left;
 }
 
 
-/* Coluna 4: Local */
-#content-area-Menu table td:nth-child(7),
-#content-area-Menu table th:nth-child(7) {
-    width: 30px;
-    text-align: center;
+#content-area-Menu table td:nth-child(5),
+#content-area-Menu table th:nth-child(5) {
+    width: 120px;
+    text-align: left;
 }
 
-/* Coluna 4: Local */
+
+#content-area-Menu table td:nth-child(6),
+#content-area-Menu table th:nth-child(6) {
+    width: 120px;
+    text-align: left;
+}
+
 #content-area-Menu table td:nth-child(8),
 #content-area-Menu table th:nth-child(8) {
     width: 100px;
     text-align: center;
 }
-/* Coluna 5: Ações */
+
+
 #content-area-Menu table td:nth-child(9),
 #content-area-Menu table th:nth-child(9) {
     width: 80px;
     text-align: center;
-    white-space: nowrap;
 }
+
 
 /* ========================== BOTÕES DE AÇÃO ========================== */
-
-.Cl_BtnAcao {
-    background-color: transparent;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    margin: 0 3px;
-    padding: 2px;
+.Cl_BtnAcao{
+    background-color:transparent;
+    border:none;
+    cursor:pointer;
+    padding:6px;
+    font-size:18px;
 }
-
-.Cl_BtnAcao:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
+.Cl_BtnAcao:hover{
+    background-color:rgba(0,0,0,0.1);
+    border-radius:6px;
 }
 
 /* ========================== PAGINAÇÃO ========================== */
-.Cl_Paginacao {
-    text-align: center;
-    margin-top: 15px;
+.Cl_Paginacao{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:10px;
+    margin-top:20px;
+    margin-right:20px;
 }
- 
-.Cl_direcao {
-    background-color: #85C300;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
+.Cl_direcao{
+    background-color:transparent;
+    color:#007bff;
+    border:1px solid #007bff;
+    padding:6px 14px;
+    font-size:14px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:background-color .3s, color .3s, transform .2s;
 }
-
-.Cl_direcao:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+.Cl_direcao:hover:not(:disabled){
+    background-color:#007bff;
+    color:#ffffff;
+    transform:translateY(-1px);
 }
-
-/* ========================== BOTÕES DE AÇÃO NA TABELA ========================== */
-.Cl_BtnAcao {
-    margin: 0px;
-    padding: 0px;
-    background-color: transparent;
-    border: none;
-    color: inherit;
-    cursor: pointer;
+.Cl_direcao:disabled{
+    background-color:transparent;
+    color:#bbb;
+    border-color:#bbb;
+    cursor:not-allowed;
+    opacity:.6;
+    transform:none;
 }
-
-.Cl_BtnAcao:hover {
-    background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* ========================== BOTÕES DE AÇÃO NA TABELA ========================== */
-.Cl_BtnAcao {
-    margin: 0px;
-    padding: 0px;
-    background-color: transparent;
-    border: none;
-    color: inherit;
-    cursor: pointer;
+.Cl_Paginacao span{
+    font-weight:bold;
+    color:#333;
+    font-size:14px;
 }
 
-.Cl_BtnAcao:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+/* ========================== RESPONSIVO (opcional) ========================== */
+@media (max-width: 1100px){
+    .Cl_Filtros{
+        grid-template-columns: 1fr 1fr;  /* quebra em 2 colunas no tablet */
+    }
+    .Cl_FiltroBtnFiltrar,
+    .Cl_FiltroBtnLimpar{
+        grid-column: span 1;
+    }
 }
 
-/* ========================== BOTAO VOLTAR ========================== */
-.btn-voltar {
-  margin-bottom: 20px;
-  padding: 6px 14px;
-  background-color: #555;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.btn-voltar:hover {
-  background-color: #333;
-}
-
-.titulo-container {
-  margin: 0px auto;
-  padding: 0px;
-  max-width: 1200px;
-  background-color: transparent;
-  border-radius: 8px;
-  text-align: right;
-}
-
-
-.btn-voltar {
-  height: 40px;
-  padding: 10;
-
-}
-
-.icon-voltar {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+@media (max-width: 640px){
+    .Cl_Filtros{
+        grid-template-columns: 1fr;      /* coluna única no mobile */
+    }
 }

@@ -1,8 +1,24 @@
 console.log("Splano_contas.js carregado");
 
 if (typeof window.planocontas === "undefined") {
+    // Registra na mesma chave o mount/unmount criado pelo carregador Global de HTML que esta no global
+    (function (s) {
+    const pageKey = s.getAttribute('data-page-script'); 
+
+    async function mount(root, ctx, scope) {
+        // sua lógica (se quiser, pode continuar rodando código no topo do arquivo;
+        // o Global já captura e vai limpar tudo ao sair)
+    }
+
+    function unmount() {
+        // opcional — o Global já limpa eventos/timers/fetch/observers/Chart
+    }
+
+    GlobalUtils.registerPage(pageKey, { mount, unmount });
+    })(document.currentScript);
+
   window.planocontas = {
-    dados: [],
+    dados: [], 
 
     configurarEventos: function () {
         // Evento do botão de busca
@@ -149,13 +165,13 @@ if (typeof window.planocontas === "undefined") {
 
                 div.appendChild(subContainer);
 
-                const icon = spanToggle.querySelector('.icon-tech');
-
                 spanToggle.addEventListener("click", () => {
                     const fechado = subContainer.classList.toggle("fechado");
-                    icon.setAttribute('data-lucide', fechado ? 'mais' : 'menos');
-                    lucide.createIcons();
+                    // renderiza de novo usando o MAPA TECH -> Lucide
+                    spanToggle.innerHTML = Util.gerarIconeTech(fechado ? 'mais' : 'menos');
+                    try { lucide.createIcons(); } catch {}
                 });
+
             }
 
             return div;

@@ -195,6 +195,20 @@ select {
   justify-self: start;
 }
 
+
+
+
+.linha15 {
+  display: grid;
+  grid-template-columns: 55% 150%;
+  gap: 10px;
+  margin-bottom: 15px;
+
+  justify-self: start;
+}
+
+
+
 .linha20 {
   display: grid;
   grid-template-columns: 80px calc(100% - 80px) 100px calc(40% - 100px);

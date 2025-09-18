@@ -1,325 +1,133 @@
-/* ========================== FONTES PERSONALIZADAS ========================== */
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-}
-
-/* ========================== CONFIGURAÇÕES GERAIS ========================== */
-body {
-  font-family: 'Arboria', 'Segoe UI', sans-serif;
-  background-color: #FFFCFB;
-  color: #333333;
-  margin: 0;
-  padding: 0;
-}
-
+/* ========================================================================= */
+/* CONFIGURAÇÕES GERAIS / LAYOUT BASE                                        */
+/* ========================================================================= */
 .container {
-  max-width: 960px;
-  margin: 0px auto;
-  padding: 20px;
-  background-color: #FFFFFF;
-  border: 1px solid #DDD;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #FFFFFF;
+    border: 1px solid #DDD;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
 }
 
+.arvore {
+    padding-left: 10px;
+}
+
+
+/* ========================================================================= */
+/* FILTRO (barra superior)                                                   */
+/* ========================================================================= */
 .filtro {
-  padding: 16px;
-  background: #f4f4f4;
-  display: flex;
-  gap: 10px;
-  align-items: center;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;          /* unificado (já havia dois blocos) */
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #ccc;
 }
 
-.sub-itens {
-  margin-left: 20px;
+.filtro label {
+    font-weight: bold;
+    color: #333333;
 }
 
-.sub-itens.fechado {
-  display: none;
+.filtro select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333333;
+    background-color: #fff;
 }
+
+.filtro button {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    color: #fff;
+    background-color: #85C300;
+    transition: background-color 0.3s ease;
+}
+.filtro button:hover { background-color: #6FA700; }
+
+#btnCriarPlanoPadrao {
+    background-color: #ccc;
+    color: #333333;
+}
+#btnCriarPlanoPadrao:hover { background-color: #bbb; }
+
+
+/* ========================================================================= */
+/* SELECTS (estilo padrão TECH)                                              */
+/* ========================================================================= */
+select,
+select:focus {
+    height: 36px;
+    min-width: 100px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+select:hover { border-color: #bbb; }
+select:focus {
+    border-color: #85C300;
+    box-shadow: 0 0 0 2px rgba(133, 195, 0, 0.2);
+}
+
+
+/* ========================================================================= */
+/* ÁRVORE DE CONTAS (nós, níveis e linhas guia)                              */
+/* ========================================================================= */
+.sub-itens { margin-left: 20px; }
+.sub-itens.fechado { display: none; }
 
 .item-conta {
-  position: relative;
-  padding: 3px 0;
+    position: relative;
+    padding: 4px 0 4px 20px;     /* unificado: mantive 4px e indentação à esquerda */
+    border-left: 1px solid #ccc;
+}
+.item-conta::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 0;
+    width: 20px;
+    height: 1px;
+    background-color: #ccc;
 }
 
+/* Estados */
 .item-conta.inativo .descricao {
-  text-decoration: line-through;
-  opacity: 0.5;
+    text-decoration: line-through;
+    opacity: 0.5;
 }
 
-.nivel-0 { font-weight: bold; }
+/* Níveis visuais */
+.nivel-0 { font-weight: bold; border-left: none; }
+.nivel-0::before { display: none; }
 .nivel-1 { margin-left: 10px; }
 .nivel-2 { margin-left: 20px; }
 .nivel-3 { margin-left: 30px; }
 
-.toggle {
-  display: inline-block;
-  width: 16px;
-  text-align: center;
-}
-
-.linha-item {
-  display: flex;
-  align-items: center;
-  padding: 3px 4px;
-}
-
-.linha-item:hover {
-  background-color: #f0f0f0;
-}
-
-.linha-item .acoes {
-  display: none;
-  margin-left: auto;
-}
-
-.linha-item:hover .acoes {
-  display: inline-flex;
-}
-
-.item-conta.editando > .linha-item {
-  background-color: #f0f0f0;
-  z-index: 1;
-}
-
-.item-conta.editando > .linha-item > .acoes {
-  display: inline-flex !important;
-}
-
-.arvore {
-  padding-left: 10px;
-}
-
-.item-conta {
-  position: relative;
-  padding: 4px 0 4px 20px;
-  border-left: 1px solid #ccc;
-}
-
-.item-conta::before {
-  content: "";
-  position: absolute;
-  top: 14px;
-  left: 0;
-  width: 20px;
-  height: 1px;
-  background-color: #ccc;
-}
-
-.nivel-0 {
-  border-left: none;
-}
-
-.nivel-0::before {
-  display: none;
-}
-
-.toggle {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  width: 18px;
-  height: 18px;
-  font-size: 12px;
-  border: 1px solid #ccc;
-  border-radius: 50%;
-  background-color: #fff;
-  color: #333;
-  cursor: pointer;
-  margin-right: 6px;
-  transition: all 0.2s ease;
-}
-
-.toggle:hover {
-  background-color: #85C300;
-  color: #fff;
-  border-color: #6FA700;
-}
-
-.item-conta.ultimo-filho::before {
-  background-color: #ccc;
-  width: 20px;
-  height: 1px;
-  top: 14px;
-  left: 0;
-  content: "";
-  position: absolute;
-}
-
-.item-conta:not(.nivel-0):last-child {
-  border-left-color: transparent;
-}
-
-/* ===============================================
-   BOTÕES DE AÇÃO: COMPORTAMENTO DE VISIBILIDADE
-   =============================================== */
-
-/* 🟢 Exibe os botões padrão (✏️ ➕ 👁️) no hover da linha */
-.linha-item:hover .btn_acao {
-  display: inline-block;
-}
-
-/* 🔒 Oculta todos os botões padrão quando houver edição ativa */
-body.editando-ativa .btn_acao {
-  display: none !important;
-}
-
-/* 🔒 Oculta todos os botões de confirmação/cancelamento por padrão */
-.btn_acao_editado {
-  display: none;
-}
-
-/* ✅ Exibe somente os botões de edição (✅ ❌) na linha que está sendo editada */
-.item-conta.editando .btn_acao_editado {
-  display: inline-block !important;
-}
-
-
-
-/* ========================== Botões filtro e criar plano ========================== */
-.filtro {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 0 10px #ccc;
-}
-
-.filtro label {
-  font-weight: bold;
-  color: #333333;
-}
-
-.filtro select {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #333333;
-  background-color: white;
-}
-
-.filtro button {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  color: white;
-  background-color: #85C300;
-  transition: background-color 0.3s ease;
-}
-
-.filtro button:hover {
-  background-color: #6FA700;
-}
-
-#btnCriarPlanoPadrao {
-  background-color: #ccc;
-  color: #333333;
-}
-
-#btnCriarPlanoPadrao:hover {
-  background-color: #bbb;
-}
-
-
-select,
-select:focus {
-  height: 36px;
-  min-width: 100px;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #fff;
-  color: #333;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-select:hover {
-  border-color: #bbb;
-}
-
-select:focus {
-  border-color: #85C300; /* Verde da paleta TECH */
-  box-shadow: 0 0 0 2px rgba(133, 195, 0, 0.2);
-}
-
-
-/* ========================== BOTAO VOLTAR ========================== */
-.btn-voltar {
-  margin-bottom: 20px;
-  padding: 6px 14px;
-  background-color: #000000;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.btn-voltar:hover {
-  background-color: #333;
-}
-
-.titulo-container {
-  margin-left: auto;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.icon-voltar {
-  width: 20px;
-  height: 20px;
-
-}
-
-.icon-voltar:hover {
-  opacity: 1;
-}
-
-
-
-
-
-
-
-/* Corrige a linha vertical no último filho */
+/* Último filho: remove vertical e mantém “└─” */
+/* Último filho: remove a vertical contínua,
+   mas repõe o pedacinho acima do “└” */
 .item-conta.ultimo-filho {
     border-left: none;
-    position: relative;
+    position: relative; /* garantir contexto para ::after */
 }
 
-/* Faz apenas a linha horizontal └─ */
 .item-conta.ultimo-filho::before {
     content: "";
     position: absolute;
@@ -327,10 +135,88 @@ select:focus {
     top: 14px;
     width: 20px;
     height: 1px;
-    background-color: #ccc;
+    background-color: #ccc;  /* “─” */
 }
 
-/* Remove traço vertical das sublinhas */
-.item-conta.ultimo-filho > .sub-itens {
-    border-left: none;
+/* ⬇️ este bloco é o que faltava */
+.item-conta.ultimo-filho::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;            /* do topo do item */
+    width: 1px;
+    height: 14px;      /* até encostar no “─” em 14px */
+    background-color: #ccc;   /* “│” */
 }
+
+.item-conta:not(.nivel-0):last-child { border-left-color: transparent; }
+
+
+/* ========================================================================= */
+/* LINHA DO ITEM (título + ícones de ação)                                   */
+/* ========================================================================= */
+.linha-item {
+    display: flex;
+    align-items: center;
+    padding: 3px 4px;
+}
+.linha-item .acoes { display: none; margin-left: auto; }
+.linha-item:hover .acoes { display: inline-flex; }
+
+/* Edição inline: destaca linha e mostra botões de confirmar/cancelar */
+.item-conta.editando > .linha-item {
+    background-color: #f0f0f0;
+    z-index: 1;
+}
+.item-conta.editando > .linha-item > .acoes { display: inline-flex !important; }
+
+
+/* ========================================================================= */
+/* TOGGLE DE EXPANSÃO/COLAPSO (círculo + Lucide plus/minus)                  */
+/* (substitui blocos duplicados)                                             */
+/* ========================================================================= */
+.toggle {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;                   /* maior para melhorar toque/visibilidade */
+    height: 20px;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: all 0.2s ease;
+}
+.toggle svg {
+    width: 20px;                   /* deixa o ícone mais visível */
+    height: 20px;
+    stroke: #333;
+    stroke-width: 4;
+    margin: 0;
+}
+.toggle:hover {
+    background-color: #85C300;
+    border-color: #6FA700;
+    color: #fff;
+}
+.toggle:hover svg { stroke: #fff; }
+
+
+/* ========================================================================= */
+/* BOTÕES DE AÇÃO: VISIBILIDADE DURANTE EDIÇÃO                               */
+/* ========================================================================= */
+/* exibe botões padrão no hover da linha */
+.linha-item:hover .btn_acao { display: inline-block; }
+
+/* oculta botões padrão quando qualquer linha está em edição */
+body.editando-ativa .btn_acao { display: none !important; }
+
+/* por padrão, ocultar botões de confirmar/cancelar */
+.btn_acao_editado { display: none; }
+
+/* ao editar, mostrar apenas botões de confirmar/cancelar na linha ativa */
+.item-conta.editando .btn_acao_editado { display: inline-block !important; }
+
+

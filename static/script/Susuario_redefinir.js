@@ -1,52 +1,48 @@
-console.log("🟢 Susuario_redefinir.js carregado");
-
-const params = new URLSearchParams(window.location.search);
-const token = params.get("token");
+console.log("Susuario_redefinir.js carregado");
 
 document.getElementById("btnAlterarSenha").addEventListener("click", async () => {
-  const btn = document.getElementById("btnAlterarSenha");
+  const hidden = document.getElementById("token");
+  let token = hidden ? (hidden.value || "").trim() : "";
 
-  // Previne múltiplos cliques
-  if (btn.disabled) return;
-  btn.disabled = true;
-  btn.textContent = "Enviando...";
-
-  const nova = document.getElementById("novaSenha").value.trim();
-  const repetir = document.getElementById("confirmarSenha").value.trim();
-
-  if (nova.length < 8 || !/[A-Z]/.test(nova) || !/[a-z]/.test(nova) || !/[!@#$%^&*(),.?":{}|<>]/.test(nova)) {
-    btn.disabled = false;
-    btn.textContent = "Salvar Senha";
-    return Swal.fire("Atenção", "A senha deve conter no mínimo 8 caracteres, incluindo uma letra maiúscula, uma minúscula e um caractere especial.", "warning");
+  // fallback: se não veio hidden, tenta ler da URL ?token=...
+  if (!token) {
+    const params = new URLSearchParams(window.location.search);
+    token = (params.get("token") || "").trim();
   }
 
-  if (nova !== repetir) {
-    btn.disabled = false;
-    btn.textContent = "Salvar Senha";
-    return Swal.fire("Erro", "As senhas não coincidem.", "error");
+  const s1 = document.getElementById("novaSenha").value;
+  const s2 = document.getElementById("confirmarSenha").value;
+
+  if (!token) {
+    Swal.fire("Link inválido", "Token ausente. Solicite novo em suporte@rufino.tech.", "error");
+    return;
+  }
+  if (!s1 || !s2) {
+    Swal.fire("Campos obrigatórios", "Preencha e confirme a nova senha.", "warning");
+    return;
+  }
+  if (s1 !== s2) {
+    Swal.fire("Atenção", "As senhas não conferem.", "warning");
+    return;
   }
 
   try {
     const resp = await fetch("/usuario/redefinir", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, senha: nova })
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ token, senha: s1 })
     });
-    const resultado = await resp.json();
+    const j = await resp.json().catch(() => ({}));
 
-    if (resp.ok) {
-      Swal.fire("Sucesso!", resultado.mensagem, "success").then(() => {
-        window.location.href = "/login";
-      });
-    } else {
-      btn.disabled = false;
-      btn.textContent = "Salvar Senha";
-      Swal.fire("Erro", resultado.mensagem || "Erro ao redefinir senha.", "error");
+    if (!resp.ok) {
+      Swal.fire("Erro", j.mensagem || "Não foi possível redefinir a senha.", "error");
+      return;
     }
-  } catch (erro) {
-    btn.disabled = false;
-    btn.textContent = "Salvar Senha";
-    console.error("Erro:", erro);
-    Swal.fire("Erro", "Erro ao comunicar com o servidor.", "error");
+
+    await Swal.fire("Sucesso", j.mensagem || "Senha redefinida com sucesso.", "success");
+    window.location.href = "/login"; // ajuste se o endpoint de login tiver outro path
+  } catch (e) {
+    console.error("Falha no reset:", e);
+    Swal.fire("Erro", "Falha de comunicação com o servidor.", "error");
   }
 });

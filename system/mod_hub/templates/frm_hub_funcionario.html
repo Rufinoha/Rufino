@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Funcionários</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_funcionario.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+
+<div class="Cl_ConfigContainer">
+  <h2>Funcionários</h2> 
+
+  <div class="Cl_Filtros">
+    <div class="linha-filtros-1">
+      <div class="filtro-campo">
+        <label for="ob_filtroNome" class="Cl_labelfiltro">Nome:</label>
+        <input id="ob_filtroNome" class="Cl_CamposFiltros" placeholder="Filtrar por nome">
+      </div>
+      <div class="filtro-campo">
+        <label for="ob_filtroDepartamento" class="Cl_labelfiltro">Departamento:</label>
+        <input id="ob_filtroDepartamento" class="Cl_CamposFiltros" placeholder="Departamento">
+      </div>
+    </div>
+
+    <div class="linha-filtros-2">
+      <div class="filtro-campo">
+        <label for="ob_filtroFuncao" class="Cl_labelfiltro">Função:</label>
+        <input id="ob_filtroFuncao" class="Cl_CamposFiltros" placeholder="Função">
+      </div>
+      <div class="filtro-campo">
+        <label for="ob_filtroStatus" class="Cl_labelfiltro">Status:</label>
+        <select id="ob_filtroStatus" class="Cl_CamposFiltros">
+          <option value="">Todos</option>
+          <option value="true" selected>Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+      </div>
+      <div class="filtro-botoes">
+        <button id="ob_btnFiltrar" class="Cl_botaoFiltro">Filtrar</button>
+        <button id="ob_btnlimparFiltro" class="Cl_botaoFiltro">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <div class="Cl_botaoIncluir">
+    <button id="ob_btnIncluir" class="Cl_BtnIncluir">Novo Funcionário</button>
+  </div>
+
+  <div class="Cl_TabelaMenu">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>CPF</th>
+          <th>Nome</th>
+          <th>Departamento</th>
+          <th>Função</th>
+          <th>Email</th>
+          <th>WhatsApp</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="ob_listaFuncionarios">
+        <tr class="Cl_Carregando"><td colspan="9">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="Cl_Paginacao">
+    <button id="ob_btnPrimeiro" class="Cl_direcao">Primeiro</button>
+    <button id="ob_btnAnterior" class="Cl_direcao">Anterior</button>
+    <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+    <button id="ob_btnProximo" class="Cl_direcao">Próximo</button>
+    <button id="ob_btnUltimo" class="Cl_direcao">Último</button>
+  </div>
+</div>
+</body>
+</html>

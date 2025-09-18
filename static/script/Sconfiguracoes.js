@@ -1,104 +1,85 @@
-console.log("🟢 Sconfiguracoes.js carregado..."); 
 
-// contra duplicações
+console.log("Sconfiguracoes.js carregado");
+
+// Protege contra duplicações
 if (typeof window.Configuracoes === "undefined") {
     window.Configuracoes = {
+        // Títulos sem emoji; ícone TECH padronizado
         cardsDisponiveis: [
+            { card_id: "usuarios",  titulo: "Usuários",             texto: "Gerencie contas e permissões do sistema.",                  page: "usuario",              iconTech: "favorecidos" },
+            { card_id: "perfil",    titulo: "Perfil de Usuário",    texto: "Gerencie os menus de cada perfil de acesso.",               page: "usuario_modelo",       iconTech: "nivel_acesso" },
+            { card_id: "Cobrancas", titulo: "Faturamento",          texto: "Controle de faturas emitidas as assinaturas de clientes.",  page: "cobranca" ,            iconTech: "financeiro" },
+            { card_id: "novidades", titulo: "Novidades",            texto: "Gerencie os cards exibidos na lateral do sistema.",         page: "novidades",            iconTech: "novidades" },
+            { card_id: "geral",     titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.",         page: "config_geral",         iconTech: "configuracoes" },
+            { card_id: "menu",      titulo: "Itens de Menu",        texto: "Configure os menus e submenus do sistema",                  page: "menu",                 iconTech: "configuracoes" },
+            { card_id: "ajuda",     titulo: "Central de Ajuda",     texto: "Cadastre dicas e explicações para os módulos.",             page: "emcontrucao_config",   iconTech: "chamado" },
+            { card_id: "banco",     titulo: "Backup",               texto: "Configure backups e verifique integridade dos dados.",      page: "emcontrucao_config",   iconTech: "configuracoes" }
+        ],
 
-            { card_id: "Cobrancas", titulo: "Faturamento", texto: "Controle de faturas emitidas as assinaturas de clientes.", pagina: "cobranca" },
-            { card_id: "novidades", titulo: "Novidades", texto: "Gerencie os cards exibidos na lateral do sistema.", pagina: "novidades" },
-            { card_id: "Menu", titulo: "Menu", texto: "Controle de conteudo dos Menus lateral e topo.", pagina: "menu" },
-            { card_id: "geral", titulo: "Configurações Gerais", texto: "Ajuste nome do sistema, logotipo e opções padrão.", pagina: "config_geral" },
-            { card_id: "ajuda", titulo: "Central de Ajuda", texto: "Cadastre dicas e explicações para os módulos.", pagina: "emcontrucao_config" },
-            { card_id: "Backup", titulo: "Backup", texto: "Configure backups e verifique integridade dos dados.", pagina: "emcontrucao_config" }
 
-        ], 
-
-        configurarEventos: async function () {
-            const container = document.getElementById("config-container");
-            if (container && container.querySelector(".card")) {
-                console.warn("⛔ Cards já estão carregados. Ignorando nova execução.");
-                return;
-            }
-
-            this.criarSlots();
-
-            // 🟩 Preenche os slots automaticamente com os cards disponíveis
-            this.cardsDisponiveis.forEach((info, index) => {
-                const slot = document.querySelectorAll(".slot")[index];
-                if (slot) {
-                const card = this.renderizarCard(info);
-                slot.appendChild(card);
-                }
-            });
-
-           
+        configurarEventos: function () {
+            this.renderizarCardsFixos();
         },
 
-        
-
-        criarSlots: function () {
+        renderizarCardsFixos: function () {
             const container = document.getElementById("config-container");
             if (!container) return;
-            container.innerHTML = ""; // 🧹 Limpa tudo antes de montar
 
-            for (let i = 0; i < 20; i++) {
-                const slot = document.createElement("div");
-                slot.classList.add("slot");
-                slot.dataset.linha = Math.floor(i / 4);
-                slot.dataset.coluna = i % 4;
-                slot.ondragover = e => e.preventDefault();
-                slot.ondrop = this.aoSoltar;
-                container.appendChild(slot);
-            }
+            // Limpa e garante classe de grid
+            container.innerHTML = "";
+            container.classList.add("Cl_CardsGrid");
+
+            // Renderiza cada card fixo
+            this.cardsDisponiveis.forEach(info => {
+                container.appendChild(this.renderizarCard(info));
+            });
+
+            // Converte <i data-lucide> em SVG (ícones TECH)
+            window.lucide?.createIcons?.();
         },
 
-        
         renderizarCard: function (info) {
             const card = document.createElement("div");
-            card.classList.add("card");
-            card.draggable = true;
+            card.className = "Cl_CardItem";
             card.dataset.cardId = info.card_id;
 
-            const titulo = document.createElement("span");
-            titulo.innerText = info.titulo;
+            // usa 'page' novo; se não vier, normaliza o legado 'pagina'
+            const page = info.page ?? this.normalizaPagina(info.pagina);
+            card.dataset.page = page; // <- grava no data-page
+
+            card.setAttribute("role", "button");
+            card.setAttribute("tabindex", "0");
+            card.setAttribute("aria-label", `${info.titulo}`);
+
+            const topo = document.createElement("div");
+            topo.className = "card-topo";
+            const iconeHTML = window?.Util?.gerarIconeTech?.(info.iconTech || "configuracoes") || "";
+            topo.innerHTML = `${iconeHTML}<span class="card-titulo">${info.titulo}</span>`;
+
             const texto = document.createElement("p");
+            texto.className = "card-texto";
             texto.innerText = info.texto;
 
-            card.appendChild(titulo);
+            card.appendChild(topo);
             card.appendChild(texto);
 
-            card.ondragstart = e => {
-                e.dataTransfer.setData("card_id", info.card_id);
-                document.querySelectorAll(".slot:empty").forEach(slot => {
-                    slot.classList.add("vazio-destino");
-                });
+            const abrir = () => {
+                const p = card.dataset.page;
+                if (!p) { throw new Error(`Card ${info.card_id} sem data-page`); }
+                window.GlobalUtils.carregarPagina(p); // <- chama o global
             };
 
-            card.ondragend = () => {
-                document.querySelectorAll(".slot").forEach(slot => {
-                    slot.classList.remove("vazio-destino");
-                });
-            };
-
-            card.onclick = () => {
-                if (info.pagina) {
-                    const pagina = info.pagina.replace("frm_", "").replace(".html", "");
-                    card.classList.add("carregando");
-                    GlobalUtils.carregarPagina(pagina);
-                    setTimeout(() => card.classList.remove("carregando"), 1000);
-                }
-            };
+            card.addEventListener("click", abrir);
+            card.addEventListener("keydown", (ev) => {
+                if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); abrir(); }
+            });
 
             return card;
         },
-
     };
 }
 
-// Após criar window.Configuracoes
+// Boot
 if (window.Configuracoes && typeof window.Configuracoes.configurarEventos === "function") {
     window.Configuracoes.configurarEventos();
 }
-
-

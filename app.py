@@ -12,6 +12,9 @@ from flask import Flask
 from dotenv import load_dotenv
 load_dotenv()
 
+
+
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "rufino_chave_secreta_default")
 app.config["SESSION_COOKIE_NAME"] = os.getenv("SESSION_COOKIE_NAME", "rufino_session")

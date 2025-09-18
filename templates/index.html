@@ -11,13 +11,6 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-  <script>
-    window.Paths = {
-      pinSolto: "{{ url_for('static', filename='imge/pin_solto.png') }}",
-      pinFincado: "{{ url_for('static', filename='imge/pin_fincado.png') }}"
-    };
-  </script>    
 </head>
 
 <body>
@@ -52,15 +45,32 @@
   </header>
 
   <!-- Menu Lateral -->
-  <aside id="menuLateral" class="retraido">
-    <button id="btnPinMenu">
-      <img id="iconePin" src="{{ url_for('static', filename='imge/pin_solto.png') }}" alt="PIN" />
-    </button>
+  <aside id="menuLateral" class="retraido" role="navigation" aria-label="Menu principal">
+
+    <div id="menuSearchBox" class="Cl_MenuSearchBox">
+        <i data-lucide="search" class="Cl_MenuSearchIcon"></i>
+        <input id="menuSearchInput" type="text" placeholder="Pesquisar módulos..." autocomplete="off">
+        <button id="menuSearchClear" class="Cl_MenuSearchClear" title="Limpar">✖</button>
+    </div>
+
+    <div class="Cl_SideBulk">
+      <button id="btnAbrirTudo" class="Cl_SideBulkBtn" title="Expandir todos">Expandir</button>
+      <button id="btnFecharTudo" class="Cl_SideBulkBtn" title="Recolher todos">Recolher</button>
+    </div>
 
     <ul id="listaMenus">
-      <!-- Aqui é o menu lateral -->
       <div id="menu-lateral" class="menu-lateral"></div>
     </ul>
+
+    <!-- Controles do rodapé do menu lateral -->
+    <div id="menuFooterControls" class="Cl_MenuFooter">
+        <button id="btnToggleSidebar" class="Cl_SidebarBtn" title="Recolher/Expandir">
+            <i data-lucide="chevrons-left"></i>
+        </button>
+        <button id="btnPinSidebar" class="Cl_SidebarBtn" title="Fixar aberto">
+            <i data-lucide="pin"></i>
+        </button>
+    </div>
   </aside>
 
 

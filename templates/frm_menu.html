@@ -1,85 +1,84 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestão de Menus - Rufino</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='image/favicon.ico') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style/Cmenu.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <title>Gestão de Menus</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/Cmenu.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.ico') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@0.257.0"></script>
 </head>
-<body>
+<body> 
 
-  <div class="titulo-container">
-    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('configuracoes')">
-      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para Configurações
-    </button>
-  </div>
+    <div class="Cl_ConfigContainer">
+        <h2>Gestão de Menus</h2>
+ 
+        <div class="Cl_Filtros">
+          <div>
+              <label class="Cl_labelfiltro">Nome do menu:</label>
+              <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome do menu">
+          </div>
 
-  <div class="Cl_ConfigContainer">
-    <h2>Menus</h2>
-    <div class="Cl_Filtros">
-      <label class="Cl_labelfiltro" for="ob_filtroNome">Nome do Menu:</label>
-      <input class="Cl_CamposFiltros" type="text" id="ob_filtroNome" placeholder="Filtrar por nome">
+          <div>
+              <label class="Cl_labelfiltro">Menus (pais):</label>
+              <select class="Cl_CamposFiltros" id="ob_filtroMenuPai">
+                  <option value="">Todos</option>
+              </select>
+          </div>
 
+          <div>
+              <label class="Cl_labelfiltro">Módulo:</label>
+              <select class="Cl_CamposFiltros" id="ob_filtroModulo">
+                  <option value="">Todos</option>
+              </select>
+          </div>
 
-      <label class="Cl_labelfiltro" for="ob_filtroMenuPrincipal">Menu:</label>
-        <select class="Cl_CamposFiltros" id="ob_filtroMenuPrincipal">
-          <option value="">Todos</option>
-        </select>
+          <div class="Cl_FiltroBtnFiltrar">
+              <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+          </div>
 
-
-
-      <label class="Cl_labelfiltro" for="ob_filtroLocal">Local:</label>
-      <select class="Cl_CamposFiltros" id="ob_filtroLocal">
-        <option value="">Todos</option>
-        <option value="lateral">Lateral</option>
-        <option value="horizontal">Horizontal</option>
-      </select>
-
-      <div>
-        <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
-        <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+          <div class="Cl_FiltroBtnLimpar">
+              <button class="Cl_botaoFiltro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+          </div>
       </div>
-    </div>
 
-    <div class="Cl_botaoIncluir">
-      <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Menu</button>
-    </div>
 
-    <div class="Cl_TabelaMenu" id="content-area-Menu">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Sequencia</th>
-            <th>Menu Principal</th>
-            <th>Rota</th>
-            <th>Data Page</th>
-            <th>Ícone</th>
-            <th>Local</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="ob_listaMenus">
-          <tr class="Cl_Carregando">
-            <td colspan="9">Carregando...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
-    <div class="Cl_Paginacao">
-      <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
-      <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
-      <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
-      <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
-      <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
-    </div>
-  </div>
-  <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+        <div class="Cl_botaoIncluir">
+            <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Menu</button>
+        </div>
 
+        <div class="Cl_TabelaMenu" id="content-area-Menu">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome do menu</th>
+                        <th>Descrição</th>
+                        <th>Menu (pai)</th>
+                        <th>Sequência</th>
+                        <th>Principal</th>
+                        <th>Data Page</th>
+                        <th>Módulo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="ob_listaMenus">
+                    <tr class="Cl_Carregando">
+                        <td colspan="9">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="Cl_Paginacao">
+            <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+            <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+            <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+            <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+            <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+        </div>
+    </div>
 </body>
 </html>

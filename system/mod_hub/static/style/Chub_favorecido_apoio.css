@@ -1,67 +1,3 @@
-/* ========================== FONTES PERSONALIZADAS ========================== */
-@font-face {
-  font-family: 'Arboria';
-  src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
-       url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
-  font-weight: 300;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Arboria';
-  src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
-       url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Arboria';
-  src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
-       url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
-  font-weight: 700;
-  font-style: normal;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Arboria', 'Segoe UI', sans-serif;
-  background-color: #FFFCFB;
-  overflow: hidden; /* remove todas as barras */
-}
-
-/* ========================== CABEÇALHO ========================== */
-.Cl_Header {
-  height: 50px;
-  display: flex;
-  align-items: center;
-  background-color: #333;
-  color: white;
-  padding: 0 50px;
-  justify-content: space-between;
-  width: calc(100% - 100px);
-}
-
-.Cl_Logo img {
-  height: 50px;
-}
-
-.Cl_Titulo {
-  text-align: center;
-  flex-grow: 1;
-}
-
-.Cl_MenuID input {
-  background-color: #555;
-  color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  width: 60px;
-  text-align: center;
-}
-
 /* ========================== CONTAINER FORMULÁRIO ========================== */
 .Cl_ContainerApoio {
   width: calc(100% - 100px);
@@ -203,53 +139,6 @@ body.pf .form-linha09 {
   background-color: #6FA700;
 }
 
-/* ========================== BOTÕES DE AÇÃO ========================== */
-
-.Cl_BotoesGeral {
-  display: flex;
-  justify-content: flex-end; /* Alinha tudo à direita */
-  padding: 0px 40px 0 0;    /* Topo e direita com espaçamento */
-}
-
-.Cl_BotoesApoio {
-  display: flex;
-  gap: 10px;
-}
-
-
-.Cl_BtnSalvar,
-.Cl_BtnCancelar {
-  background-color: #85C300;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  font-size: 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  max-width: 150px;
-}
-
-.Cl_BtnSalvar:hover,
-.Cl_BtnCancelar:hover {
-  background-color: #6FA700;
-}
-
-.Cl_BtnExcluir {
-  background-color: #E53935;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  font-size: 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  max-width: 150px;
-}
-
-.Cl_BtnExcluir:hover {
-  background-color: #C62828;
-}
 
 /* ========================== COMBO CUSTOMIZADO ========================== */
 .combo-busca {
@@ -347,21 +236,98 @@ body.pf .form-linha09 {
   background-color: #f1f1f1;
 }
 
-/* ========================== CAMPOS DINÂMICOS POR TIPO ========================== */
-.form-campo[data-tipo="pj"],
-.form-campo[data-tipo="pf"] {
-  transition: all 0.3s ease;
+/* === Campo de Categoria com caret igual ao <select> ====================== */
+.Cl_TypeCombo { position: relative; }
+
+
+
+
+.Cl_TypeCombo input#categoria_display{
+  width: 100%;
+  padding: 8px 36px 8px 12px;   /* espaço para a seta à direita */
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  color: #333333;
+  appearance: none;             /* visual limpo */
+  -moz-appearance: none;
+  -webkit-appearance: none;
 }
 
-/* Esconde os campos dinâmicos por padrão */
-.form-campo[data-tipo="pj"],
-.form-campo[data-tipo="pf"] {
-  display: none;
+
+/* esconde qualquer botão dentro do wrapper do combo */
+.Cl_TypeCombo .Cl_TypeComboCaret,
+.Cl_TypeCombo button{
+  display: none !important;
 }
 
-/* Quando visíveis, aparece com estilo destacado */
-.form-campo[data-tipo="pj"].ativo,
-.form-campo[data-tipo="pf"].ativo {
-  display: flex !important;
 
+/* caret embutido igual ao select nativo */
+.Cl_TypeCombo::after{
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  pointer-events: none; /* clique passa pro input */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23222222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: center;
 }
+
+
+
+
+/* foco como seus inputs/selects */
+.Cl_TypeCombo input#categoria_display:focus{
+  border-color: #85C300;
+  box-shadow: 0 0 0 3px rgba(133,195,0,0.2);
+}
+
+/* Lista colada no input */
+.Cl_TypeComboList{
+  position: absolute;
+  z-index: 1000;
+  max-height: 220px;
+  overflow: auto;
+  background: #FFFFFF;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  list-style: none;   /* remove o ponto preto */
+  margin: 0;          /* remove espaço extra */
+  padding: 4px 0;
+}
+.Cl_TypeComboList .item{
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.Cl_TypeComboList .item:hover,
+.Cl_TypeComboList .item.active{
+  background: #F4FBEA;
+}
+.Cl_TypeComboList .item.vazio{
+  color: #777;
+  cursor: default;
+}
+
+/* área clicável sobre a seta (invisível) */
+.Cl_TypeComboHotspot{
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 36px;         /* mesma folga do padding-right do input */
+  height: 100%;
+  cursor: pointer;
+  background: transparent;
+}
+
+

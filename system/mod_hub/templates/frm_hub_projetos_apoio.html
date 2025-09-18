@@ -1,62 +1,66 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Projeto</title>
-  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_projetos_apoio.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <title>TECH | Projeto (Apoio)</title>
+    <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('mod_hub.static', filename='style/Chub_projetos_apoio.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@0.257.0"></script>
 </head>
 <body>
-
-<div class="Cl_Header">
-  <div class="Cl_Logo">
-    <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
-  </div>
-  <div class="Cl_Titulo">
-    <h1>Projeto</h1>
-  </div>
-  <div class="Cl_MenuID">
-    <label for="id">ID:</label>
-    <input type="text" id="id" disabled>
-  </div>
-</div>
-
-<div class="Cl_ContainerApoio">
-  <form id="formProjeto" class="form-grade">
-    <div class="form-linha01">
-      <div class="form-campo">
-        <label for="nome_projeto">Nome do Projeto:</label>
-        <input type="text" id="nome_projeto" required />
+    <!-- 🔹 CABEÇALHO -->
+    <div class="Cl_Header">
+      <div class="Cl_Logo">
+        <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
       </div>
-
-      <div class="form-campo">
-        <label class="switch-label">
-          <span>Status:</span>
-          <label class="switch-toggle">
-            <input type="checkbox" id="status" checked />
-            <span class="slider"></span>
-          </label>
-        </label>
+      <div class="Cl_Titulo">
+        <h1>Projetos</h1>
+      </div>
+      <div class="Cl_MenuID">
+        <label for="id">ID Projeto:</label>
+        <input type="text" id="id" disabled>
       </div>
     </div>
 
-    <div class="form-linha02">
-      <div class="form-campo" style="flex: 1 1 100%;">
-        <label for="observacoes">Observações:</label>
-        <textarea id="observacoes" rows="4" placeholder="Observações opcionais..."></textarea>
-      </div>
+    <!-- 🔹 FORMULÁRIO -->
+    <div class="Cl_Formulario">
+        <!-- Linha 1: nome + status (switch) -->
+        <div class="linha1">
+            <div class="form-campo">
+                <label for="nome_projeto">Nome do Projeto:</label>
+                <input type="text" id="nome_projeto">
+            </div>
+            <div class="form-campo">
+                <label>Status:</label>
+                <div style="display: flex; align-items: center;">
+                    <label class="switch">
+                        <input type="checkbox" id="statusToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="statusLabel" style="margin-left: 8px;">Ativo</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linha 2: observações (grande) -->
+        <div class="linha2">
+            <div class="form-campo">
+                <label for="obs">Observações:</label>
+                <textarea id="obs" rows="6"></textarea>
+            </div>
+        </div>
     </div>
-  </form>
-</div>
 
-<div class="Cl_BotoesApoio">
-  <button id="ob_btnSalvar" class="Cl_BtnSalvar">Salvar</button>
-  <button id="ob_btnexcluir" class="Cl_BtnExcluir">Excluir</button>
-</div>
+    <!-- 🔹 BOTÕES -->
+    <div class="Cl_Botoes Cl_NoPrint">
+        <button id="btnSalvar">Salvar</button>
+        <button id="btnExcluir" class="Neutro">Excluir</button>
+    </div>
 
-<script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
-<script src="{{ url_for('mod_hub.static', filename='script/Shub_projetos_apoio.js') }}"></script>
+    <!-- 🔹 SCRIPTS -->
+    <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
+    <script src="{{ url_for('mod_hub.static', filename='script/Shub_projetos_apoio.js') }}"></script>
 </body>
 </html>

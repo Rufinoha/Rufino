@@ -1,104 +1,109 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lançamentos de Reembolso</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Creem_lancamentos.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <title>TECH | Reembolso • Lançamentos</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Creem_lancamentos.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@0.257.0"></script>
 </head>
 <body>
-  <div class="titulo-container">
-    <button class="btn-voltar" onclick="GlobalUtils.carregarPagina('reembolso_inicio')">
-      <img src="/static/imge/setavoltar.png" alt="Voltar" class="icon-voltar">Voltar para HUB
-    </button>
-  </div>
-  <div class="Cl_ConfigContainer">
-    <h2>Reembolso Lançados</h2>
+    <div class="Cl_ConfigContainer">
+        <h2>Reembolso • Lançamentos</h2>
 
-    <div class="Cl_Filtros">
-      <label class="Cl_labelfiltro" for="filtroDescricao">Descrição:</label>
-      <input class="Cl_CamposFiltros" type="text" id="filtroDescricao" placeholder="Filtrar por descrição">
+        <!-- =================== FILTROS (padrão; botões lado a lado) =================== -->
+        <div class="Cl_Filtros">
+            <div>
+                <label class="Cl_labelfiltro" for="ob_filtroDescricao">Descrição:</label>
+                <input class="Cl_CamposFiltros" type="text" id="ob_filtroDescricao" placeholder="Filtrar por descrição">
+            </div>
 
-      <label class="Cl_labelfiltro" for="filtroData">Data:</label>
-      <input class="Cl_CamposFiltros" type="date" id="filtroData">
+            <div>
+                <label class="Cl_labelfiltro" for="ob_filtroData">Data:</label>
+                <input class="Cl_CamposFiltros" type="date" id="ob_filtroData" placeholder="dd/mm/aaaa">
+            </div>
 
-      <label class="Cl_labelfiltro" for="filtroStatus">Status:</label>
-      <!-- Campo original oculto -->
-      <select id="filtroStatus" multiple style="display:none">
-        <option value="Aberto" selected>Aberto</option>
-        <option value="Retornado" selected>Retornado</option>
-        <option value="Rejeitado">Rejeitado</option>
-        <option value="Aprovado">Aprovado</option>
-        <option value="Finalizado">Finalizado</option>
-      </select>
+            <div>
+                <label class="Cl_labelfiltro">Status:</label>
+                <!-- botão-resumo do multiselect (como a imagem 2) -->
+                <div class="Cl_StatusMulti">
+                    <button type="button" id="ob_btnStatus" class="Cl_CamposFiltros Cl_SelectLike">
+                        Filtros = 5 <span class="Cl_Chevron"></span>
+                    </button>
 
+                    <div id="ob_painelStatus" class="Cl_StatusDropdown" aria-hidden="true">
+                        <label class="Cl_Check"><input type="checkbox" value="ABERTO" checked><span>Aberto</span></label>
+                        <label class="Cl_Check"><input type="checkbox" value="RETORNADO" checked><span>Retornado</span></label>
+                        <label class="Cl_Check"><input type="checkbox" value="REJEITADO"><span>Rejeitado</span></label>
+                        <label class="Cl_Check"><input type="checkbox" value="APROVADO"><span>Aprovado</span></label>
+                        <label class="Cl_Check"><input type="checkbox" value="FINALIZADO"><span>Finalizado</span></label>
 
-      <!-- Novo componente visual -->
-      <div class="combo-custom" id="statusWrapper">
-        <input type="text" id="comboStatusDisplay" placeholder="Status" readonly />
-        <div id="statusDropdown" class="dropdown-options" style="display:none">
-          <label><input type="checkbox" value="Aberto" checked> <span>Aberto</span></label>
-          <label><input type="checkbox" value="Retornado" checked> <span>Retornado</span></label>
-          <label><input type="checkbox" value="Rejeitado"> <span>Rejeitado</span></label>
-          <label><input type="checkbox" value="Aprovado"> <span>Aprovado</span></label>
-          <label><input type="checkbox" value="Finalizado"> <span>Finalizado</span></label>
+                        <div class="Cl_MultiAcoes">
+                            <button type="button" id="ob_btnStatusOK" class="Cl_botaoFiltro Neutro">OK</button>
+                            <button type="button" id="ob_btnStatusCancel" class="Cl_botaoFiltro Neutro">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-          <hr>
-          <button type="button" id="btnStatusOK">OK</button>
-          <button type="button" id="btnStatusnoOK">Cancelar</button>
+            <div>
+                <button class="Cl_botaoFiltro" id="ob_btnFiltrar">Filtrar</button>
+                <button class="Cl_botaoFiltro Neutro" id="ob_btnlimparFiltro">Limpar Filtro</button>
+            </div>
         </div>
 
-      </div>
+        <div class="Cl_swithminhas">
+            <!-- Botão incluir (padrão Rufino) -->
+            <div class="Cl_botaoIncluir">
+                <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Reembolso</button>
+            </div>
 
-      <div id="filtroMinhasreembolsoArea" style="display: none">
-        <label class="Cl_labelfiltro" for="filtroMinhasreembolso">
-          <input type="checkbox" id="filtroMinhasreembolso" checked>
-          Mostrar somente minhas reembolso
-        </label>
-      </div>
+            <!-- Somente minhas (aparece só p/ dev/adm) -->
+            <div id="ob_wrapSomenteMinhas" class="Cl_FiltroItem" style="display:none; margin-left:auto; align-items:center; gap:10px;">
+                <label class="Cl_labelfiltro" for="ob_toggleSomenteMinhas" title="Listar apenas lançamentos criados por mim">
+                    Somente minhas
+                </label>
 
-      <div>
-        <button class="Cl_botaoFiltro" id="btnFiltrar">Filtrar</button>
-        <button class="Cl_botaoFiltro" id="btnLimparFiltro">Limpar</button>
-      </div>
-    </div>
-    
-    <div class="Cl_botaoIncluir">
-      <button class="Cl_BtnIncluir" id="ob_btnIncluir">Novo Reembolso</button>
-    </div>
+                <!-- Switch padrão TECH -->
+                <label class="switch">
+                    <input type="checkbox" id="ob_toggleSomenteMinhas" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
 
-    <div class="Cl_TabelaMenu" id="content-area-reembolso">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th>Valor Total</th>
-            <th>Status</th>
-            <th>Notas</th>
-            <th>Ação</th>
-          </tr>
-        </thead>
-        <tbody id="listareembolso">
-          <tr class="Cl_Carregando">
-            <td colspan="7">Carregando...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <!-- =================== GRID PRINCIPAL =================== -->
+        <div class="Cl_TabelaMenu" id="content-area-ReemLanc">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Valor total</th>
+                        <th>Status</th>
+                        <th>Notas</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="ob_listaLanc">
+                    <tr class="Cl_Carregando">
+                        <td colspan="7">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-    <div class="Cl_Paginacao">
-      <button class="Cl_direcao" id="btnPrimeiro" disabled>Primeiro</button>
-      <button class="Cl_direcao" id="btnAnterior" disabled>Anterior</button>
-      <span>Página <span id="paginaAtual">1</span> de <span id="totalPaginas">1</span></span>
-      <button class="Cl_direcao" id="btnProximo" disabled>Próximo</button>
-      <button class="Cl_direcao" id="btnUltimo" disabled>Último</button>
+        <!-- =================== PAGINAÇÃO (padrão) =================== -->
+        <div class="Cl_Paginacao">
+            <button class="Cl_direcao" id="ob_btnPrimeiro" disabled>Primeiro</button>
+            <button class="Cl_direcao" id="ob_btnAnterior" disabled>Anterior</button>
+            <span>Página <span id="ob_paginaAtual">1</span> de <span id="ob_totalPaginas">1</span></span>
+            <button class="Cl_direcao" id="ob_btnProximo" disabled>Próximo</button>
+            <button class="Cl_direcao" id="ob_btnUltimo" disabled>Último</button>
+        </div>
     </div>
-  </div>
 </body>
-
 </html>

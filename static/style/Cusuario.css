@@ -50,20 +50,18 @@ h2 {
 
 /* ========================== CONTAINER DE FILTROS ========================== */
 .Cl_Filtros {
+  position: relative; /* NOVO: para permitir posicionamento absoluto interno */
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: flex-start;
+  gap: 12px;
+  align-items: center;
   border: 1px solid #ccc;
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
   margin-bottom: 20px;
   background-color: #f9f9f9;
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 1180px;
-  gap: 10px;
 }
+
 
 .Cl_Filtros label {
   font-weight: bold;
@@ -156,6 +154,11 @@ h2 {
   background-color: #efffe0;
 }
 
+#content-area-Usuarios table td:nth-child(1),
+#content-area-Usuarios table th:nth-child(1) {
+    display: none;
+}
+
 /* ========================== LINHA DE CARREGAMENTO ========================== */
 .Cl_Carregando td {
   text-align: center;
@@ -201,44 +204,26 @@ h2 {
 
 
 /* ========================== BOTAO VOLTAR ========================== */
-.btn-voltar {
-  margin-bottom: 20px;
-  padding: 6px 14px;
-  background-color: #555;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.btn-voltar:hover {
-  background-color: #333;
-}
-
-
-
-
-/* ====================== Botão VOLTAR ========================== */
 .titulo-container {
-  margin: 0px auto;
-  padding: 0px;
-  max-width: 1200px;
-  background-color: transparent;
-  border-radius: 8px;
-  text-align: right;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  margin: 0;
+  padding: 0;
 }
 
-
 .btn-voltar {
-  height: 40px;
-  padding: 10;
-
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
 }
 
 .icon-voltar {
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
+  width: 22px;
+  height: 22px;
+}
+
+.btn-voltar:hover {
+  transform: scale(1.1);
 }

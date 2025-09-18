@@ -1,192 +1,93 @@
-/* ========================== FONTES PERSONALIZADAS ========================== */
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
-    font-weight: 300;
-    font-style: normal;
+
+/* ========================================================================= */
+/* FORM                                                                       */
+/* ========================================================================= */
+.Cl_Formulario{
+    width:90%;
+    max-width:100%;
+    margin:8px auto;
+    padding:20px;
+    background:#FFFFFF;
+    border:1px solid #eee;
+    border-radius:8px;
+    box-shadow:2px 2px 6px rgba(0,0,0,0.04);
+    display:flex; flex-direction:column;
+}
+.form-campo{
+    display:flex; flex-direction:column; width:100%;
+}
+.Cl_Formulario label{
+    font-weight:600; margin:10px 0 4px 0; font-size:13px; color:#333333;
+}
+.Cl_Formulario input[type="text"],
+.Cl_Formulario textarea{
+    padding:8px 12px;
+    font-size:14px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    outline:none;
+    transition:border-color .2s, box-shadow .2s;
+    background-color:#FFFFFF; color:#333333;
+}
+.Cl_Formulario textarea{ resize: vertical; }
+.Cl_Formulario input:focus,
+.Cl_Formulario textarea:focus{
+    border-color:#85C300;
+    box-shadow:0 0 0 3px rgba(133,195,0,.2);
 }
 
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
-    font-weight: 400;
-    font-style: normal;
+.linha1{
+    display:grid;
+    grid-template-columns: 60% 20%;
+    gap: 20%;
+    align-items:end;
+}
+.linha2{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:20px;
 }
 
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
-    font-weight: 700;
-    font-style: normal;
-}
+/* ========================================================================= */
+/* SWITCH (status)                                                            */
+/* ========================================================================= */
+.Cl_SwitchWrap{ display:flex; align-items:center; gap:8px; margin-top:6px; }
+.Cl_StatusText{ font-weight:600; color:#333333; }
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Arboria', 'Segoe UI', sans-serif;
-    background-color: #FFFCFB;
+.switch{
+    position:relative; display:inline-block; width:50px; height:24px;
 }
+.switch input{ opacity:0; width:0; height:0; }
+.slider{
+    position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
+    background-color:#ccc; transition:.2s; border-radius:24px;
+}
+.slider:before{
+    position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px;
+    background-color:#FFFFFF; transition:.2s; border-radius:50%;
+}
+input:checked + .slider{ background-color:#85C300; }
+input:checked + .slider:before{ transform:translateX(26px); }
+/* Garantir que o switch receba clique (caso alguma camada esteja sobreposta) */
 
-/* ========================== CABEÇALHO ========================== */
-.Cl_Header {
-  height: 50px;
-  display: flex;
-  align-items: center;
-  background-color: #333;
-  color: white;
-  padding: 0 50px;
-  justify-content: space-between;
-  width: calc(100% - 100px);
-}
 
-.Cl_Logo img {
-  height: 50px;
-}
 
-.Cl_Titulo {
-  text-align: center;
-  flex-grow: 1;
+/* ========================================================================= */
+/* BOTÕES                                                                     */
+/* ========================================================================= */
+.Cl_Botoes{
+    display:flex; justify-content:right; gap:12px; margin: 8px 80px 8px 0;
 }
+.Cl_Botoes button{
+    min-width:110px; padding:10px 18px; margin:10px 0;
+    border:none; border-radius:8px;
+    background-color:#85C300; color:#FFFFFF;
+    font-size:15px; cursor:pointer;
+    transition:background-color .2s, transform .15s;
+}
+.Cl_Botoes button:hover{ background-color:#6FA700; transform:translateY(-1px); }
+.Cl_Botoes button.Neutro{ background-color:#ccc; color:#333333; }
+.Cl_Botoes button.Neutro:hover{ background-color:#bbb; }
 
-.Cl_MenuID input {
-  background-color: #555;
-  color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 4px;
-  width: 60px;
-  text-align: center;
-}
-
-/* ========================== CONTAINER FORMULÁRIO ========================== */
-.Cl_ContainerApoio {
-  width: calc(100% - 100px);
-  margin: 20px auto;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-}
-
-.form-grade {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-linha01, .form-linha02 {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.form-campo {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-input, textarea, select {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-}
-
-textarea {
-  resize: none;
-}
-
-/* ========================== SWITCH ========================== */
-.switch-toggle {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 25px;
-}
-
-.switch-toggle input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  background-color: #ccc;
-  border-radius: 34px;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 19px;
-  width: 19px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  border-radius: 50%;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #85C300;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-
-/* ========================== BOTÕES RODAPÉ ========================== */
-.Cl_BotoesApoio {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 20px;
-  margin-right: 30px;
-}
-
-.Cl_BtnSalvar, .Cl_BtnCancelar, .Cl_BtnExcluir {
-  padding: 12px 25px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.Cl_BtnSalvar {
-  background-color: #85C300;
-  color: white;
-}
-
-.Cl_BtnSalvar:hover {
-  background-color: #6FA700;
-}
-
-.Cl_BtnCancelar {
-  background-color: #ccc;
-  color: #333;
-}
-
-.Cl_BtnCancelar:hover {
-  background-color: #bbb;
-}
-
-.Cl_BtnExcluir {
-  background-color: #E53935;
-  color: white;
-}
-
-.Cl_BtnExcluir:hover {
-  background-color: #C62828;
-}
+/* Impressão */
+@media print{ .Cl_NoPrint{ display:none !important; } }

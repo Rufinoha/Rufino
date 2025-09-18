@@ -1,36 +1,8 @@
-/* ========================== FONTES ========================== */
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
-    font-weight: 300;
-}
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
-    font-weight: 400;
-}
-@font-face {
-    font-family: 'Arboria';
-    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
-         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
-    font-weight: 700;
-}
-
-/* ========================== ESTRUTURA GERAL ========================== */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Arboria', 'Segoe UI', sans-serif;
-    background-color: #FFFCFB;
-}
-
 /* ========================== CONTAINERS E TÍTULOS ========================== */
 .Cl_ConfigContainer {
-    margin: 0 auto;
+    margin: 10px auto;
     padding: 10px;
-    max-width: 1200px;
+    max-width: 1400px;
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -49,70 +21,6 @@ h2 {
     margin: 0;
     color: #000;
     text-align: right;
-}
-
-/* ========================== BOTÕES ========================== */
-.Cl_botaoFiltro,
-.Cl_BtnIncluir {
-    background-color: #85C300;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-size: 15px;
-    cursor: pointer;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-.Cl_botaoFiltro:hover,
-.Cl_BtnIncluir:hover {
-    background-color: #6FA700;
-    transform: scale(1.05);
-}
-
-.Cl_botaoIncluir {
-    margin-bottom: 10px;
-}
-
-.Cl_direcao {
-    background-color: #85C300;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-.Cl_direcao:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.Cl_BtnAcao {
-    background-color: transparent;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    margin: 0 3px;
-    padding: 2px;
-}
-.Cl_BtnAcao:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-}
-
-.btn-voltar {
-    margin-bottom: 20px;
-    padding: 6px 14px;
-    background-color: #555;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s ease-in-out;
-}
-.btn-voltar:hover {
-    background-color: #333;
 }
 
 /* ========================== FILTROS ========================== */
@@ -163,11 +71,9 @@ h2 {
     background-color: #efffe0;
 }
 
-/* ========================== TABELA LIVRO DIÁRIO: COLUNAS ESPECÍFICAS ========================== */
 #content-area-LivroDiario table td:nth-child(1),
 #content-area-LivroDiario table th:nth-child(1) {
-    width: 50px;
-    text-align: center;
+    display: none;
 }
 
 #content-area-LivroDiario table td:nth-child(5),
@@ -178,19 +84,8 @@ h2 {
 
 #content-area-LivroDiario table td:nth-child(6),
 #content-area-LivroDiario table th:nth-child(6) {
-    width: 70px;
+    width: 100px;
     text-align: center;
 }
 
-/* ========================== PAGINAÇÃO ========================== */
-.Cl_Paginacao {
-    text-align: center;
-    margin-top: 15px;
-}
 
-/* ========================== ÍCONES ========================== */
-.icon-voltar {
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-}

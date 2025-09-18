@@ -2,10 +2,10 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Lançamento de Item da Reembolso</title>
+  <title>Lançamento de nota da Reembolso</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Cdesp_lancamentos_apoio_item.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='reembolso/style/Creem_lancamentos_apoio_nota.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -15,7 +15,7 @@
       <img src="{{ url_for('static', filename='imge/logorufino.png') }}" alt="Logo">
     </div>
     <div class="Cl_Titulo">
-      <h1>Lançamento de Reembolso</h1>
+      <h1>Lançamento de Notas</h1>
     </div>
     <div class="Cl_MenuID">
       <label for="id">ID:</label>
@@ -23,10 +23,10 @@
     </div>
   </div>
 
-  <div class="apoio-item-container">
+  <div class="apoio-nota-container">
 
     <!-- Campos ocultos -->
-    <input type="hidden" id="id_item">
+    <input type="hidden" id="id_nota">
     <input type="hidden" id="id_reembolso" name="id_reembolso">
     <input type="hidden" id="id_empresa">
 
@@ -126,9 +126,7 @@
     <button type="button" class="Cl_BtnSalvar" id="btnSalvar" >Salvar</button>
     <button type="button" class="Cl_BtnExcluir" id="btnExcluir">Excluir</button>
   </div>
-
   <script src="{{ url_for('static', filename='script/global_utils.js') }}"></script>
-  <script src="{{ url_for('static', filename='reembolso/script/Sdesp_lancamentos_apoio_item.js') }}"></script>
-
+  <script src="{{ url_for('static', filename='reembolso/script/Sreem_lancamentos_apoio_nota.js') }}"></script>
 </body>
 </html>

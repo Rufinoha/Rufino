@@ -22,20 +22,29 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ✅ Carrega dados da categoria existente
-function carregarCategoria() {
-  fetch("/categoria/apoio_dados", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id: idCategoria })
-  })
-    .then(res => res.json())
-    .then(res => {
-      document.getElementById("nome_categoria").value = res.nome_categoria || "";
-      document.getElementById("status").checked = res.status;
-      document.getElementById("observacoes").value = res.observacoes || "";
-    })
-    .catch(() => Swal.fire("Erro", "Erro ao carregar categoria.", "error"));
+async function carregarCategoria() {
+  try {
+    const resp = await fetch("/categoria/apoio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: idCategoria })
+    });
+    const json = await resp.json();
+
+    if (!resp.ok || json.sucesso === false) {
+      throw new Error(json.mensagem || `Erro HTTP ${resp.status}`);
+    }
+
+    const { nome_categoria, status, observacoes } = json.dados;
+    document.getElementById("nome_categoria").value = nome_categoria || "";
+    document.getElementById("status").checked = !!status;
+    document.getElementById("observacoes").value = observacoes || "";
+  } catch (err) {
+    Swal.fire("Erro", err.message || "Erro ao carregar categoria.", "error");
+  }
 }
+
+
 
 // ✅ Salvar categoria
 async function salvarCategoria() {
@@ -58,20 +67,27 @@ async function salvarCategoria() {
     });
     const json = await resp.json();
 
-    if (resp.ok && json.retorno) {
-      Swal.fire("Sucesso", json.msg, "success").then(() => {
-        window.parent.postMessage({ grupo: "atualizarTabela" }, "*");
-        GlobalUtils.fecharJanelaApoio(nivelModal);
-      });
+    const okFlag = (json.sucesso === true) || (json.retorno === true);
+    const msgOk  = json.mensagem || json.msg || "Categoria salva com sucesso.";
+
+    if (resp.ok && okFlag) {
+      // se veio id novo do back, atualiza o id local
+      if (json.id) idCategoria = json.id;
+
+      await Swal.fire("Sucesso", msgOk, "success");
+      window.parent.postMessage({ grupo: "atualizarTabela" }, "*");
+      GlobalUtils.fecharJanelaApoio(nivelModal);
     } else {
-      Swal.fire("Erro", json.msg || "Erro ao salvar.", "error");
+      const msgErr = json.mensagem || json.msg || "Erro ao salvar.";
+      Swal.fire("Erro", msgErr, "error");
     }
   } catch (e) {
     Swal.fire("Erro", "Erro inesperado ao salvar.", "error");
   }
 }
 
-// ✅ Excluir categoria
+
+// idCategoria deve estar disponível no escopo (ex.: setado ao abrir o apoio)
 async function excluirCategoria() {
   const confirma = await Swal.fire({
     title: `Excluir categoria ${idCategoria}?`,
@@ -81,24 +97,25 @@ async function excluirCategoria() {
     confirmButtonText: "Sim, excluir",
     cancelButtonText: "Cancelar"
   });
-
   if (!confirma.isConfirmed) return;
+
 
   try {
     const resp = await fetch("/categoria/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: idCategoria })
+      body: JSON.stringify({ id: numId })
     });
-    const json = await resp.json();
 
-    if (resp.ok && json.retorno) {
-      Swal.fire("Excluído!", json.msg, "success").then(() => {
-        window.parent.postMessage({ grupo: "atualizarTabela" }, "*");
-        GlobalUtils.fecharJanelaApoio(nivelModal);
-      });
+    const json = await resp.json(); // 🔹 sempre JSON
+    console.log(json.mensagem ||json.erro || json.Number)
+    if (resp.ok && json.sucesso) {
+      await Swal.fire("Excluído!", json.mensagem || "Categoria excluída com sucesso.", "success");
+      window.parent.postMessage({ grupo: "atualizarTabela" }, "*");
+      GlobalUtils.fecharJanelaApoio(window.__nivelModal__ || 1);
     } else {
-      Swal.fire("Erro", json.msg || "Erro ao excluir.", "error");
+      console.log(json.mensagem ||json.erro || json.Number)
+      Swal.fire("Erro", json.mensagem || json.erro || "Erro ao excluir.", "error");
     }
   } catch (e) {
     Swal.fire("Erro", "Erro inesperado ao excluir.", "error");

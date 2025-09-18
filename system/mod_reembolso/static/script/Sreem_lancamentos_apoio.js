@@ -5,7 +5,6 @@ console.log("Sreem_lancamentos_apoio.js carregado");
 // ║BLOCO 1 - RECEBENDO DADOS DO PRINCIPAL (postMessage)
 // ╚══════════════════════════════════════════════════╝
 GlobalUtils.receberDadosApoio(async (id) => {
-  console.log("📩 ID recebido via postMessage:", id);
 
   // Preenche dados básicos da sessão
   const id_empresa = sessionStorage.getItem("id_empresa") || "";
@@ -18,11 +17,9 @@ GlobalUtils.receberDadosApoio(async (id) => {
 
   // ──> BLOCO 3 - TRATATIVA DE ID
   if (id) {
-    console.log("🔄 Carregando reembolso com ID:", id);
     await carregarReembolso(id);
     controlarBotaoItens();
   } else {
-    console.log("🆕 Modo inclusão: limpando formulário");
     limparFormulario();
     controlarBotaoItens();
   }
@@ -33,68 +30,97 @@ GlobalUtils.receberDadosApoio(async (id) => {
 // ║BLOCO 2 - EVENTOS DOS BOTÕES PRINCIPAIS
 // ╚══════════════════════════════════════════════════╝
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🟢 DOM totalmente carregado.");
 
   //====================== Botão SALVAR ==========================================
   document.getElementById("ob_btnSalvar")?.addEventListener("click", async () => {
-  const dados = {
-    id: document.getElementById("id").value || null,
-    id_empresa: document.getElementById("id_empresa").value,
-    descricao: document.getElementById("descricao").value.trim(),
-    data: document.getElementById("data").value,
-    id_adiantamento: document.getElementById("id_adiantamento").value || null,
-    obs: document.getElementById("obs").value.trim(),
-    valor_total: parseFloat((document.getElementById("valor_total").textContent || "0").replace(/\./g, "").replace(",", ".")) || 0.00
-  };
+    const dados = {
+      id:               document.getElementById("id").value || null,
+      id_empresa:       document.getElementById("id_empresa").value,
+      descricao:        document.getElementById("descricao").value.trim(),
+      data:             document.getElementById("data").value,
+      id_adiantamento:  document.getElementById("id_adiantamento").value || null,
+      obs:              document.getElementById("obs").value.trim(),
+      valor_total:      parseFloat((document.getElementById("valor_total").textContent || "0").replace(/\./g, "").replace(",", ".")) || 0.00
+    };
 
-  if (!dados.descricao || !dados.data) {
-    Swal.fire("Atenção", "Preencha todos os campos obrigatórios.", "warning");
-    return;
-  }
+    if (!dados.descricao || !dados.data) {
+      Swal.fire("Atenção", "Preencha todos os campos obrigatórios.", "warning");
+      return;
+    }
 
-  const status = document.getElementById("statusBadge")?.textContent?.trim()?.toLowerCase();
-  if (dados.id_reembolso && status !== "Aberto") {
-    Swal.fire("Atenção", "Só é possível editar quando o status for 'Aberto'.", "info");
-    return;
-  }
+    // Só valida status quando for EDIÇÃO (id preenchido)
+    if (dados.id) {
+      const badgeEl     = document.getElementById("statusBadge");
+      const statusAtual = (badgeEl?.dataset.status || badgeEl?.textContent || "").trim().toUpperCase();
+      const permitidos  = ["ABERTO", "PENDENTE", "RETORNADO"];
+      if (!permitidos.includes(statusAtual)) {
+        Swal.fire("Atenção", "Este reembolso não pode ser salvo no status atual.", "info");
+        return;
+      }
+    }
 
-  try {
-    const resp = await fetch("/reembolso/salvar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados)
-    });
+    try {
+      const resp = await fetch("/reembolso/lanc/salvar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dados)
+      });
+      const json = await resp.json();
 
-    const json = await resp.json();
+      if (!resp.ok || !json.id) throw new Error(json.erro || "Erro ao salvar");
 
-    if (resp.ok && json.id) {
+      // Atualiza ID no form
       document.getElementById("id").value = json.id;
+
+      // Inclusão: após salvar, mostra "Aberto" no badge
+      if (!dados.id) {
+        const badge = document.getElementById("statusBadge");
+        if (badge) {
+          badge.textContent    = "Aberto";
+          badge.dataset.status = "ABERTO";
+          badge.className      = "status-badge status-aberto";
+        }
+      }
+
       controlarBotaoItens();
       Swal.fire("Sucesso", json.mensagem || "Reembolso salvo.", "success");
       window.opener?.postMessage({ grupo: "reembolsoalva" }, "*");
-    } else {
-      throw new Error(json.erro || "Erro ao salvar");
+    } catch (err) {
+      Swal.fire("Erro", err.message || "Falha ao salvar.", "error");
     }
-  } catch (err) {
-    Swal.fire("Erro", err.message, "error");
-  }
-});
+  });
+
+
+
+
 
 
 
 
   //======================  Botão INCLUIR NOTAS (antigo incluir itens) ====================== 
-  document.getElementById("btnNovoItem")?.addEventListener("click", () => {
-    const idField = document.getElementById("id");
-    const id = idField ? idField.value : null;
+  document.getElementById("btnNovoNotas")?.addEventListener("click", () => {
+    const id = document.getElementById("id")?.value?.trim();
 
     if (!id) {
-      Swal.fire("Atenção", "Salve o reembolso antes de incluir itens.", "info");
+      Swal.fire("Atenção", "Salve o reembolso antes de incluir notas.", "info");
       return;
     }
 
-    window.open(`/reembolso/item/incluir?id_reembolso=${id}`, "_blank", "width=900,height=650");
+    // 🔑 chama no host (pai) para empilhar sobre o modal atual
+    const Host = (window.parent && window.parent.GlobalUtils)
+      ? window.parent.GlobalUtils
+      : window.GlobalUtils;
+
+    Host.abrirJanelaApoioModal({
+      rota: "/reembolso/nota/incluir",
+      titulo: "Incluir Nota",
+      largura: 900,
+      altura: 650,
+      nivel: 2                 // empilha sobre o nível 1
+    });
   });
+
+
 
 
 
@@ -159,13 +185,11 @@ function limparFormulario() {
 }
 
 async function carregarReembolso(id) {
-  console.log("📦 Chamando rota /reembolso/apoio/" + id);
   try {
-    const resp = await fetch(`/reembolso/apoio/${id}`);
+    const resp = await fetch(`/reembolso/lanc/apoio/${id}`);
     if (!resp.ok) throw new Error("Erro ao carregar dados");
 
     const dados = await resp.json();
-    console.log("📝 Dados carregados do backend:", dados);
 
     for (const campo in dados) {
       const el = document.getElementById(campo);
@@ -235,8 +259,9 @@ function preencherAuditoria(nome, dataHora) {
 }
 
 function controlarBotaoItens() {
-  const btn = document.getElementById("btnNovoNotas");
-  const id = document.getElementById("id").value;
+  const btn = document.getElementById("btnNovoNotas"); // ou btnNovonota
+  const id  = document.getElementById("id").value;
+  if (!btn) return;
 
   if (id) {
     btn.disabled = false;
@@ -249,63 +274,69 @@ function controlarBotaoItens() {
 
 
 
+
 // ╔══════════════════════════════════════════════════╗
 // ║ ITENS DA TABELA DE REEMBOLSO
 // ╚══════════════════════════════════════════════════╝
 const reembolsoItens = {
   async carregar() {
-    const id_reembolso = document.getElementById("id")?.value;
-    const usuario = GlobalUtils.getUsuarioLogado();
-    const id_empresa = usuario?.id_empresa;
-
-    console.log("🔎 Carregando itens com:", { id_reembolso, id_empresa });
-
-    if (!id_reembolso || !id_empresa) {
-      console.warn("⚠️ ID do reembolso ou empresa não informado.");
-      return;
-    }
-
     try {
-      const resp = await fetch(`/reembolso/item/dados?id_reembolso=${id_reembolso}&id_empresa=${id_empresa}`);
+      // pegue do DOM (ou do localStorage como fallback)
+      const id_reembolso = document.getElementById("id")?.value;
+      const id_empresa   = document.getElementById("id_empresa")?.value
+                        || window.Util?.localstorage("id_empresa", 0);
+
+      if (!id_reembolso) {
+        // sem ID ainda (novo registro não salvo)
+        const tbody = document.getElementById("listaItens");
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8">Nenhum nota incluído.</td></tr>`;
+        return;
+      }
+
+      // id_empresa NÃO é necessário para o back (ele usa a sessão),
+      // mas deixei se você quiser logar/inspecionar.
+      const url = `/reembolso/nota/dados?id_reembolso=${encodeURIComponent(id_reembolso)}`;
+
+      const resp = await fetch(url, { credentials: "include" });
       if (!resp.ok) throw new Error("Erro na requisição dos itens");
 
       const dados = await resp.json();
-      console.log("📦 Itens recebidos:", dados);
 
       const tbody = document.getElementById("listaItens");
       tbody.innerHTML = "";
 
-      if (!dados.length) {
-        tbody.innerHTML = `<tr><td colspan="8">Nenhum item incluído.</td></tr>`;
+      if (!Array.isArray(dados) || !dados.length) {
+        tbody.innerHTML = `<tr><td colspan="8">Nenhum nota incluído.</td></tr>`;
         return;
       }
 
-      dados.forEach(item => {
+      dados.forEach(nota => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${item.id}</td>
-          <td>${item.data ? Util.formatarData(item.data) : ""}</td>
-          <td>${item.descricao}</td>
-          <td>${item.nome_categoria || "-"}</td>
-          <td>${item.razao_social_emitente || "-"}</td>
-          <td>${item.forma_pagamento || "-"}</td>
-          <td>R$ ${parseFloat(item.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
+          <td>${nota.id}</td>
+          <td>${nota.data ? (window.Util?.formatarData?.(nota.data) || nota.data) : ""}</td>
+          <td>${nota.descricao || "-"}</td>
+          <td>${nota.nome_categoria || "-"}</td>
+          <td>${nota.razao_social_emitente || "-"}</td>
+          <td>${nota.forma_pagamento || "-"}</td>
+          <td>R$ ${parseFloat(nota.valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
           <td>
-            <button class="btn-icon btnEditarItem" data-id="${item.id}" title="Editar">
-              ${Util.gerarIconeTech('editar')}
+            <button class="btn-icon btnEditarnota" data-id="${nota.id}" title="Editar">
+              ${window.Util?.gerarIconeTech?.('editar') || ''}
             </button>
-            <button class="btn-icon btnExcluirItem" data-id="${item.id}" title="Excluir">
-              ${Util.gerarIconeTech('excluir')}
+            <button class="btn-icon btnExcluirnota" data-id="${nota.id}" title="Excluir">
+              ${window.Util?.gerarIconeTech?.('excluir') || ''}
             </button>
-            <a class="btn-icon" href="${item.anexo_nota}" target="_blank" title="Ver anexo">
-              ${Util.gerarIconeTech('anexo')}
-            </a>
+            ${nota.anexo_nota ? `
+              <a class="btn-icon" href="${nota.anexo_nota}" target="_blank" title="Ver anexo">
+                ${window.Util?.gerarIconeTech?.('anexo') || ''}
+              </a>` : ``}
           </td>
         `;
         tbody.appendChild(tr);
       });
-      lucide.createIcons();
 
+      lucide.createIcons();
     } catch (err) {
       console.error("❌ Erro ao carregar itens:", err);
       Swal.fire("Erro", "Falha ao carregar os itens do reembolso.", "error");
@@ -314,3 +345,5 @@ const reembolsoItens = {
 };
 
 
+
+ 

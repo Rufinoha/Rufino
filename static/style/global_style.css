@@ -1,90 +1,416 @@
-/* ========================== FONTES ========================== */
+/* ========================================================================= */
+/* ========================== FONTES PERSONALIZADAS ======================== */
+/* ========================================================================= */
 @font-face {
-  font-family: 'Arboria';
-  src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
-       url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
-  font-weight: 300;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Arboria';
-  src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
-       url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-}
-@font-face {
-  font-family: 'Arboria';
-  src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
-       url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
-  font-weight: 700;
-  font-style: normal;
-}
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Arboria', 'Segoe UI', sans-serif;
-  background-color: #FFFCFB;
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Light.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Light.woff') format('woff');
+    font-weight: 300; /* Light */
+    font-style: normal;
 }
 
-/* Estilo para todos os ícones Tech */
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Book.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Book.woff') format('woff');
+    font-weight: 400; /* Regular */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Arboria';
+    src: url('/static/fonts/Arboria/Arboria-Bold.woff2') format('woff2'),
+         url('/static/fonts/Arboria/Arboria-Bold.woff') format('woff');
+    font-weight: 700; /* Bold */
+    font-style: normal;
+}
+
+
+/* ========================================================================= */
+/* ========================== CONFIGURAÇÕES GERAIS ========================= */
+/* ========================================================================= */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arboria', 'Segoe UI', sans-serif;
+    background-color: #FFFCFB;
+}
+
+
+/* ========================================================================= */
+/* ========================== ICONES TECH (Lucide / SVG) =================== */
+/* ========================================================================= */
+/* Ícone isolado */
 .icon-tech {
-  color: #85C300;
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  vertical-align: middle;
+    color: #85C300;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    vertical-align: middle;
 }
 
 .icon-tech:hover {
-  color: #6FA700;
+    color: #6FA700;
 }
 
+/* Botão “clean” para ícones */
 .btn-icon {
-  background: none;
-  border: none;
-  padding: 3px;
-  margin: 0 2px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background 0.2s;
+    background: none;
+    border: none;
+    padding: 3px;
+    margin: 0 2px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s ease;
 }
 
 .btn-icon:hover {
-  background: rgba(133, 195, 0, 0.1); /* leve fundo ao passar o mouse */
+    background: rgba(133, 195, 0, 0.1);
 }
 
+/* Evita que o SVG capture o clique em vez do botão */
 .btn-icon .icon-tech {
-  width: 16px;
-  height: 16px;
-  pointer-events: none; /* para o SVG não "interceptar" o clique */
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
 }
 
 
+/* ========================================================================= */
+/* ========================== MODAL DE APOIO =============================== */
+/* ========================================================================= */
+#modalApoio {
+    display: none;
+}
 
 #modalApoio.aberto {
-  display: block;
-  z-index: 9999;
-}
-
-#modalApoio {
-  display: none;
+    display: block;
+    z-index: 9999;
 }
 
 
-/*   
+/* ========================================================================= */
+/* ========================== COMBOBOX (Cl_SelectLike) ===================== */
+/* ========================================================================= */
+/* Container base */
+.Cl_SelectLike {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
 
+/* input do combobox */
+.Cl_SelectDisplay {
+    width: 100%;
+    padding: 8px 32px 8px 12px;  
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fff;
+    color: #333;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+/* CARET sempre visível */
+.Cl_Caret {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #333; /* cor da setinha */
+}
+
+/* Painel padrão */
+.Cl_ComboPanel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+/* Painel flutuante */
+.Cl_ComboPanel.is-floating {
+    position: fixed;
+    inset: auto;
+    min-width: auto !important;
+    width: auto;
+    max-height: 280px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 2147483000;
+    box-sizing: border-box;
+}
+
+/* abrir/fechar pelo aria-hidden */
+.Cl_ComboPanel[aria-hidden="true"]  { display: none; }
+.Cl_ComboPanel[aria-hidden="false"] { display: block; }
+
+/* Área de busca */
+.Cl_ComboSearch {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+}
+.Cl_ComboSearchInput {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Lista e status */
+.Cl_ComboStatus {
+    padding: 6px 10px;
+    font-size: 12px;
+    color: #666;
+}
+.Cl_ComboLista {
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+}
+
+/* Itens */
+.Cl_Item,
+.Cl_ComboItem {
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: grid;
+    grid-auto-rows: min-content;
+    gap: 2px;
+    transition: background-color 0.15s, box-shadow 0.15s;
+    line-height: 1.25;
+    color: #333333;
+}
+
+.Cl_Item:hover,
+.Cl_ComboItem:hover,
+.Cl_Item.Cl_sel,
+.Cl_ComboItem[aria-selected="true"] {
+    background: #F4FBEA;
+    box-shadow: inset 0 0 0 1px #85C300;
+}
+
+.Cl_Item__linha,
+.Cl_ComboItem__linha {
+    font-size: 13px;
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.Cl_Item__linha--1,
+.Cl_ComboItem__linha--1 {
+    font-weight: 700;
+}
+
+.Cl_Item__rotulo,
+.Cl_ComboItem__rotulo {
+    font-weight: 700;
+    margin-right: 4px;
+}
+
+.Cl_Item mark,
+.Cl_ComboItem mark,
+.Cl_Match mark {
+    background: #fff3bf;
+    padding: 0 2px;
+    border-radius: 3px;
+}
+
+/* Estados de foco */
+.Cl_SelectDisplay:focus,
+.Cl_Caret:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(133,195,0,.35);
+    border-color: #85C300;
+}
+
+/* Exemplo largura fixa */
+#combo_conta { 
+    width: 420px; 
+}
+
+
+/* ========================================================================= */
+/* ========================== PAGINAÇÃO ==================================== */
+/* ========================================================================= */
+.Cl_Paginacao {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    margin-right: 20px;
+}
+
+.Cl_direcao {
+    background-color: transparent;
+    color: #85C300;
+    border: 1px solid #85C300;
+    padding: 6px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, transform 0.15s;
+}
+
+.Cl_direcao:hover:not(:disabled) {
+    background-color: #85C300;
+    color: #FFFFFF;
+    transform: translateY(-1px);
+}
+
+.Cl_direcao:disabled {
+    background-color: transparent;
+    color: #bbb;
+    border-color: #bbb;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+
+.Cl_Paginacao span {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+
+
+
+/* ========================================================================= */
+/* =========================== CABEÇALHO DO APOIO ========================== */
+/* ========================================================================= */
+.Cl_Header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  background-color: #333;
+  color: white;
+  padding: 0 50px;
+  justify-content: space-between;
+  width: calc(100% - 100px);
+}
+
+.Cl_Logo img {
+  height: 50px;
+}
+
+.Cl_Titulo {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.Cl_MenuID input {
+  background-color: #555;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  width: 60px;
+  text-align: center;
+}
+
+
+
+/* ========================================================================= */
+/* BOTÕES */
+/* ========================================================================= */
+.Cl_BotoesApoio {
+    display: flex;
+    justify-content: right;
+    margin-top: 20px;
+    margin-right: 40px;
+    gap: 10px;
+}
+
+
+
+.Cl_botaoFiltro, .Cl_BtnIncluir, .Cl_BtnSalvar{
+    background-color: #85C300;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.Cl_botaoFiltro:hover, .Cl_BtnIncluir:hover, .Cl_BtnSalvar:hover {
+    background-color: #6FA700;
+    transform: scale(1.05);
+}
+
+.Cl_botaoIncluir {
+    margin-bottom: 10px;
+}
+
+
+/* Excluir (vermelho) */
+.Cl_BtnExcluir {
+    background-color: #E53935;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.Cl_BtnExcluir:hover {
+    background-color: #C62828;
+    transform: scale(1.05);
+}
+
+/* Cancelar (cinza claro neutro) */
+.Cl_BtnCancelar {
+    background-color: #ccc;
+    color: #333333;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.Cl_BtnCancelar:hover {
+    background-color: #bbb;
+    transform: scale(1.05);
+}
+
+
+/* ========================================================================= */
+/* ========================== COMENTÁRIOS DE USO ========================== */
+/* ========================================================================= */
+/*
 <link rel="stylesheet" href="{{ url_for('static', filename='style/global_style.css') }}">
-
-
 <script src="https://unpkg.com/lucide@latest"></script>
-
-
-lucide.createIcons();
-
-
-  */
+<script>lucide.createIcons();</script>
+*/

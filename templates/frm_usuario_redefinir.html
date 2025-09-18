@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>Definir Nova Senha | Rufino</title>
+  <link rel="icon" href="{{ url_for('static', filename='imge/favicon.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style/Cusuario_redefinir.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='imge/logorufino.png') }}">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
+  <!-- use a classe já existente no CSS para herdar o visual -->
   <div class="container-redefinir">
     <h2>Definir Nova Senha</h2>
     <p>Crie uma senha segura para acessar o sistema.</p>
+
+    <!-- token validado no GET -->
+    <input type="hidden" id="token" value="{{ token }}">
 
     <form id="formSenha" onsubmit="return false;">
       <div class="grupo-input">
@@ -24,7 +28,7 @@
         <input type="password" id="confirmarSenha" name="confirmarSenha" required>
       </div>
 
-      <button id="btnAlterarSenha">Salvar Senha</button>
+      <button id="btnAlterarSenha" type="button">Salvar Senha</button>
     </form>
   </div>
 
